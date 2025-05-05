@@ -21,7 +21,27 @@ cd Projet_Web_CIR2-ma-nouvelle-fonctionnalite
 
 Remplacez `<URL_DU_DEPOT>` par l'URL de votre dépôt Git.
 
-### 2. Installer Expo CLI globalement
+### 2. Création des fichiers manquants
+
+⚠️ **Important** : Certains fichiers n'ont pas pu être ajoutés au dépôt GitHub. Vous devez les créer manuellement :
+
+#### Créer le fichier config.js
+
+Créez un fichier `config.js` à la racine du projet avec le contenu suivant :
+
+```javascript
+export const API_URL = 'https://api.challengr.app';
+export const AUTH_TOKEN_KEY = 'auth_token';
+export const USER_DATA_KEY = 'user_data';
+export const API_TIMEOUT = 10000; // 10 secondes
+export const MAPS_API_KEY = 'votre_cle_api_google_maps'; // Optionnel pour les fonctionnalités de carte
+```
+
+#### Créer le dossier node_modules
+
+Au lieu de créer ce dossier manuellement, il sera généré automatiquement à l'étape suivante.
+
+### 3. Installer Expo CLI globalement
 
 ```bash
 npm install -g expo-cli
@@ -29,7 +49,7 @@ npm install -g expo-cli
 
 Cette commande installe l'outil en ligne de commande d'Expo qui est nécessaire pour développer et tester l'application.
 
-### 3. Installer les dépendances du projet
+### 4. Installer les dépendances du projet
 
 ```bash
 npm install
@@ -37,7 +57,7 @@ npm install
 
 Cette commande lit le fichier package.json et installe toutes les dépendances nécessaires pour le projet. Cela peut prendre quelques minutes.
 
-### 4. Démarrer l'application
+### 5. Démarrer l'application
 
 ```bash
 npm start
@@ -45,7 +65,7 @@ npm start
 
 Cette commande lance le serveur de développement Expo. Un QR code s'affichera dans votre terminal.
 
-### 5. Tester l'application
+### 6. Tester l'application
 
 Vous avez plusieurs options pour tester l'application :
 
@@ -83,6 +103,9 @@ Cette commande vérifie votre environnement et propose des solutions.
 
 ### Problèmes avec les modules natifs
 Certains modules comme la caméra ou la géolocalisation peuvent nécessiter des permissions supplémentaires sur les appareils physiques.
+
+### Erreur "Cannot find module 'config'"
+Si vous recevez cette erreur, vérifiez que vous avez bien créé le fichier `config.js` comme indiqué à l'étape 2.
 
 ## Structure du projet
 
