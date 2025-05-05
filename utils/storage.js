@@ -1,0 +1,623 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CHALLENGE_TYPES, generateUniqueId } from './constants';
+// Suppression de l'import qui crée le cycle de dépendances
+// import { getAuthUser } from '../services/authService';
+
+// Clés de stockage
+const TASKS_STORAGE_KEY = '@challengr_tasks';
+const DAILY_TASKS_KEY = '@challengr_daily_tasks';
+const TIMED_TASKS_KEY = '@challengr_timed_tasks';
+const POINTS_STORAGE_KEY = '@challengr_points';
+const COMPLETED_TASKS_KEY = '@challengr_completed_tasks';
+const USER_PROFILE_KEY = '@challengr_user_profile';
+const STREAK_KEY = '@challengr_streak';
+const LAST_DAILY_REFRESH_KEY = '@challengr_last_daily_refresh';
+const CURRENT_USER_KEY = '@challengr_current_user'; // Ajout de la clé utilisée dans authService
+
+/**
+ * Récupère l'ID de l'utilisateur connecté directement depuis AsyncStorage
+ * au lieu de passer par authService pour éviter le cycle de dépendances
+ */
+export const getCurrentUserId = async () => {
+  try {
+    const currentUserJson = await AsyncStorage.getItem(CURRENT_USER_KEY);
+    if (!currentUserJson) {
+      console.warn('Aucun utilisateur connecté');
+      return null;
+    }
+    
+    const currentUser = JSON.parse(currentUserJson);
+    if (!currentUser || !currentUser.userId) {
+      console.warn('userId manquant dans les données utilisateur');
+      return null;
+    }
+    
+    return currentUser.userId;
+  } catch (error) {
+    console.error('Erreur lors de la récupération de l\'ID utilisateur:', error);
+    return null;
+  }
+};
+
+/**
+ * Génère une clé de stockage spécifique à un utilisateur
+ * Cette fonction est essentielle pour séparer les données entre utilisateurs
+ */
+const getUserSpecificKey = async (baseKey) => {
+  const userId = await getCurrentUserId();
+  if (!userId) return baseKey; // Fallback au cas où
+  return `${baseKey}_${userId}`;
+};
+
+/**
+ * Récupère les tâches depuis le stockage
+ */
+export const retrieveTasks = async () => {
+  try {
+    const userKey = await getUserSpecificKey(TASKS_STORAGE_KEY);
+    const tasksJson = await AsyncStorage.getItem(userKey);
+    
+    if (tasksJson !== null) {
+      return JSON.parse(tasksJson);
+    }
+    
+    // Si aucune tâche n'existe, retourner un tableau vide
+    return [];
+  } catch (error) {
+    console.error('Erreur lors de la récupération des tâches:', error);
+    return [];
+  }
+};
+
+/**
+ * Enregistre les tâches dans le stockage
+ */
+export const saveTasks = async (tasks) => {
+  try {
+    const userKey = await getUserSpecificKey(TASKS_STORAGE_KEY);
+    await AsyncStorage.setItem(userKey, JSON.stringify(tasks));
+    return tasks;
+  } catch (error) {
+    console.error('Erreur lors de l\'enregistrement des tâches:', error);
+    return [];
+  }
+};
+
+/**
+ * Marque une tâche comme complétée et l'ajoute à la liste des tâches terminées
+ */
+export const completeTask = async (taskId) => {
+  try {
+    // Récupérer les tâches actuelles
+    const tasks = await retrieveTasks();
+    
+    // Mettre à jour la tâche spécifique
+    const updatedTasks = tasks.map(task => 
+      task.id === taskId ? { ...task, completed: true } : task
+    );
+    
+    // Enregistrer les tâches mises à jour
+    await saveTasks(updatedTasks);
+    
+    // Ajouter aux tâches complétées
+    await addCompletedTask(taskId);
+    
+    return updatedTasks;
+  } catch (error) {
+    console.error('Erreur lors de la complétion de la tâche:', error);
+    return [];
+  }
+};
+
+/**
+ * Ajoute une tâche complétée à la liste des tâches terminées
+ */
+export const addCompletedTask = async (taskId) => {
+  try {
+    const userKey = await getUserSpecificKey(COMPLETED_TASKS_KEY);
+    const completedTasks = await retrieveCompletedTasks();
+    
+    // Vérifier si la tâche n'est pas déjà dans la liste
+    if (!completedTasks.includes(taskId)) {
+      const updatedCompletedTasks = [...completedTasks, taskId];
+      await AsyncStorage.setItem(
+        userKey, 
+        JSON.stringify(updatedCompletedTasks)
+      );
+    }
+  } catch (error) {
+    console.error('Erreur lors de l\'ajout aux tâches complétées:', error);
+  }
+};
+
+/**
+ * Récupère la liste des tâches complétées
+ */
+export const retrieveCompletedTasks = async () => {
+  try {
+    const userKey = await getUserSpecificKey(COMPLETED_TASKS_KEY);
+    const completedTasksJson = await AsyncStorage.getItem(userKey);
+    
+    if (completedTasksJson !== null) {
+      return JSON.parse(completedTasksJson);
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Erreur lors de la récupération des tâches complétées:', error);
+    return [];
+  }
+};
+
+/**
+ * Supprime une tâche de n'importe quel type (standard, quotidien, temporaire)
+ */
+export const deleteTask = async (taskId) => {
+  try {
+    // 1. Chercher dans les tâches standards
+    const standardTasks = await retrieveTasks();
+    const standardTaskExists = standardTasks.some(task => task.id === taskId);
+    
+    if (standardTaskExists) {
+      // Filtrer la tâche à supprimer des tâches standards
+      const updatedTasks = standardTasks.filter(task => task.id !== taskId);
+      await saveTasks(updatedTasks);
+      return updatedTasks;
+    }
+    
+    // 2. Chercher dans les tâches quotidiennes
+    const dailyTasks = await retrieveDailyTasks();
+    const dailyTaskExists = dailyTasks.some(task => task.id === taskId);
+    
+    if (dailyTaskExists) {
+      // Filtrer la tâche à supprimer des tâches quotidiennes
+      const updatedDailyTasks = dailyTasks.filter(task => task.id !== taskId);
+      const userKey = await getUserSpecificKey(DAILY_TASKS_KEY);
+      await AsyncStorage.setItem(userKey, JSON.stringify(updatedDailyTasks));
+      // Retourner toutes les tâches standards (car la fonction est attendue pour retourner les tâches standards)
+      return standardTasks;
+    }
+    
+    // 3. Chercher dans les tâches à durée limitée
+    const timedTasks = await retrieveTimedTasks();
+    const timedTaskExists = timedTasks.some(task => task.id === taskId);
+    
+    if (timedTaskExists) {
+      // Filtrer la tâche à supprimer des tâches à durée limitée
+      const updatedTimedTasks = timedTasks.filter(task => task.id !== taskId);
+      const userKey = await getUserSpecificKey(TIMED_TASKS_KEY);
+      await AsyncStorage.setItem(userKey, JSON.stringify(updatedTimedTasks));
+      // Retourner toutes les tâches standards (car la fonction est attendue pour retourner les tâches standards)
+      return standardTasks;
+    }
+    
+    // Si on arrive ici, la tâche n'a pas été trouvée
+    return standardTasks;
+  } catch (error) {
+    console.error('Erreur lors de la suppression de la tâche:', error);
+    return [];
+  }
+};
+
+/**
+ * Récupère le nombre de points actuel
+ */
+export const retrievePoints = async () => {
+  try {
+    const userKey = await getUserSpecificKey(POINTS_STORAGE_KEY);
+    const pointsJson = await AsyncStorage.getItem(userKey);
+    
+    if (pointsJson !== null) {
+      return parseInt(pointsJson, 10);
+    }
+    
+    // Si aucun point n'existe, retourner 0
+    return 0;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des points:', error);
+    return 0;
+  }
+};
+
+/**
+ * Ajoute des points au total
+ */
+export const addPoints = async (pointsToAdd) => {
+  try {
+    const currentPoints = await retrievePoints();
+    const newPoints = currentPoints + pointsToAdd;
+    const userKey = await getUserSpecificKey(POINTS_STORAGE_KEY);
+    await AsyncStorage.setItem(userKey, newPoints.toString());
+    return newPoints;
+  } catch (error) {
+    console.error('Erreur lors de l\'ajout de points:', error);
+    return 0;
+  }
+};
+
+/**
+ * Récupère le profil utilisateur depuis le stockage
+ */
+export const retrieveUserProfile = async () => {
+  try {
+    const userKey = await getUserSpecificKey(USER_PROFILE_KEY);
+    const profileJson = await AsyncStorage.getItem(userKey);
+    
+    if (profileJson !== null) {
+      return JSON.parse(profileJson);
+    }
+    
+    // Si aucun profil n'existe, retourner un profil par défaut
+    return {
+      username: 'Utilisateur',
+      bio: 'Passionné de défis et aventures!',
+      profileImage: null,
+      email: 'user@example.com'
+    };
+  } catch (error) {
+    console.error('Erreur lors de la récupération du profil utilisateur:', error);
+    return null;
+  }
+};
+
+/**
+ * Enregistre le profil utilisateur dans le stockage
+ */
+export const storeUserProfile = async (userProfile) => {
+  try {
+    const userKey = await getUserSpecificKey(USER_PROFILE_KEY);
+    await AsyncStorage.setItem(userKey, JSON.stringify(userProfile));
+    return true;
+  } catch (error) {
+    console.error('Erreur lors de l\'enregistrement du profil utilisateur:', error);
+    return false;
+  }
+};
+
+/**
+ * Réinitialise toutes les données de l'application
+ * Fonction utile pour les tests ou pour permettre à l'utilisateur de tout réinitialiser
+ */
+export const resetAllData = async () => {
+  try {
+    const keys = [TASKS_STORAGE_KEY, POINTS_STORAGE_KEY, COMPLETED_TASKS_KEY, USER_PROFILE_KEY];
+    const userKeys = await Promise.all(keys.map(key => getUserSpecificKey(key)));
+    await AsyncStorage.multiRemove(userKeys);
+    console.log('Toutes les données ont été réinitialisées');
+    return true;
+  } catch (error) {
+    console.error('Erreur lors de la réinitialisation des données:', error);
+    return false;
+  }
+};
+
+/**
+ * Récupère les défis quotidiens
+ */
+export const retrieveDailyTasks = async () => {
+  try {
+    // Vérifier si les défis quotidiens doivent être rafraîchis
+    await refreshDailyTasksIfNeeded();
+    
+    const userKey = await getUserSpecificKey(DAILY_TASKS_KEY);
+    const dailyTasksJson = await AsyncStorage.getItem(userKey);
+    
+    if (dailyTasksJson !== null) {
+      return JSON.parse(dailyTasksJson);
+    }
+    
+    // Si aucun défi quotidien n'existe, en générer de nouveaux
+    return await generateAndSaveDailyTasks();
+  } catch (error) {
+    console.error('Erreur lors de la récupération des défis quotidiens:', error);
+    return [];
+  }
+};
+
+/**
+ * Vérifie si les défis quotidiens doivent être rafraîchis (une fois par jour)
+ */
+export const refreshDailyTasksIfNeeded = async () => {
+  try {
+    const userKey = await getUserSpecificKey(LAST_DAILY_REFRESH_KEY);
+    const lastRefreshJson = await AsyncStorage.getItem(userKey);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    
+    let lastRefresh = 0;
+    if (lastRefreshJson !== null) {
+      lastRefresh = parseInt(lastRefreshJson, 10);
+    }
+    
+    // Si la dernière actualisation n'est pas d'aujourd'hui, régénérer les défis
+    if (lastRefresh < today) {
+      await generateAndSaveDailyTasks();
+      await AsyncStorage.setItem(userKey, today.toString());
+    }
+  } catch (error) {
+    console.error('Erreur lors de la vérification de l\'actualisation des défis quotidiens:', error);
+  }
+};
+
+/**
+ * Génère de nouveaux défis quotidiens
+ */
+const generateAndSaveDailyTasks = async () => {
+  // Liste des défis quotidiens possibles
+  const possibleDailyTasks = [
+    {
+      title: "Boire 2 litres d'eau",
+      description: "Hydratez-vous correctement aujourd'hui",
+      points: 15,
+      difficulty: "EASY",
+      category: "FITNESS"
+    },
+    {
+      title: "15 minutes de méditation",
+      description: "Prenez un moment pour vous recentrer",
+      points: 20,
+      difficulty: "EASY",
+      category: "MINDFULNESS"
+    },
+    {
+      title: "Lire 20 pages",
+      description: "Développez votre connaissance ou votre imagination",
+      points: 25,
+      difficulty: "MEDIUM",
+      category: "LEARNING"
+    },
+    {
+      title: "Faire 30 minutes d'exercice",
+      description: "Restez actif pour votre santé",
+      points: 30,
+      difficulty: "MEDIUM",
+      category: "FITNESS"
+    },
+    {
+      title: "Apprendre 5 nouveaux mots",
+      description: "Enrichissez votre vocabulaire",
+      points: 15,
+      difficulty: "EASY",
+      category: "LEARNING"
+    },
+    {
+      title: "Contacter un ami ou un membre de la famille",
+      description: "Maintenez vos liens sociaux",
+      points: 20,
+      difficulty: "EASY",
+      category: "SOCIAL"
+    },
+    {
+      title: "Ranger votre espace de travail",
+      description: "Un environnement propre améliore la productivité",
+      points: 15,
+      difficulty: "EASY",
+      category: "PRODUCTIVITY"
+    },
+    {
+      title: "Faire une bonne action",
+      description: "Aidez quelqu'un aujourd'hui",
+      points: 25,
+      difficulty: "MEDIUM",
+      category: "SOCIAL"
+    },
+    {
+      title: "Essayer une nouvelle recette",
+      description: "Développez vos compétences culinaires",
+      points: 35,
+      difficulty: "MEDIUM",
+      category: "CREATIVITY"
+    },
+    {
+      title: "Faire une liste de tâches pour demain",
+      description: "Organisez-vous pour être plus efficace",
+      points: 15,
+      difficulty: "EASY",
+      category: "PRODUCTIVITY"
+    }
+  ];
+  
+  // Sélectionner aléatoirement 3 défis quotidiens
+  const selectedIndices = new Set();
+  while (selectedIndices.size < 3 && selectedIndices.size < possibleDailyTasks.length) {
+    const randomIndex = Math.floor(Math.random() * possibleDailyTasks.length);
+    selectedIndices.add(randomIndex);
+  }
+  
+  // Créer les défis quotidiens
+  const dailyTasks = Array.from(selectedIndices).map(index => {
+    const task = possibleDailyTasks[index];
+    return {
+      id: generateUniqueId(),
+      title: task.title,
+      description: task.description,
+      points: task.points,
+      difficulty: task.difficulty,
+      category: task.category,
+      type: CHALLENGE_TYPES.DAILY,
+      completed: false,
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(new Date().setHours(23, 59, 59, 999)).toISOString()
+    };
+  });
+  
+  // Sauvegarder les défis quotidiens
+  const userKey = await getUserSpecificKey(DAILY_TASKS_KEY);
+  await AsyncStorage.setItem(userKey, JSON.stringify(dailyTasks));
+  
+  return dailyTasks;
+};
+
+/**
+ * Récupère les défis à durée limitée
+ */
+export const retrieveTimedTasks = async () => {
+  try {
+    const userKey = await getUserSpecificKey(TIMED_TASKS_KEY);
+    const timedTasksJson = await AsyncStorage.getItem(userKey);
+    
+    if (timedTasksJson !== null) {
+      const timedTasks = JSON.parse(timedTasksJson);
+      
+      // Filtrer les défis expirés
+      const now = new Date().getTime();
+      const validTimedTasks = timedTasks.filter(task => {
+        const expiresAt = new Date(task.expiresAt).getTime();
+        return expiresAt > now;
+      });
+      
+      // Si des défis ont expiré, mettre à jour le stockage
+      if (validTimedTasks.length !== timedTasks.length) {
+        await AsyncStorage.setItem(userKey, JSON.stringify(validTimedTasks));
+      }
+      
+      return validTimedTasks;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Erreur lors de la récupération des défis à durée limitée:', error);
+    return [];
+  }
+};
+
+/**
+ * Crée un nouveau défi à durée limitée
+ */
+export const createTimedTask = async (task) => {
+  try {
+    const timedTasks = await retrieveTimedTasks();
+    
+    // Créer le nouveau défi à durée limitée
+    const newTimedTask = {
+      ...task,
+      id: generateUniqueId(),
+      type: CHALLENGE_TYPES.TIMED,
+      completed: false,
+      createdAt: new Date().toISOString()
+    };
+    
+    // Si expiresAt n'est pas fourni, définir une durée par défaut de 3 jours
+    if (!newTimedTask.expiresAt) {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 3);
+      newTimedTask.expiresAt = expiresAt.toISOString();
+    }
+    
+    const updatedTimedTasks = [...timedTasks, newTimedTask];
+    const userKey = await getUserSpecificKey(TIMED_TASKS_KEY);
+    await AsyncStorage.setItem(userKey, JSON.stringify(updatedTimedTasks));
+    
+    return newTimedTask;
+  } catch (error) {
+    console.error('Erreur lors de la création d\'un défi à durée limitée:', error);
+    return null;
+  }
+};
+
+/**
+ * Récupère les informations de série actuelle
+ */
+export const retrieveStreak = async () => {
+  try {
+    const userKey = await getUserSpecificKey(STREAK_KEY);
+    const streakJson = await AsyncStorage.getItem(userKey);
+    
+    if (streakJson !== null) {
+      const streak = JSON.parse(streakJson);
+      
+      // Vérifier si la série est toujours active (moins de 24h depuis la dernière complétion)
+      const now = new Date().getTime();
+      const lastCompletionTime = new Date(streak.lastCompletionDate).getTime();
+      const daysSinceLastCompletion = Math.floor((now - lastCompletionTime) / (1000 * 60 * 60 * 24));
+      
+      if (daysSinceLastCompletion > 1) {
+        // Si plus d'un jour s'est écoulé, réinitialiser la série
+        const resetStreak = {
+          count: 0,
+          lastCompletionDate: null
+        };
+        await AsyncStorage.setItem(userKey, JSON.stringify(resetStreak));
+        return resetStreak;
+      }
+      
+      return streak;
+    }
+    
+    // Si aucune série n'existe, en créer une nouvelle
+    const newStreak = {
+      count: 0,
+      lastCompletionDate: null
+    };
+    await AsyncStorage.setItem(userKey, JSON.stringify(newStreak));
+    return newStreak;
+  } catch (error) {
+    console.error('Erreur lors de la récupération de la série:', error);
+    return { count: 0, lastCompletionDate: null };
+  }
+};
+
+/**
+ * Met à jour la série après avoir complété un défi
+ */
+export const updateStreak = async () => {
+  try {
+    const streak = await retrieveStreak();
+    const now = new Date();
+    
+    // Si c'est la première complétion ou si la série a été réinitialisée
+    if (!streak.lastCompletionDate) {
+      const updatedStreak = {
+        count: 1,
+        lastCompletionDate: now.toISOString()
+      };
+      const userKey = await getUserSpecificKey(STREAK_KEY);
+      await AsyncStorage.setItem(userKey, JSON.stringify(updatedStreak));
+      return updatedStreak;
+    }
+    
+    const lastCompletionDate = new Date(streak.lastCompletionDate);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const lastCompletionDay = new Date(
+      lastCompletionDate.getFullYear(),
+      lastCompletionDate.getMonth(),
+      lastCompletionDate.getDate()
+    );
+    
+    // Si la dernière complétion était hier, incrémenter la série
+    if (lastCompletionDay.getTime() === yesterday.getTime()) {
+      const updatedStreak = {
+        count: streak.count + 1,
+        lastCompletionDate: now.toISOString()
+      };
+      const userKey = await getUserSpecificKey(STREAK_KEY);
+      await AsyncStorage.setItem(userKey, JSON.stringify(updatedStreak));
+      return updatedStreak;
+    }
+    
+    // Si la dernière complétion était aujourd'hui, juste mettre à jour l'horodatage
+    if (lastCompletionDay.getTime() === today.getTime()) {
+      const updatedStreak = {
+        count: streak.count,
+        lastCompletionDate: now.toISOString()
+      };
+      const userKey = await getUserSpecificKey(STREAK_KEY);
+      await AsyncStorage.setItem(userKey, JSON.stringify(updatedStreak));
+      return updatedStreak;
+    }
+    
+    // Si plus d'un jour s'est écoulé, réinitialiser la série
+    const resetStreak = {
+      count: 1, // Commence une nouvelle série
+      lastCompletionDate: now.toISOString()
+    };
+    const userKey = await getUserSpecificKey(STREAK_KEY);
+    await AsyncStorage.setItem(userKey, JSON.stringify(resetStreak));
+    return resetStreak;
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour de la série:', error);
+    return { count: 0, lastCompletionDate: null };
+  }
+};

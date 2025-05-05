@@ -1,0 +1,365 @@
+import React from 'react';
+import { View, TouchableOpacity, StyleSheet, Dimensions, StatusBar, Text, Platform, Animated } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+import { CardStyleInterpolators } from '@react-navigation/stack';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+
+// Importer vos écrans
+import HomeScreen from '../screens/HomeScreen';
+import TasksScreen from '../screens/TasksScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import FriendsScreen from '../screens/FriendsScreen';
+import ConversationScreen from '../screens/ConversationScreen';
+import Icon, { COLORS } from '../components/common/Icon';
+
+const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+const { width } = Dimensions.get('window');
+
+function CustomTabBar({ state, descriptors, navigation }) {
+  // Animation de focus pour les onglets
+  const animatedValues = React.useRef(state.routes.map(() => new Animated.Value(0))).current;
+  
+  React.useEffect(() => {
+    // Animer l'onglet actif
+    const focusedTab = state.index;
+    Animated.parallel([
+      // Réduire l'échelle des autres onglets
+      ...animatedValues.map((anim, index) => 
+        Animated.spring(anim, {
+          toValue: index === focusedTab ? 1 : 0,
+          friction: 8,
+          tension: 50,
+          useNativeDriver: true
+        })
+      )
+    ]).start();
+  }, [state.index]);
+
+  return (
+    <View style={styles.tabBarContainer}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <BlurView intensity={90} tint="dark" style={styles.blurContainer}>
+        <LinearGradient
+          colors={['rgba(0, 0, 0, 0.7)', 'rgba(0, 0, 0, 0.5)']}
+          style={styles.gradientOverlay}
+        >
+          <View style={styles.tabBar}>
+            {state.routes.map((route, index) => {
+              const { options } = descriptors[route.key];
+              const isFocused = state.index === index;
+              
+              let iconName;
+              let title;
+              let iconColor;
+              
+              // Configuration spécifique par route
+              if (route.name === 'Home') {
+                iconName = isFocused ? 'home' : 'home-outline';
+                title = 'Accueil';
+                iconColor = isFocused ? COLORS.primary : '#fff';
+              } else if (route.name === 'Tasks') {
+                iconName = isFocused ? 'list' : 'list-outline';
+                title = 'Défis';
+                iconColor = isFocused ? COLORS.primary : '#fff';
+              } else if (route.name === 'Profile') {
+                iconName = isFocused ? 'person' : 'person-outline';
+                title = 'Profil';
+                iconColor = isFocused ? COLORS.primary : '#fff';
+              } else if (route.name === 'Friends') {
+                iconName = isFocused ? 'people' : 'people-outline';
+                title = 'Amis';
+                iconColor = isFocused ? COLORS.primary : '#fff';
+              }
+              
+              const onPress = () => {
+                const event = navigation.emit({
+                  type: 'tabPress',
+                  target: route.key,
+                  canPreventDefault: true,
+                });
+                
+                if (!isFocused && !event.defaultPrevented) {
+                  // Animation du tap feedback
+                  Animated.sequence([
+                    Animated.timing(animatedValues[index], {
+                      toValue: 0.8,
+                      duration: 100,
+                      useNativeDriver: true
+                    }),
+                    Animated.timing(animatedValues[index], {
+                      toValue: 1,
+                      duration: 100,
+                      useNativeDriver: true
+                    })
+                  ]).start();
+                  
+                  navigation.navigate(route.name);
+                }
+              };
+              
+              // Interpolations pour les animations
+              const tabScale = animatedValues[index].interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.9, 1.1]
+              });
+              
+              const indicatorWidth = animatedValues[index].interpolate({
+                inputRange: [0, 1],
+                outputRange: ['10%', '50%']
+              });
+              
+              return (
+                <TouchableOpacity
+                  key={index}
+                  onPress={onPress}
+                  style={[
+                    styles.tabItem,
+                    isFocused ? styles.activeTabItem : null
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  {isFocused && (
+                    <Animated.View style={[
+                      styles.activeTabIndicator,
+                      { 
+                        width: indicatorWidth,
+                        left: '25%',
+                        right: '25%',
+                      }
+                    ]} />
+                  )}
+                  <Animated.View style={{ 
+                    transform: [{ scale: isFocused ? tabScale : 1 }]
+                  }}>
+                    <Ionicons 
+                      name={iconName} 
+                      size={24} 
+                      color={iconColor} 
+                      style={{ 
+                        opacity: isFocused ? 1 : 0.7 
+                      }}
+                    />
+                  </Animated.View>
+                  <Animated.Text style={[
+                    styles.tabTitle,
+                    { 
+                      color: iconColor,
+                      opacity: isFocused ? 1 : 0.7,
+                      transform: [{ scale: isFocused ? tabScale : 1 }]
+                    }
+                  ]}>
+                    {title}
+                  </Animated.Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </LinearGradient>
+      </BlurView>
+    </View>
+  );
+}
+
+function TabNavigator() {
+  return (
+    <Tab.Navigator
+      tabBar={props => <CustomTabBar {...props} />}
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen} 
+      />
+      <Tab.Screen 
+        name="Tasks" 
+        component={TasksScreen} 
+      />
+      <Tab.Screen 
+        name="Friends" 
+        component={FriendsScreen} 
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen} 
+      />
+    </Tab.Navigator>
+  );
+}
+
+export default function AppNavigator() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName="Main"
+        screenOptions={{
+          headerShown: false,
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
+          cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+          transitionSpec: {
+            open: {
+              animation: 'spring',
+              config: { 
+                stiffness: 1000,
+                damping: 80,
+                mass: 3,
+                overshootClamping: false,
+                restDisplacementThreshold: 0.01,
+                restSpeedThreshold: 0.01
+              },
+            },
+            close: {
+              animation: 'spring',
+              config: { 
+                stiffness: 1000,
+                damping: 80,
+                mass: 3,
+                overshootClamping: false,
+                restDisplacementThreshold: 0.01,
+                restSpeedThreshold: 0.01
+              },
+            },
+          },
+          cardShadowEnabled: true,
+          cardOverlayEnabled: true,
+          detachPreviousScreen: false,
+        }}
+      >
+        <Stack.Screen 
+          name="Main" 
+          component={TabNavigator} 
+          options={{
+            cardStyle: { backgroundColor: 'transparent' },
+          }}
+        />
+        <Stack.Screen 
+          name="Conversation" 
+          component={ConversationScreen} 
+          options={{
+            headerShown: true,
+            headerTitleAlign: 'center',
+            headerStyle: {
+              backgroundColor: COLORS.primary,
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
+            },
+            headerTintColor: COLORS.white,
+            headerTitle: props => (
+              <View style={styles.conversationHeader}>
+                <Text style={styles.conversationHeaderTitle}>{props.children}</Text>
+              </View>
+            ),
+            headerBackImage: () => (
+              <View style={styles.backButton}>
+                <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+              </View>
+            ),
+            cardStyleInterpolator: ({ current, layouts }) => {
+              return {
+                cardStyle: {
+                  transform: [
+                    {
+                      translateY: current.progress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [layouts.screen.height, 0],
+                      }),
+                    },
+                  ],
+                  opacity: current.progress,
+                  shadowOpacity: current.progress.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0, 0.3, 0.7],
+                  }),
+                },
+                overlayStyle: {
+                  opacity: current.progress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 0.5],
+                  }),
+                },
+              };
+            },
+          }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+const STATUSBAR_HEIGHT = StatusBar.currentHeight || 25;
+const NAV_HEIGHT = 80;
+
+const styles = StyleSheet.create({
+  tabBarContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: NAV_HEIGHT,
+    zIndex: 999,
+  },
+  blurContainer: {
+    flex: 1,
+    overflow: 'hidden',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  gradientOverlay: {
+    flex: 1,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  tabBar: {
+    flexDirection: 'row',
+    width: '100%',
+    height: '100%',
+    justifyContent: 'space-around',
+    paddingTop: 5,
+    paddingBottom: Platform.OS === 'ios' ? 25 : 5,
+  },
+  tabItem: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    paddingVertical: 8,
+  },
+  activeTabItem: {
+    backgroundColor: 'transparent',
+  },
+  activeTabIndicator: {
+    position: 'absolute',
+    top: 0,
+    left: '25%',
+    right: '25%',
+    height: 3,
+    backgroundColor: COLORS.primary,
+    borderRadius: 3,
+  },
+  tabTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  conversationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  conversationHeaderTitle: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  backButton: {
+    marginLeft: 10,
+  },
+});
