@@ -37,7 +37,8 @@
     "react-native-paper": "^5.13.1",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
-    "react-native-web": "0.20.0"
+    "react-native-web": "0.20.0",
+    "start": "^5.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
