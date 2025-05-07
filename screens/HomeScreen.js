@@ -833,6 +833,57 @@ export default function HomeScreen({ navigation }) {
     );
   };
 
+  // Function to handle adding a new challenge
+  const handleAddChallenge = async (coordinate) => {
+    try {
+      const newChallenge = {
+        id: generateUniqueId(),
+        title: "Nouveau défi",
+        description: "Décrivez votre défi ici",
+        points: 10,
+        difficulty: "EASY",
+        category: "CUSTOM",
+        latitude: coordinate.latitude,
+        longitude: coordinate.longitude,
+        distance: 0, // Distance is irrelevant for custom challenges
+      };
+
+      // Add the new challenge to the list of nearby challenges
+      setNearbyChallenges((prevChallenges) => [...prevChallenges, newChallenge]);
+
+      // Optionally save the new challenge to AsyncStorage
+      const savedChallenges = await AsyncStorage.getItem('@custom_challenges');
+      const challenges = savedChallenges ? JSON.parse(savedChallenges) : [];
+      challenges.push(newChallenge);
+      await AsyncStorage.setItem('@custom_challenges', JSON.stringify(challenges));
+
+      Alert.alert("Succès", "Défi ajouté à la carte !");
+    } catch (error) {
+      console.error("Erreur lors de l'ajout du défi :", error);
+      Alert.alert("Erreur", "Impossible d'ajouter le défi.");
+    }
+  };
+
+  // Load custom challenges from AsyncStorage
+  const loadCustomChallenges = async () => {
+    try {
+      const savedChallenges = await AsyncStorage.getItem('@custom_challenges');
+      if (savedChallenges) {
+        setNearbyChallenges((prevChallenges) => [
+          ...prevChallenges,
+          ...JSON.parse(savedChallenges),
+        ]);
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des défis personnalisés :", error);
+    }
+  };
+
+  // Call loadCustomChallenges when the component mounts
+  useEffect(() => {
+    loadCustomChallenges();
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
@@ -1255,6 +1306,7 @@ export default function HomeScreen({ navigation }) {
                 }}
                 showsUserLocation={true}
                 showsMyLocationButton={true}
+                onLongPress={(e) => handleAddChallenge(e.nativeEvent.coordinate)} // Add this line
               >
                 {/* Marqueur pour chaque défi à proximité */}
                 {nearbyChallenges.map((challenge) => (
