@@ -14,7 +14,7 @@ import {
   Modal,
   TextInput,
   KeyboardAvoidingView,
-  TouchableWithoutFeedback,
+  TouchableWithoutFeedback, 
   Keyboard,
   Alert,
   ActivityIndicator
@@ -336,34 +336,31 @@ const ProfileScreen = () => {
   
   const selectFromGallery = async () => {
     try {
-      // Demande les permissions pour accéder à la galerie
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (permissionResult.granted === false) {
-        Alert.alert("Permission requise", "Vous devez autoriser l'accès à la galerie pour changer votre photo");
-        return;
-      }
-      
-      // Lance le sélecteur d'image
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-      
-      if (!result.canceled) {
-        // Met à jour l'image dans le formulaire d'édition
-        setEditedProfile({
-          ...editedProfile,
-          profileImage: result.assets[0].uri
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        if (permissionResult.granted === false) {
+            Alert.alert("Permission requise", "Vous devez autoriser l'accès à la galerie pour changer votre photo");
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
         });
-      }
+
+        if (!result.canceled) {
+            setEditedProfile({
+                ...editedProfile,
+                profileImage: result.assets[0].uri
+            });
+        }
     } catch (error) {
-      console.error("Erreur lors de la sélection d'image:", error);
-      Alert.alert("Erreur", "Impossible de sélectionner cette image");
+        console.error("Erreur lors de la sélection d'image:", error);
+        Alert.alert("Erreur", "Impossible de sélectionner cette image");
     }
-  };
+};
   
   const handlePhotoCapture = (photoUri) => {
     // Met à jour l'image dans le formulaire d'édition

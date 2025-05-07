@@ -49,6 +49,394 @@ import { BlurView } from 'expo-blur';
 
 // Suppression du composant CustomNavBar
 
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.secondary, // Changement de blanc (#fff) à la couleur du bandeau (COLORS.secondary)
+    paddingTop: Platform.OS === 'android' ? SCREEN.statusBarHeight : 0,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  header: {
+    paddingTop: 12,
+    paddingBottom: 12,
+    paddingHorizontal: 16,
+    backgroundColor: COLORS.secondary,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: COLORS.white,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 2,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  levelInfoButton: {
+    marginRight: 10,
+    padding: 5,
+  },
+  addButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+  },
+  addButtonText: {
+    color: COLORS.white,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  addTaskForm: {
+    backgroundColor: COLORS.white,
+    margin: 12,
+    padding: 16,
+    borderRadius: 12,
+    elevation: 3,
+    shadowColor: COLORS.secondary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+  },
+  formTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: COLORS.textPrimary,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e1e8f0',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+    fontSize: 16,
+    backgroundColor: '#f8faff',
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
+  },
+  difficultyContainer: {
+    marginBottom: 16,
+  },
+  difficultyLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
+    color: COLORS.textPrimary,
+  },
+  difficultyButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  difficultyButton: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: '#f0f4f8',
+    marginHorizontal: 4,
+    alignItems: 'center',
+  },
+  difficultyButtonText: {
+    fontSize: 13,
+    color: COLORS.textPrimary,
+  },
+  activeDifficultyText: {
+    color: COLORS.white,
+    fontWeight: '500',
+  },
+  submitButton: {
+    backgroundColor: COLORS.secondary,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  submitButtonText: {
+    color: COLORS.white,
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  filterContainer: {
+    paddingVertical: 12,
+    paddingLeft: 12,
+    backgroundColor: COLORS.white,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f4f8',
+  },
+  filterButtonContainer: {
+    marginRight: 10,
+  },
+  filterButtons: {
+    paddingRight: 12,
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: COLORS.background,
+    borderWidth: 0,
+  },
+  filterIcon: {
+    marginRight: 6,
+  },
+  activeFilter: {
+    backgroundColor: COLORS.secondary,
+  },
+  filterText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666',
+  },
+  activeFilterText: {
+    color: COLORS.white,
+    fontWeight: '600',
+  },
+  tasksList: {
+    padding: 15,
+    paddingBottom: 30,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  emptySubText: {
+    fontSize: 14,
+    color: COLORS.textLight,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  emptyActionButton: {
+    backgroundColor: COLORS.secondary,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
+  emptyActionButtonText: {
+    color: COLORS.white,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderRadius: 15,
+    width: '100%',
+    maxHeight: '80%',
+    padding: 20,
+  },
+  modalScrollView: {
+    maxHeight: 400,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 20,
+    marginBottom: 10,
+    color: COLORS.secondary,
+  },
+  modalText: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+    lineHeight: 22,
+    marginBottom: 15,
+  },
+  levelInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f4f8',
+  },
+  levelInfoLabel: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+  },
+  levelInfoValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  difficultyInfoCard: {
+    flexDirection: 'row',
+    backgroundColor: '#f8faff',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  difficultyIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    flexDirection: 'row',
+  },
+  difficultyInfoContent: {
+    flex: 1,
+  },
+  difficultyInfoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  difficultyInfoPoints: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+  },
+  modalCloseButton: {
+    backgroundColor: COLORS.secondary,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  modalCloseButtonText: {
+    color: COLORS.white,
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  levelTitleContainer: {
+    marginBottom: 15,
+  },
+  levelTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+  },
+  levelDescription: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginTop: 5,
+  },
+  advantagesContainer: {
+    marginBottom: 15,
+  },
+  advantageItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  advantageIcon: {
+    marginRight: 10,
+  },
+  advantageText: {
+    fontSize: 15,
+    color: COLORS.textPrimary,
+  },
+  bonusContainer: {
+    marginBottom: 15,
+  },
+  bonusTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.success,
+    textAlign: 'center',
+    marginBottom: 5,
+  },
+  bonusDescription: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  navBar: {
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingTop: Platform.OS === 'android' ? SCREEN.statusBarHeight : 0,
+  },
+  navBarGradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  navBarContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  navBarButton: {
+    padding: 10,
+  },
+  navBarTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.white,
+  },
+  navBarRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    padding: 10,
+  },
+  translucentNavBar: {
+    backgroundColor: 'transparent',
+  },
+  solidNavBar: {
+    backgroundColor: COLORS.primary,
+  },
+  sectionHeader: {
+    backgroundColor: '#f8fafc',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 4,
+    borderRadius: 8,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+  },
+  sectionInfo: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 4,
+  }
+});
+
 const TasksScreen = ({ navigation }) => {
   const [tasks, setTasks] = useState([]);
   const [dailyTasks, setDailyTasks] = useState([]);
@@ -89,9 +477,25 @@ const TasksScreen = ({ navigation }) => {
     completed: new Animated.Value(filter === 'completed' ? 1 : 0.7)
   });
 
+  const [taskRatings, setTaskRatings] = useState({});
+
+  // Ajouter la fonction pour charger les notations
+  const loadTaskRatings = async () => {
+    try {
+      const userKey = '@challengr_task_ratings';
+      const savedRatings = await AsyncStorage.getItem(userKey);
+      if (savedRatings) {
+        setTaskRatings(JSON.parse(savedRatings));
+      }
+    } catch (error) {
+      console.error('Error loading task ratings:', error);
+    }
+  };
+
   useEffect(() => {
     // Charger les données en premier
     loadUserData();
+    loadTaskRatings();
     
     // Ajouter un léger délai avant de lancer les animations
     const timeout = setTimeout(() => {
@@ -114,6 +518,7 @@ const TasksScreen = ({ navigation }) => {
     const unsubscribe = navigation.addListener('focus', () => {
       // Recharger les données à chaque fois que l'écran retrouve le focus
       loadUserData();
+      loadTaskRatings();
     });
     
     // Nettoyer les timeouts et écouteurs quand le composant est démonté
@@ -688,8 +1093,29 @@ const TasksScreen = ({ navigation }) => {
     );
   };
   
-  const renderItem = ({ item }) => {
+  const handleRateTask = async (taskId, rating) => {
+    try {
+      const userKey = '@challengr_task_ratings';
+      const updatedRatings = { ...taskRatings, [taskId]: rating };
+      
+      await AsyncStorage.setItem(userKey, JSON.stringify(updatedRatings));
+      setTaskRatings(updatedRatings);
+      
+      // Mettre à jour la liste des tâches pour refléter la nouvelle notation
+      loadUserData();
+    } catch (error) {
+      console.error("Error saving rating:", error);
+    }
+  };
+
+  const renderItem = ({ item, section, index }) => {
     const difficultyInfo = DIFFICULTY_LEVELS[item.difficulty] || DIFFICULTY_LEVELS.MEDIUM;
+    const sectionIndex = taskSections.indexOf(section);
+    let globalIndex = index;
+    
+    for (let i = 0; i < sectionIndex; i++) {
+      globalIndex += taskSections[i].data.length;
+    }
     
     return (
       <Task
@@ -699,8 +1125,15 @@ const TasksScreen = ({ navigation }) => {
         difficulty={item.difficultyLabel || difficultyInfo.name}
         difficultyColor={difficultyInfo.color}
         completed={item.completed}
+        type={item.type}
+        category={item.category}
+        expiresAt={item.expiresAt}
+        streak={streak?.count}
         onComplete={() => handleCompleteTask(item.id)}
         onDelete={() => handleDeleteTask(item.id)}
+        onRate={(rating) => handleRateTask(item.id, rating)}
+        userRating={taskRatings[item.id]}
+        index={globalIndex}
       />
     );
   };
@@ -867,6 +1300,8 @@ const TasksScreen = ({ navigation }) => {
                   streak={streak?.count}
                   onComplete={() => handleCompleteTask(item.id)}
                   onDelete={() => handleDeleteTask(item.id)}
+                  onRate={(rating) => handleRateTask(item.id, rating)}
+                  userRating={taskRatings[item.id]}
                   index={globalIndex} // Passage de l'index global pour l'animation en cascade
                 />
               );
@@ -911,393 +1346,5 @@ const TasksScreen = ({ navigation }) => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.secondary, // Changement de blanc (#fff) à la couleur du bandeau (COLORS.secondary)
-    paddingTop: Platform.OS === 'android' ? SCREEN.statusBarHeight : 0,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  header: {
-    paddingTop: 12,
-    paddingBottom: 12,
-    paddingHorizontal: 16,
-    backgroundColor: COLORS.secondary,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: COLORS.white,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 2,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  levelInfoButton: {
-    marginRight: 10,
-    padding: 5,
-  },
-  addButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-  },
-  addButtonText: {
-    color: COLORS.white,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  addTaskForm: {
-    backgroundColor: COLORS.white,
-    margin: 12,
-    padding: 16,
-    borderRadius: 12,
-    elevation: 3,
-    shadowColor: COLORS.secondary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-  },
-  formTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: COLORS.textPrimary,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#e1e8f0',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
-    fontSize: 16,
-    backgroundColor: '#f8faff',
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  difficultyContainer: {
-    marginBottom: 16,
-  },
-  difficultyLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 8,
-    color: COLORS.textPrimary,
-  },
-  difficultyButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  difficultyButton: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: '#f0f4f8',
-    marginHorizontal: 4,
-    alignItems: 'center',
-  },
-  difficultyButtonText: {
-    fontSize: 13,
-    color: COLORS.textPrimary,
-  },
-  activeDifficultyText: {
-    color: COLORS.white,
-    fontWeight: '500',
-  },
-  submitButton: {
-    backgroundColor: COLORS.secondary,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  submitButtonText: {
-    color: COLORS.white,
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  filterContainer: {
-    paddingVertical: 12,
-    paddingLeft: 12,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f4f8',
-  },
-  filterButtonContainer: {
-    marginRight: 10,
-  },
-  filterButtons: {
-    paddingRight: 12,
-  },
-  filterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    backgroundColor: COLORS.background,
-    borderWidth: 0,
-  },
-  filterIcon: {
-    marginRight: 6,
-  },
-  activeFilter: {
-    backgroundColor: COLORS.secondary,
-  },
-  filterText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666',
-  },
-  activeFilterText: {
-    color: COLORS.white,
-    fontWeight: '600',
-  },
-  tasksList: {
-    padding: 15,
-    paddingBottom: 30,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-  },
-  emptySubText: {
-    fontSize: 14,
-    color: COLORS.textLight,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  emptyActionButton: {
-    backgroundColor: COLORS.secondary,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  emptyActionButtonText: {
-    color: COLORS.white,
-    fontWeight: '600',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: COLORS.white,
-    borderRadius: 15,
-    width: '100%',
-    maxHeight: '80%',
-    padding: 20,
-  },
-  modalScrollView: {
-    maxHeight: 400,
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: COLORS.textPrimary,
-    textAlign: 'center',
-  },
-  modalSubtitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 20,
-    marginBottom: 10,
-    color: COLORS.secondary,
-  },
-  modalText: {
-    fontSize: 15,
-    color: COLORS.textSecondary,
-    lineHeight: 22,
-    marginBottom: 15,
-  },
-  levelInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f4f8',
-  },
-  levelInfoLabel: {
-    fontSize: 15,
-    color: COLORS.textSecondary,
-  },
-  levelInfoValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-  },
-  difficultyInfoCard: {
-    flexDirection: 'row',
-    backgroundColor: '#f8faff',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 10,
-    alignItems: 'center',
-  },
-  difficultyIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    flexDirection: 'row',
-  },
-  difficultyInfoContent: {
-    flex: 1,
-  },
-  difficultyInfoTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  difficultyInfoPoints: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-  },
-  modalCloseButton: {
-    backgroundColor: COLORS.secondary,
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  modalCloseButtonText: {
-    color: COLORS.white,
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  levelTitleContainer: {
-    marginBottom: 15,
-  },
-  levelTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
-    textAlign: 'center',
-  },
-  levelDescription: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-    marginTop: 5,
-  },
-  advantagesContainer: {
-    marginBottom: 15,
-  },
-  advantageItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  advantageIcon: {
-    marginRight: 10,
-  },
-  advantageText: {
-    fontSize: 15,
-    color: COLORS.textPrimary,
-  },
-  bonusContainer: {
-    marginBottom: 15,
-  },
-  bonusTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.success,
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-  bonusDescription: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-  },
-  navBar: {
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingTop: Platform.OS === 'android' ? SCREEN.statusBarHeight : 0,
-  },
-  navBarGradient: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  navBarContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  navBarButton: {
-    padding: 10,
-  },
-  navBarTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.white,
-  },
-  navBarRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  backButton: {
-    padding: 10,
-  },
-  translucentNavBar: {
-    backgroundColor: 'transparent',
-  },
-  solidNavBar: {
-    backgroundColor: COLORS.primary,
-  },
-  sectionHeader: {
-    backgroundColor: '#f8fafc',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 4,
-    borderRadius: 8,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
-  },
-  sectionInfo: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-  },
-});
 
 export default TasksScreen;

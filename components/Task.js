@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import Icon from './common/Icon';
 import { CHALLENGE_TYPES, CHALLENGE_CATEGORIES } from '../utils/constants';
@@ -16,6 +16,8 @@ const Task = ({
   streak,
   onComplete, 
   onDelete,
+  onRate,
+  userRating = 0,
   index = 0 // Nouvel indice pour animer l'entrée en cascade
 }) => {
   // Animation d'entrée de la tâche
@@ -123,6 +125,67 @@ const Task = ({
   
   const categoryInfo = getCategoryInfo();
   const timeRemaining = getTimeRemaining();
+
+  const [showRating, setShowRating] = useState(false);
+  const [rating, setRating] = useState(0);
+
+  const handleComplete = () => {
+    setShowRating(true);
+  };
+
+  const handleRateSubmit = () => {
+    onComplete();
+    if (onRate) {
+      onRate(rating);
+    }
+    setShowRating(false);
+  };
+
+  const renderStars = () => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <TouchableOpacity
+          key={i}
+          onPress={() => setRating(i)}
+          style={styles.starButton}
+        >
+          <Icon
+            name={i <= rating ? "star" : "star-outline"}
+            size={30}
+            color={i <= rating ? "#FFD700" : "#bbb"}
+          />
+        </TouchableOpacity>
+      );
+    }
+    return stars;
+  };
+
+  const renderCompletedRating = () => {
+    if (!completed || !userRating) return null;
+    
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <Icon
+          key={i}
+          name={i <= userRating ? "star" : "star-outline"}
+          size={16}
+          color={i <= userRating ? "#FFD700" : "#bbb"}
+          style={{ marginRight: 2 }}
+        />
+      );
+    }
+    
+    return (
+      <View style={styles.completedRatingContainer}>
+        <Text style={styles.completedRatingLabel}>Difficulté évaluée :</Text>
+        <View style={styles.completedStarsContainer}>
+          {stars}
+        </View>
+      </View>
+    );
+  };
   
   return (
     <Animated.View style={[styles.container, getTaskTypeStyle(), { transform: [{ scale: scaleAnim }, { translateY: translateYAnim }], opacity: opacityAnim }]}>
@@ -173,26 +236,46 @@ const Task = ({
               <Text style={styles.timeText}>{timeRemaining}</Text>
             </View>
           )}
+          
+          {renderCompletedRating()}
         </View>
       </View>
       
       <View style={styles.buttonContainer}>
-        {!completed && (
+        {!completed && !showRating && (
           <TouchableOpacity 
             style={styles.completeButton} 
-            onPress={onComplete}
+            onPress={handleComplete}
           >
             <Icon name="checkmark" size={16} color="#fff" style={styles.buttonIcon} />
             <Text style={styles.buttonText}>Terminer</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity 
-          style={styles.deleteButton} 
-          onPress={onDelete}
-        >
-          <Icon name="trash" size={16} color="#e74c3c" style={styles.buttonIcon} />
-          <Text style={styles.deleteButtonText}>Supprimer</Text>
-        </TouchableOpacity>
+        
+        {showRating && (
+          <View style={styles.ratingContainer}>
+            <Text style={styles.ratingText}>Notez la difficulté de ce défi :</Text>
+            <View style={styles.starsContainer}>
+              {renderStars()}
+            </View>
+            <TouchableOpacity 
+              style={styles.submitRatingButton}
+              onPress={handleRateSubmit}
+            >
+              <Text style={styles.submitRatingText}>Valider</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {!completed && !showRating && (
+          <TouchableOpacity 
+            style={styles.deleteButton} 
+            onPress={onDelete}
+          >
+            <Icon name="trash" size={16} color="#e74c3c" style={styles.buttonIcon} />
+            <Text style={styles.deleteButtonText}>Supprimer</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </Animated.View>
   );
@@ -333,6 +416,47 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     color: '#e74c3c',
   },
+  ratingContainer: {
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  ratingText: {
+    fontSize: 16,
+    marginBottom: 10,
+    color: '#666',
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 15,
+  },
+  starButton: {
+    padding: 5,
+  },
+  submitRatingButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  submitRatingText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  completedRatingContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    marginTop: 8,
+  },
+  completedRatingLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  completedStarsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  }
 });
 
 export default Task;
