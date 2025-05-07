@@ -62,6 +62,44 @@ const BADGES = {
     icon: "calendar-check",
     color: COLORS.error,
     locked: true // Toujours verrouillé pour la démo
+  },
+  // Nouveaux badges
+  TEN_CHALLENGES: {
+    name: "Déterminé",
+    description: "Vous avez complété 10 défis!",
+    icon: "fire",
+    color: "#E67E22", // Orange foncé
+    unlockedAt: 10
+  },
+  TWENTY_CHALLENGES: {
+    name: "Champion",
+    description: "Vous avez complété 20 défis!",
+    icon: "medal",
+    color: "#8E44AD", // Violet
+    unlockedAt: 20
+  },
+  LEVEL_10: {
+    name: "Expert",
+    description: "Vous avez atteint le niveau 10!",
+    icon: "crown",
+    color: "#F1C40F", // Jaune doré
+    unlockedAt: 0,
+    levelRequired: 10
+  },
+  HARD_CHALLENGE: {
+    name: "Intrépide",
+    description: "Complétez 3 défis difficiles",
+    icon: "mountain",
+    color: "#D35400", // Orange brûlé
+    unlockedAt: 3,
+    specialRequirement: "difficile" // À implémenter dans la logique
+  },
+  EARLY_ADOPTER: {
+    name: "Pionnier",
+    description: "Parmi les premiers utilisateurs de l'application",
+    icon: "rocket",
+    color: "#16A085", // Vert turquoise
+    specialRequirement: "earlyAdopter"
   }
 };
 
@@ -226,7 +264,12 @@ const ProfileScreen = () => {
       const unlockedBadges = [
         { ...BADGES.FIRST_CHALLENGE, unlocked: completedCount >= BADGES.FIRST_CHALLENGE.unlockedAt },
         { ...BADGES.FIVE_CHALLENGES, unlocked: completedCount >= BADGES.FIVE_CHALLENGES.unlockedAt },
+        { ...BADGES.TEN_CHALLENGES, unlocked: completedCount >= BADGES.TEN_CHALLENGES.unlockedAt },
+        { ...BADGES.TWENTY_CHALLENGES, unlocked: completedCount >= BADGES.TWENTY_CHALLENGES.unlockedAt },
         { ...BADGES.LEVEL_5, unlocked: levelInfo.level >= BADGES.LEVEL_5.levelRequired },
+        { ...BADGES.LEVEL_10, unlocked: levelInfo.level >= BADGES.LEVEL_10.levelRequired },
+        { ...BADGES.HARD_CHALLENGE, unlocked: false }, // Implémenter la logique pour les défis difficiles plus tard
+        { ...BADGES.EARLY_ADOPTER, unlocked: true }, // Pour démonstration, on considère l'utilisateur comme un early adopter
         { ...BADGES.CONSISTENT, unlocked: !BADGES.CONSISTENT.locked }
       ];
       

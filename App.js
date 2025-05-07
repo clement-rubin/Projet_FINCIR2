@@ -10,8 +10,6 @@ import LoginScreen from './screens/LoginScreen';
 import { isUserAuthenticated, getAuthUser } from './services/authService';
 import { COLORS } from './components/common/Icon';
 
-//TEST
-
 export default function App() {
   const [isFirstLogin, setIsFirstLogin] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
