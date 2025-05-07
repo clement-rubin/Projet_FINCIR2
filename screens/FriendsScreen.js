@@ -55,7 +55,13 @@ const FriendsScreen = ({ navigation }) => {
   // Hooks inchangés
   useFocusEffect(
     useCallback(() => {
-      loadFriendsData();
+      // Réinitialiser complètement l'état à chaque retour sur l'écran
+      setPage(1);
+      setFriends([]);
+      setHasMoreFriends(true);
+      
+      // Charger à nouveau les données
+      loadFriendsData(true);
       
       // Animation d'entrée
       Animated.parallel([
@@ -124,8 +130,8 @@ const FriendsScreen = ({ navigation }) => {
         
         // Vérifier si la réponse est valide
         if (friendsResponse && friendsResponse.friends) {
-          // Remplacer complètement la liste au lieu de l'ajouter
-          setFriends(friendsResponse.friends);
+          // Utiliser la déduplication
+          setFriends(deduplicateFriends(friendsResponse.friends));
           
           // Mettre à jour le statut de pagination
           if (friendsResponse.pagination) {
@@ -143,14 +149,19 @@ const FriendsScreen = ({ navigation }) => {
         const friendsResponse = await getFriends(page);
         
         if (friendsResponse && friendsResponse.friends) {
-          // Vérifier et éliminer les doublons avant d'ajouter de nouveaux amis
+          // Vérification plus stricte des doublons avant d'ajouter de nouveaux amis
           const existingIds = new Set(friends.map(f => f.friendshipId));
+          const existingUserIds = new Set(friends.map(f => f.friend?._id).filter(Boolean));
+          
+          // Exclure les doublons à la fois par friendshipId ET par l'ID utilisateur
           const newFriends = friendsResponse.friends.filter(
-            newFriend => !existingIds.has(newFriend.friendshipId)
+            newFriend => !existingIds.has(newFriend.friendshipId) && 
+                        !existingUserIds.has(newFriend.friend?._id)
           );
           
           if (newFriends.length > 0) {
-            setFriends(prev => [...prev, ...newFriends]);
+            // Utiliser la déduplication quand on ajoute de nouveaux amis
+            setFriends(prev => deduplicateFriends([...prev, ...newFriends]));
           }
           
           // Mettre à jour le statut de pagination
@@ -388,6 +399,21 @@ const FriendsScreen = ({ navigation }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Fonction pour éviter les doublons dans la liste d'amis
+  const deduplicateFriends = (friendsList) => {
+    const uniqueFriends = new Map();
+    
+    // Utiliser Map pour conserver uniquement la dernière version de chaque ami
+    friendsList.forEach(friend => {
+      if (friend && friend.friend && friend.friendshipId) {
+        // Utiliser l'ID d'amitié comme clé
+        uniqueFriends.set(friend.friendshipId, friend);
+      }
+    });
+    
+    return Array.from(uniqueFriends.values());
   };
 
   // Fonctions de rendu avec composants optimisés
