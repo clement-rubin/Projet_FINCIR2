@@ -625,7 +625,7 @@ export default function HomeScreen({ navigation }) {
           duration: 800, 
           useNativeDriver: true 
         }),
-      ]),
+     ]),
 
       // Animation des cartes de statistiques
       Animated.stagger(150, [
@@ -1306,7 +1306,7 @@ export default function HomeScreen({ navigation }) {
                 }}
                 showsUserLocation={true}
                 showsMyLocationButton={true}
-                onLongPress={(e) => handleAddChallenge(e.nativeEvent.coordinate)} // Add this line
+                onLongPress={(e) => handleAddChallenge(e.nativeEvent.coordinate)}
               >
                 {/* Marqueur pour chaque défi à proximité */}
                 {nearbyChallenges.map((challenge) => (
@@ -1318,7 +1318,14 @@ export default function HomeScreen({ navigation }) {
                     }}
                     title={challenge.title}
                     description={challenge.description}
-                    onPress={() => handleSelectChallenge(challenge)}
+                    onPress={() => {
+                      // Set the selected challenge without modifying its position
+                      if (selectedChallenge?.id !== challenge.id) {
+                        setSelectedChallenge(challenge);
+                        const routeDetails = calculateRouteInfo(challenge);
+                        setRouteInfo(routeDetails);
+                      }
+                    }}
                   >
                     <View style={[styles.challengeMarker, getCategoryStyle(challenge.category)]}>
                       <Icon 
@@ -1705,8 +1712,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
     elevation: 3,
   },
   completedButton: {
