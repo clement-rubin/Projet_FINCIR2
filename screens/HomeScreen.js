@@ -625,7 +625,7 @@ export default function HomeScreen({ navigation }) {
           duration: 800, 
           useNativeDriver: true 
         }),
-      ]),
+     ]),
 
       // Animation des cartes de statistiques
       Animated.stagger(150, [
@@ -832,6 +832,57 @@ export default function HomeScreen({ navigation }) {
       </View>
     );
   };
+
+  // Function to handle adding a new challenge
+  const handleAddChallenge = async (coordinate) => {
+    try {
+      const newChallenge = {
+        id: generateUniqueId(),
+        title: "Nouveau défi",
+        description: "Décrivez votre défi ici",
+        points: 10,
+        difficulty: "EASY",
+        category: "CUSTOM",
+        latitude: coordinate.latitude,
+        longitude: coordinate.longitude,
+        distance: 0, // Distance is irrelevant for custom challenges
+      };
+
+      // Add the new challenge to the list of nearby challenges
+      setNearbyChallenges((prevChallenges) => [...prevChallenges, newChallenge]);
+
+      // Optionally save the new challenge to AsyncStorage
+      const savedChallenges = await AsyncStorage.getItem('@custom_challenges');
+      const challenges = savedChallenges ? JSON.parse(savedChallenges) : [];
+      challenges.push(newChallenge);
+      await AsyncStorage.setItem('@custom_challenges', JSON.stringify(challenges));
+
+      Alert.alert("Succès", "Défi ajouté à la carte !");
+    } catch (error) {
+      console.error("Erreur lors de l'ajout du défi :", error);
+      Alert.alert("Erreur", "Impossible d'ajouter le défi.");
+    }
+  };
+
+  // Load custom challenges from AsyncStorage
+  const loadCustomChallenges = async () => {
+    try {
+      const savedChallenges = await AsyncStorage.getItem('@custom_challenges');
+      if (savedChallenges) {
+        setNearbyChallenges((prevChallenges) => [
+          ...prevChallenges,
+          ...JSON.parse(savedChallenges),
+        ]);
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des défis personnalisés :", error);
+    }
+  };
+
+  // Call loadCustomChallenges when the component mounts
+  useEffect(() => {
+    loadCustomChallenges();
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -1255,6 +1306,7 @@ export default function HomeScreen({ navigation }) {
                 }}
                 showsUserLocation={true}
                 showsMyLocationButton={true}
+                onLongPress={(e) => handleAddChallenge(e.nativeEvent.coordinate)}
               >
                 {/* Marqueur pour chaque défi à proximité */}
                 {nearbyChallenges.map((challenge) => (
@@ -1266,7 +1318,14 @@ export default function HomeScreen({ navigation }) {
                     }}
                     title={challenge.title}
                     description={challenge.description}
-                    onPress={() => handleSelectChallenge(challenge)}
+                    onPress={() => {
+                      // Set the selected challenge without modifying its position
+                      if (selectedChallenge?.id !== challenge.id) {
+                        setSelectedChallenge(challenge);
+                        const routeDetails = calculateRouteInfo(challenge);
+                        setRouteInfo(routeDetails);
+                      }
+                    }}
                   >
                     <View style={[styles.challengeMarker, getCategoryStyle(challenge.category)]}>
                       <Icon 
@@ -1653,8 +1712,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
     elevation: 3,
   },
   completedButton: {
