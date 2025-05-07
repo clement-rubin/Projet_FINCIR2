@@ -1319,7 +1319,6 @@ export default function HomeScreen({ navigation }) {
                     title={challenge.title}
                     description={challenge.description}
                     onPress={() => {
-                      // Set the selected challenge without modifying its position
                       if (selectedChallenge?.id !== challenge.id) {
                         setSelectedChallenge(challenge);
                         const routeDetails = calculateRouteInfo(challenge);
@@ -1328,26 +1327,12 @@ export default function HomeScreen({ navigation }) {
                     }}
                   >
                     <View style={[styles.challengeMarker, getCategoryStyle(challenge.category)]}>
-                      <Icon 
-                        name={getCategoryIcon(challenge.category)} 
-                        size={20} 
-                        color={COLORS.white} 
+                      <Icon
+                        name={getCategoryIcon(challenge.category)}
+                        size={20}
+                        color={COLORS.white}
                       />
                     </View>
-                    <CustomCallout visible={selectedChallenge?.id === challenge.id} onClose={() => setSelectedChallenge(null)}>
-                      <Text style={styles.calloutTitle}>{challenge.title}</Text>
-                      <Text style={styles.calloutDescription}>{challenge.description}</Text>
-                      <View style={styles.calloutFooter}>
-                        <View style={styles.calloutPoints}>
-                          <Icon name="star" size={12} color={COLORS.warning} />
-                          <Text style={styles.calloutPointsText}>{challenge.points} pts</Text>
-                        </View>
-                        <View style={styles.calloutDistance}>
-                          <Icon name="location" size={12} color={COLORS.primary} />
-                          <Text style={styles.calloutDistanceText}>{challenge.distance.toFixed(1)} km</Text>
-                        </View>
-                      </View>
-                    </CustomCallout>
                   </Marker>
                 ))}
               </MapView>
