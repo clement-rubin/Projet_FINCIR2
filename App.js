@@ -107,30 +107,13 @@ export default function App() {
         ]),
       ]),
       
-      // Animation de la barre de chargement avec effet de pulsation
-      Animated.parallel([
-        Animated.timing(loadingBarWidth, {
-          toValue: screenWidth - 80, // 40px de marge de chaque côté
-          duration: 1800,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: false, // Width ne peut pas utiliser native driver
-        }),
-        Animated.loop(
-          Animated.sequence([
-            Animated.timing(sparkleAnim, {
-              toValue: 1,
-              duration: 600,
-              useNativeDriver: true,
-            }),
-            Animated.timing(sparkleAnim, {
-              toValue: 0.6,
-              duration: 600,
-              useNativeDriver: true,
-            }),
-          ]),
-          { iterations: 2 }
-        ),
-      ]),
+      // Animation de la barre de chargement
+      Animated.timing(loadingBarWidth, {
+        toValue: screenWidth - 80,
+        duration: 1800,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: false // Doit être false pour width
+      }),
       
       // Effet de rebond final plus prononcé
       Animated.spring(logoScale, {
@@ -323,10 +306,12 @@ export default function App() {
             style={[
               styles.progressBarShine,
               { 
-                left: loadingBarWidth.interpolate({
-                  inputRange: [0, screenWidth - 80],
-                  outputRange: ['0%', '100%']
-                })
+                transform: [{ 
+                  translateX: loadingBarWidth.interpolate({
+                    inputRange: [0, screenWidth - 80],
+                    outputRange: [0, screenWidth - 110] // Position de départ et d'arrivée
+                  })
+                }]
               }
             ]} 
           />

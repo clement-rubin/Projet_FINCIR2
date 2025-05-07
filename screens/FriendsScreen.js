@@ -102,15 +102,17 @@ const FriendsScreen = ({ navigation }) => {
 
   // Animer l'indicateur d'onglet
   useEffect(() => {
+    // Calculer la position cible
     let position = 0;
     if (activeTab === 'pending') position = SCREEN.width * 0.22;
     else if (activeTab === 'search') position = SCREEN.width * 0.45;
     
+    // Utiliser translateX au lieu de manipuler la largeur
     Animated.spring(tabIndicatorPosition, {
       toValue: position,
       friction: 8,
       tension: 50,
-      useNativeDriver: true
+      useNativeDriver: true // Maintenant safe avec translateX
     }).start();
   }, [activeTab]);
 
@@ -630,7 +632,7 @@ const FriendsScreen = ({ navigation }) => {
 
       <Animated.View 
         style={[
-          styles.tabIndicator, 
+          styles.tabIndicator,
           { transform: [{ translateX: tabIndicatorPosition }] }
         ]}
       />
@@ -952,11 +954,11 @@ const styles = StyleSheet.create({
   },
   tabIndicator: {
     height: 2,
-    width: '20%',
+    width: '20%', // Largeur fixe
     backgroundColor: COLORS.primary,
     position: 'absolute',
     bottom: 0,
-    left: 16,
+    left: 0, // Ne pas utiliser left pour l'animation, nous utilisons translateX
   },
 });
 

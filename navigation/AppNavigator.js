@@ -108,9 +108,10 @@ function CustomTabBar({ state, descriptors, navigation }) {
                 outputRange: [0.9, 1.1]
               });
               
-              const indicatorWidth = animatedValues[index].interpolate({
+              // Utiliser scaleX au lieu de width pour l'animation de l'indicateur
+              const indicatorScale = animatedValues[index].interpolate({
                 inputRange: [0, 1],
-                outputRange: ['10%', '50%']
+                outputRange: [0.2, 1]
               });
               
               return (
@@ -127,9 +128,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
                     <Animated.View style={[
                       styles.activeTabIndicator,
                       { 
-                        width: indicatorWidth,
-                        left: '25%',
-                        right: '25%',
+                        transform: [{ scaleX: indicatorScale }]
                       }
                     ]} />
                   )}

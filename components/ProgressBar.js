@@ -14,7 +14,7 @@ const ProgressBar = ({ progress, total, label }) => {
       toValue: percentage,
       duration: 800,
       easing: Easing.out(Easing.cubic),
-      useNativeDriver: false
+      useNativeDriver: false // Doit être false pour width
     }).start();
   }, [percentage, widthAnim]);
   
