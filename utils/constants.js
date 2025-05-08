@@ -29,6 +29,36 @@ export const CHALLENGE_CATEGORIES = {
   PRODUCTIVITY: { id: 'productivity', name: "Productivité", icon: "timer", color: "#f1c40f" },
   MINDFULNESS: { id: 'mindfulness', name: "Bien-être mental", icon: "leaf", color: "#16a085" },
   CUSTOM: { id: 'custom', name: "Personnalisé", icon: "create", color: "#34495e" },
+  SPORT: {
+    id: 'sport',
+    name: 'Sport',
+    icon: 'fitness',
+    color: '#e74c3c'
+  },
+  CUISINE: {
+    id: 'cuisine',
+    name: 'Cuisine',
+    icon: 'restaurant',
+    color: '#f39c12'
+  },
+  TRAVAIL: {
+    id: 'travail',
+    name: 'Travail',
+    icon: 'briefcase',
+    color: '#3498db'
+  },
+  LECTURE: {
+    id: 'lecture',
+    name: 'Lecture',
+    icon: 'book',
+    color: '#9b59b6'
+  },
+  RELAXATION: {
+    id: 'relaxation',
+    name: 'Relaxation',
+    icon: 'leaf',
+    color: '#27ae60'
+  }
 };
 
 // Types de défis
@@ -37,7 +67,8 @@ export const CHALLENGE_TYPES = {
   DAILY: 'daily',         // Défis quotidiens qui se renouvellent chaque jour
   TIMED: 'timed',         // Défis à durée limitée
   STREAK: 'streak',       // Défis qui demandent une série de complétion consécutive
-  COMMUNITY: 'community'  // Défis de la communauté
+  COMMUNITY: 'community', // Défis de la communauté
+  COMPLETED: 'completed'  // Défis complétés par l'utilisateur
 };
 
 // Clés de stockage pour AsyncStorage

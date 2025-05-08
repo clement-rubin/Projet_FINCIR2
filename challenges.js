@@ -1,3 +1,5 @@
+import { CHALLENGE_TYPES } from './utils/constants';
+
 export const CHALLENGES = [
   {
     id: 1,
@@ -7,7 +9,9 @@ export const CHALLENGES = [
       latitude: 50.6372,
       longitude: 3.0635
     },
-    points: 50
+    points: 50,
+    type: CHALLENGE_TYPES.REGULAR,
+    completed: false
   },
   {
     id: 2,
@@ -17,7 +21,9 @@ export const CHALLENGES = [
       latitude: 50.6372,
       longitude: 3.0635
     },
-    points: 30
+    points: 30,
+    type: CHALLENGE_TYPES.REGULAR,
+    completed: false
   },
   {
     id: 3,
@@ -27,6 +33,22 @@ export const CHALLENGES = [
       latitude: 50.6372,
       longitude: 3.0635
     },
-    points: 40
+    points: 40,
+    type: CHALLENGE_TYPES.REGULAR,
+    completed: false
   }
 ];
+
+// Fonction pour obtenir les défis complétés
+export const getCompletedChallenges = () => {
+  return CHALLENGES.filter(challenge => challenge.completed);
+};
+
+// Fonction pour marquer un défi comme complété
+export const markChallengeAsCompleted = (challengeId) => {
+  const challenge = CHALLENGES.find(c => c.id === challengeId);
+  if (challenge) {
+    challenge.completed = true;
+    challenge.type = CHALLENGE_TYPES.COMPLETED;
+  }
+};

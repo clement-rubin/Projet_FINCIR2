@@ -100,28 +100,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   addTaskForm: {
+    position: 'absolute',
+    left: '5%',
+    right: '5%',
+    top: '15%',
     backgroundColor: COLORS.white,
-    margin: 12,
-    padding: 16,
-    borderRadius: 12,
-    elevation: 3,
-    shadowColor: COLORS.secondary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
+    borderRadius: 25,
+    elevation: 8,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
+    zIndex: 1000,
+  },
+  addTaskFormScroll: {
+    maxHeight: '70%',
+    width: '100%',
+  },
+  addTaskFormContent: {
+    padding: 20,
   },
   formTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 12,
     color: COLORS.textPrimary,
+    marginBottom: 15,
+    textAlign: 'center',
   },
   input: {
     borderWidth: 1,
     borderColor: '#e1e8f0',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
+    borderRadius: 15,
+    padding: 12,
+    marginBottom: 15,
     fontSize: 16,
     backgroundColor: '#f8faff',
   },
@@ -246,7 +257,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
   modalContent: {
     backgroundColor: COLORS.white,
@@ -434,7 +444,71 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textSecondary,
     marginTop: 4,
-  }
+  },
+  categoryContainer: {
+    marginBottom: 16,
+  },
+  categoryLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
+    color: COLORS.textPrimary,
+  },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -4,
+  },
+  categoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    margin: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e1e8f0',
+    backgroundColor: '#f8faff',
+    minWidth: '45%',
+  },
+  categoryButtonActive: {
+    borderColor: COLORS.secondary,
+    backgroundColor: `${COLORS.secondary}20`,
+  },
+  categoryIcon: {
+    marginRight: 8,
+  },
+  categoryText: {
+    fontSize: 13,
+    color: COLORS.textPrimary,
+  },
+  categoryTextActive: {
+    color: COLORS.secondary,
+    fontWeight: '600',
+  },
+  twoColumnsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 8,
+  },
+  columnContainer: {
+    flex: 1,
+    paddingHorizontal: 8,
+  },
+  columnTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    marginBottom: 8,
+    marginTop: 8,
+  },
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    zIndex: 999,
+  },
 });
 
 const TasksScreen = ({ navigation }) => {
@@ -470,6 +544,7 @@ const TasksScreen = ({ navigation }) => {
   // Animation properties
   const slideAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
   const [filterAnims] = useState({
     all: new Animated.Value(filter === 'all' ? 1 : 0.7),
@@ -584,15 +659,14 @@ const TasksScreen = ({ navigation }) => {
       });
     }
     
-    // Filtrer les tâches selon le filtre actuel
+    // Fonction pour filtrer les défis selon le filtre actif
     const filterTask = (task) => {
-      if (filter === 'all') return true;
-      if (filter === 'active') return !task.completed;
       if (filter === 'completed') return task.completed;
-      return true;
+      if (filter === 'active') return !task.completed;
+      return true; // 'all' montre tous les défis
     };
     
-    // Section pour les défis quotidiens (filtrés)
+    // Section pour les défis quotidiens
     const filteredDailyTasks = dailyTasks.filter(filterTask);
     if (filteredDailyTasks.length > 0) {
       sections.push({
@@ -602,7 +676,7 @@ const TasksScreen = ({ navigation }) => {
       });
     }
     
-    // Section pour les défis temporaires (filtrés)
+    // Section pour les défis temporaires
     const filteredTimedTasks = timedTasks.filter(filterTask);
     if (filteredTimedTasks.length > 0) {
       sections.push({
@@ -613,26 +687,22 @@ const TasksScreen = ({ navigation }) => {
     }
     
     // Section pour les défis standards
-    if (regularTasks.length > 0) {
-      // Filtrer selon le filtre actif
-      const filteredRegularTasks = regularTasks.filter(filterTask);
-      
-      if (filter === 'all' || filter === 'active') {
+    const filteredRegularTasks = regularTasks.filter(filterTask);
+    if (filteredRegularTasks.length > 0) {
+      // Si on est dans le filtre "completed", on montre tous les défis complétés dans une seule section
+      if (filter === 'completed') {
+        sections.push({
+          title: "✅ Défis complétés",
+          data: filteredRegularTasks,
+          info: "Historique de tous vos défis complétés"
+        });
+      } else {
+        // Sinon, on sépare les défis actifs et complétés
         const activeRegularTasks = filteredRegularTasks.filter(task => !task.completed);
         if (activeRegularTasks.length > 0) {
           sections.push({
             title: "📝 Mes défis en cours",
             data: activeRegularTasks
-          });
-        }
-      }
-      
-      if (filter === 'all' || filter === 'completed') {
-        const completedRegularTasks = filteredRegularTasks.filter(task => task.completed);
-        if (completedRegularTasks.length > 0) {
-          sections.push({
-            title: "✅ Défis complétés",
-            data: completedRegularTasks
           });
         }
       }
@@ -644,19 +714,81 @@ const TasksScreen = ({ navigation }) => {
   const applyFilter = (filterType, tasksList = tasks) => {
     setFilter(filterType);
     
-    // Mettre à jour les tâches filtrées pour l'affichage
+    // Récupérer toutes les tâches
     const allTasksArray = [...dailyTasks, ...timedTasks, ...tasks];
     
+    // Mettre à jour les tâches filtrées pour l'affichage
+    let filtered;
     if (filterType === 'all') {
-      setFilteredTasks(allTasksArray);
+      filtered = allTasksArray;
     } else if (filterType === 'active') {
-      setFilteredTasks(allTasksArray.filter(task => !task.completed));
+      filtered = allTasksArray.filter(task => !task.completed);
     } else if (filterType === 'completed') {
-      setFilteredTasks(allTasksArray.filter(task => task.completed));
+      filtered = allTasksArray.filter(task => task.completed);
     }
     
-    // Ensuite mettre à jour les sections avec le nouveau filtre
-    organizeTasks(tasks, dailyTasks, timedTasks);
+    setFilteredTasks(filtered);
+    
+    // Mettre à jour les sections avec le nouveau filtre
+    const sections = [];
+    
+    // Section pour les séries si l'utilisateur a une série en cours
+    if (streak.count > 0) {
+      sections.push({
+        title: `🔥 Série de ${streak.count} jour${streak.count > 1 ? 's' : ''}`,
+        data: [],
+        info: `Maintenez votre série en complétant au moins un défi chaque jour. Votre dernière activité: ${new Date(streak.lastCompletionDate).toLocaleDateString()}`
+      });
+    }
+
+    // Filtrer les défis selon le type et le filtre actuel
+    const filterByType = (tasks, type) => {
+      if (filterType === 'all') return tasks;
+      return tasks.filter(task => filterType === 'completed' ? task.completed : !task.completed);
+    };
+
+    // Section pour les défis quotidiens
+    const filteredDailyTasks = filterByType(dailyTasks);
+    if (filteredDailyTasks.length > 0) {
+      sections.push({
+        title: "📅 Défis quotidiens",
+        data: filteredDailyTasks,
+        info: "Ces défis se renouvellent chaque jour. Complétez-les pour maintenir votre série!"
+      });
+    }
+
+    // Section pour les défis temporaires
+    const filteredTimedTasks = filterByType(timedTasks);
+    if (filteredTimedTasks.length > 0) {
+      sections.push({
+        title: "⏱️ Défis à durée limitée",
+        data: filteredTimedTasks,
+        info: "Attention! Ces défis expirent bientôt. Relevez-les avant qu'il ne soit trop tard."
+      });
+    }
+
+    // Section pour les défis standards
+    const filteredRegularTasks = filterByType(tasks);
+    if (filteredRegularTasks.length > 0) {
+      const activeRegularTasks = filteredRegularTasks.filter(task => !task.completed);
+      const completedRegularTasks = filteredRegularTasks.filter(task => task.completed);
+
+      if (filterType !== 'completed' && activeRegularTasks.length > 0) {
+        sections.push({
+          title: "📝 Mes défis en cours",
+          data: activeRegularTasks
+        });
+      }
+
+      if (filterType !== 'active' && completedRegularTasks.length > 0) {
+        sections.push({
+          title: "✅ Défis complétés",
+          data: completedRegularTasks
+        });
+      }
+    }
+
+    setTaskSections(sections);
   };
 
   // Fonction pour animer les filtres lors de la sélection
@@ -713,7 +845,7 @@ const TasksScreen = ({ navigation }) => {
   
   const handleCompleteTask = async (id) => {
     try {
-      // Chercher dans tous les types de défis
+      // Trouver d'abord le défi dans toutes les catégories
       let task = null;
       let taskType = null;
       
@@ -742,99 +874,64 @@ const TasksScreen = ({ navigation }) => {
         }
       }
       
-      // Si la tâche n'est pas trouvée ou déjà complétée, arrêter
       if (!task || task.completed) return;
-      
-      // Récupérer les informations du niveau actuel pour calculer le bonus
+
+      // Marquer immédiatement le défi comme complété dans l'état local
+      const updateTaskLocally = (tasksList, taskId) => {
+        return tasksList.map(t => t.id === taskId ? { ...t, completed: true } : t);
+      };
+
+      if (taskType === 'standard') {
+        setTasks(updateTaskLocally(tasks, id));
+      } else if (taskType === 'daily') {
+        setDailyTasks(updateTaskLocally(dailyTasks, id));
+      } else if (taskType === 'timed') {
+        setTimedTasks(updateTaskLocally(timedTasks, id));
+      }
+
+      // Calculer les points avec le bonus
       const levelInfo = calculateLevel(points);
-      const currentLevel = levelInfo.level;
-      
-      // Calculer les points à ajouter en tenant compte du bonus de niveau
-      const basePoints = task.points;
       const bonusMultiplier = levelInfo.bonusMultiplier;
+      const basePoints = task.points;
       const pointsToAdd = Math.floor(basePoints * bonusMultiplier);
       
-      // Ajouter les points et mettre à jour la tâche selon son type
-      await addPoints(pointsToAdd);
-      
-      let updatedTasks = [...tasks];
-      
-      if (taskType === 'standard') {
-        // Mise à jour des défis standards
-        updatedTasks = await completeTask(id);
-        setTasks(updatedTasks);
-      } else if (taskType === 'daily') {
-        // Mise à jour des défis quotidiens
-        const updatedDailyTasks = dailyTasks.map(t => 
-          t.id === id ? { ...t, completed: true } : t
-        );
-        await AsyncStorage.setItem(DAILY_TASKS_KEY, JSON.stringify(updatedDailyTasks));
-        setDailyTasks(updatedDailyTasks);
-        // Mettre à jour la série quotidienne
+      // Mettre à jour les points et le défi dans la base de données
+      await Promise.all([
+        addPoints(pointsToAdd),
+        completeTask(id)
+      ]);
+
+      // Mettre à jour la série si c'est un défi quotidien
+      if (taskType === 'daily') {
         const updatedStreak = await updateStreak();
         setStreak(updatedStreak);
-      } else if (taskType === 'timed') {
-        // Mise à jour des défis temporaires
-        const updatedTimedTasks = timedTasks.map(t => 
-          t.id === id ? { ...t, completed: true } : t
-        );
-        await AsyncStorage.setItem(TIMED_TASKS_KEY, JSON.stringify(updatedTimedTasks));
-        setTimedTasks(updatedTimedTasks);
       }
-      
-      // Recalculer le niveau après l'ajout des points
+
+      // Mettre à jour l'état avec les nouveaux points
       const newPoints = points + pointsToAdd;
+      setPoints(newPoints);
+
+      // Vérifier le passage de niveau
       const newLevelInfo = calculateLevel(newPoints);
-      
-      // Vérifier si l'utilisateur a monté de niveau
-      if (newLevelInfo.level > currentLevel) {
-        // Récupérer les avantages débloqués pour ce niveau
-        const advantages = newLevelInfo.advantages || [];
-        
-        // Préparer les informations pour l'animation de passage de niveau
+      if (newLevelInfo.level > levelInfo.level) {
         setLevelUpInfo({
           newLevel: newLevelInfo.level,
           previousTitle: levelInfo.title,
           newTitle: newLevelInfo.title,
-          advantages: advantages
+          advantages: newLevelInfo.advantages || []
         });
-        
-        // Mettre à jour les points et le niveau dans l'état
-        setPoints(newPoints);
-        setLevel(newLevelInfo.level);
-        
-        // Afficher l'animation de passage de niveau
-        setTimeout(() => {
-          setShowLevelUpAnimation(true);
-        }, 500);
-      } else {
-        // Si pas de nouveau niveau, afficher le message normal
-        let successMessage = `Félicitations ! Vous avez gagné ${pointsToAdd} points.`;
-        
-        // Ajouter un message sur le bonus si applicable
-        if (bonusMultiplier > 1) {
-          const bonusPoints = pointsToAdd - basePoints;
-          successMessage += `\n(Inclut un bonus de niveau de +${bonusPoints} points)`;
-        }
-        
-        // Animation et feedback
-        Alert.alert(
-          "Défi complété !",
-          successMessage,
-          [{ text: "Super !" }]
-        );
-        
-        // Mettre à jour les points
-        setPoints(newPoints);
+        setShowLevelUpAnimation(true);
       }
-      
-      // Réorganiser tous les défis en sections
-      organizeTasks(updatedTasks, dailyTasks, timedTasks);
-      
-      // Appliquer le filtre actuel à tous les défis
-      const allTasks = [...dailyTasks, ...timedTasks, ...updatedTasks];
+
+      // Réorganiser les sections
+      const allTasks = [
+        ...updateTaskLocally(dailyTasks, id),
+        ...updateTaskLocally(timedTasks, id),
+        ...updateTaskLocally(tasks, id)
+      ];
+      organizeTasks(tasks, dailyTasks, timedTasks);
       applyFilter(filter, allTasks);
-      
+
     } catch (error) {
       console.error("Error completing task:", error);
       Alert.alert("Erreur", "Impossible de compléter ce défi");
@@ -889,6 +986,11 @@ const TasksScreen = ({ navigation }) => {
       Alert.alert("Champ requis", "Veuillez donner un titre à votre défi");
       return;
     }
+
+    if (!selectedCategory) {
+      Alert.alert("Champ requis", "Veuillez sélectionner une catégorie pour votre défi");
+      return;
+    }
     
     const difficultyInfo = DIFFICULTY_LEVELS[difficulty];
     
@@ -899,6 +1001,7 @@ const TasksScreen = ({ navigation }) => {
       points: difficultyInfo.points,
       difficulty: difficulty,
       difficultyLabel: difficultyInfo.name,
+      category: selectedCategory,
       completed: false,
       createdAt: new Date().toISOString(),
     };
@@ -920,6 +1023,7 @@ const TasksScreen = ({ navigation }) => {
       setNewTaskTitle('');
       setNewTaskDescription('');
       setDifficulty('MEDIUM');
+      setSelectedCategory('');
       
       // Fermer le formulaire
       toggleAddTaskForm();
@@ -935,21 +1039,37 @@ const TasksScreen = ({ navigation }) => {
   const toggleAddTaskForm = () => {
     if (showAddTask) {
       // Animation de fermeture
-      Animated.timing(opacityAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start(() => {
+      Animated.parallel([
+        Animated.timing(opacityAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 0.8,
+          useNativeDriver: true,
+          friction: 5,
+          tension: 40
+        })
+      ]).start(() => {
         setShowAddTask(false);
       });
     } else {
-      // Ouvrir le formulaire puis lancer l'animation
       setShowAddTask(true);
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
+      // Animation d'ouverture
+      Animated.parallel([
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          friction: 5,
+          tension: 40
+        })
+      ]).start();
     }
   };
   
@@ -1092,7 +1212,14 @@ const TasksScreen = ({ navigation }) => {
       </Modal>
     );
   };
-  
+
+  const renderSectionHeader = ({ section }) => (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>{section.title}</Text>
+      {section.info && <Text style={styles.sectionInfo}>{section.info}</Text>}
+    </View>
+  );
+
   const handleRateTask = async (taskId, rating) => {
     try {
       const userKey = '@challengr_task_ratings';
@@ -1163,6 +1290,66 @@ const TasksScreen = ({ navigation }) => {
     </View>
   );
 
+  const renderCategorySelector = () => {
+    const categories = [
+      CHALLENGE_CATEGORIES.SPORT,
+      CHALLENGE_CATEGORIES.CUISINE,
+      CHALLENGE_CATEGORIES.TRAVAIL,
+      CHALLENGE_CATEGORIES.LECTURE,
+      CHALLENGE_CATEGORIES.RELAXATION,
+    ];
+
+    return (
+      <View style={styles.categoryContainer}>
+        <Text style={styles.categoryLabel}>Catégorie:</Text>
+        <View style={styles.categoryGrid}>
+          {categories.map((category) => {
+            const isSelected = selectedCategory === category.id;
+            return (
+              <TouchableOpacity
+                key={category.id}
+                style={[
+                  styles.categoryButton,
+                  isSelected && styles.categoryButtonActive,
+                ]}
+                onPress={() => setSelectedCategory(category.id)}
+              >
+                <Icon
+                  name={category.icon}
+                  size={16}
+                  color={isSelected ? category.color : '#666'}
+                  style={styles.categoryIcon}
+                />
+                <Text
+                  style={[
+                    styles.categoryText,
+                    isSelected && styles.categoryTextActive,
+                  ]}
+                >
+                  {category.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+    );
+  };
+
+  const renderTasksByType = () => {
+    return (
+      <SectionList
+        sections={taskSections}
+        renderItem={renderItem}
+        renderSectionHeader={renderSectionHeader}
+        keyExtractor={(item, index) => item.id || index.toString()}
+        contentContainerStyle={styles.tasksList}
+        stickySectionHeadersEnabled={false}
+        showsVerticalScrollIndicator={false}
+      />
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
@@ -1197,41 +1384,58 @@ const TasksScreen = ({ navigation }) => {
         </View>
         
         {showAddTask && (
-          <Animated.View 
-            style={[
-              styles.addTaskForm,
-              {opacity: opacityAnim}
-            ]}
-          >
-            <Text style={styles.formTitle}>Créer un nouveau défi</Text>
-            
-            <TextInput
-              style={styles.input}
-              placeholder="Titre du défi"
-              placeholderTextColor="#999"
-              value={newTaskTitle}
-              onChangeText={setNewTaskTitle}
+          <>
+            <TouchableOpacity 
+              style={styles.backdrop}
+              activeOpacity={1} 
+              onPress={toggleAddTaskForm}
             />
-            
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder="Description (optionnelle)"
-              placeholderTextColor="#999"
-              value={newTaskDescription}
-              onChangeText={setNewTaskDescription}
-              multiline
-              numberOfLines={3}
-            />
-            
-            {renderDifficultySelector()}
-            
-            <TouchableOpacity
-              style={styles.submitButton}
-              onPress={handleAddTask}
+            <Animated.View 
+              style={[
+                styles.addTaskForm,
+                {
+                  opacity: opacityAnim,
+                  transform: [
+                    { scale: scaleAnim }
+                  ]
+                }
+              ]}
             >
-              <Text style={styles.submitButtonText}>Ajouter le défi</Text>
-            </TouchableOpacity>
-          </Animated.View>
+              <ScrollView style={styles.addTaskFormScroll}>
+                <View style={styles.addTaskFormContent}>
+                  <Text style={styles.formTitle}>Créer un nouveau défi</Text>
+                  
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Titre du défi"
+                    placeholderTextColor="#999"
+                    value={newTaskTitle}
+                    onChangeText={setNewTaskTitle}
+                  />
+                  
+                  <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="Description (optionnelle)"
+                    placeholderTextColor="#999"
+                    value={newTaskDescription}
+                    onChangeText={setNewTaskDescription}
+                    multiline
+                    numberOfLines={3}
+                  />
+                  
+                  {renderCategorySelector()}
+                  {renderDifficultySelector()}
+                  
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={handleAddTask}
+                  >
+                    <Text style={styles.submitButtonText}>Ajouter le défi</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            </Animated.View>
+          </>
         )}
         
         <View style={styles.filterContainer}>
@@ -1271,64 +1475,7 @@ const TasksScreen = ({ navigation }) => {
             </Animated.View>
           </View>
         ) : (
-          <SectionList
-            sections={taskSections}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item, index, section, separators }) => {
-              const difficultyInfo = DIFFICULTY_LEVELS[item.difficulty] || DIFFICULTY_LEVELS.MEDIUM;
-              
-              // Calcul de l'index global en tenant compte des sections précédentes
-              const sectionIndex = taskSections.indexOf(section);
-              let globalIndex = index;
-              
-              // Ajouter les longueurs des sections précédentes
-              for (let i = 0; i < sectionIndex; i++) {
-                globalIndex += taskSections[i].data.length;
-              }
-              
-              return (
-                <Task
-                  title={item.title}
-                  description={item.description}
-                  points={item.points}
-                  difficulty={item.difficultyLabel || difficultyInfo.name}
-                  difficultyColor={difficultyInfo.color}
-                  completed={item.completed}
-                  type={item.type}
-                  category={item.category}
-                  expiresAt={item.expiresAt}
-                  streak={streak?.count}
-                  onComplete={() => handleCompleteTask(item.id)}
-                  onDelete={() => handleDeleteTask(item.id)}
-                  onRate={(rating) => handleRateTask(item.id, rating)}
-                  userRating={taskRatings[item.id]}
-                  index={globalIndex} // Passage de l'index global pour l'animation en cascade
-                />
-              );
-            }}
-            renderSectionHeader={({ section }) => (
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>{section.title}</Text>
-                {section.info && (
-                  <Text style={styles.sectionInfo}>{section.info}</Text>
-                )}
-              </View>
-            )}
-            stickySectionHeadersEnabled={false}
-            contentContainerStyle={styles.tasksList}
-            ListEmptyComponent={() => (
-              <View style={styles.emptyContainer}>
-                <Icon name="list" size={60} color="#d1d8e0" />
-                <Text style={styles.emptyText}>Aucun défi disponible</Text>
-                <TouchableOpacity 
-                  style={styles.emptyActionButton}
-                  onPress={() => toggleAddTaskForm()}
-                >
-                  <Text style={styles.emptyActionButtonText}>Créer un défi</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          />
+          renderTasksByType()
         )}
         
         {renderLevelInfo()}

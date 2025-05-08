@@ -73,54 +73,52 @@ const Task = ({
     }
   };
   
-  // Style spécifique selon le type de défi
+  // Style spécifique selon le type de défi et la catégorie
   const getTaskTypeStyle = () => {
-    switch (type) {
-      case CHALLENGE_TYPES.DAILY:
-        return {
-          borderLeftWidth: 5,
-          borderLeftColor: '#f39c12',
-          backgroundColor: '#fffbef'
-        };
-      case CHALLENGE_TYPES.TIMED:
-        return {
-          borderLeftWidth: 5,
-          borderLeftColor: '#e74c3c',
-          backgroundColor: '#fef5f5'
-        };
-      case CHALLENGE_TYPES.STREAK:
-        return {
-          borderLeftWidth: 5,
-          borderLeftColor: '#9b59b6',
-          backgroundColor: '#f9f0fc'
-        };
-      case CHALLENGE_TYPES.COMMUNITY:
-        return {
-          borderLeftWidth: 5,
-          borderLeftColor: '#27ae60',
-          backgroundColor: '#f0fcf5'
-        };
-      default:
-        return completed ? {
-          backgroundColor: '#e8f5e9',
-          borderLeftWidth: 5,
-          borderLeftColor: '#4caf50',
-        } : {};
+    const baseStyle = {
+      borderLeftWidth: 5,
+    };
+
+    if (completed) {
+      return {
+        ...baseStyle,
+        backgroundColor: '#e8f5e9',
+        borderLeftColor: '#4caf50',
+      };
     }
+
+    // Si c'est un défi quotidien, on garde le style orange
+    if (type === CHALLENGE_TYPES.DAILY) {
+      return {
+        ...baseStyle,
+        borderLeftColor: '#f39c12',
+        backgroundColor: '#fffbef'
+      };
+    }
+
+    // Pour les défis standards, on utilise la couleur de la catégorie
+    const categoryInfo = getCategoryInfo();
+    if (categoryInfo) {
+      return {
+        ...baseStyle,
+        borderLeftColor: categoryInfo.color,
+        backgroundColor: `${categoryInfo.color}10`, // Très légère teinte de la couleur de la catégorie
+      };
+    }
+
+    // Style par défaut si pas de catégorie
+    return baseStyle;
   };
   
   // Récupérer l'icône et la couleur de la catégorie (si définie)
   const getCategoryInfo = () => {
     if (!category) return null;
     
-    let categoryInfo = null;
-    Object.values(CHALLENGE_CATEGORIES).forEach(cat => {
-      if (cat.id === category.toLowerCase() || cat.id === category) {
-        categoryInfo = cat;
-      }
-    });
+    const categoryKey = Object.keys(CHALLENGE_CATEGORIES).find(
+      key => CHALLENGE_CATEGORIES[key].id.toLowerCase() === category.toLowerCase()
+    );
     
-    return categoryInfo || null;
+    return categoryKey ? CHALLENGE_CATEGORIES[categoryKey] : null;
   };
   
   const categoryInfo = getCategoryInfo();
@@ -130,14 +128,20 @@ const Task = ({
   const [rating, setRating] = useState(0);
 
   const handleComplete = () => {
+    // Valider directement le défi
+    onComplete();
+    // Afficher l'option de notation
     setShowRating(true);
   };
 
   const handleRateSubmit = () => {
-    onComplete();
     if (onRate) {
       onRate(rating);
     }
+    setShowRating(false);
+  };
+
+  const handleSkipRating = () => {
     setShowRating(false);
   };
 
@@ -254,16 +258,24 @@ const Task = ({
         
         {showRating && (
           <View style={styles.ratingContainer}>
-            <Text style={styles.ratingText}>Notez la difficulté de ce défi :</Text>
+            <Text style={styles.ratingText}>Comment avez-vous trouvé ce défi ?</Text>
             <View style={styles.starsContainer}>
               {renderStars()}
             </View>
-            <TouchableOpacity 
-              style={styles.submitRatingButton}
-              onPress={handleRateSubmit}
-            >
-              <Text style={styles.submitRatingText}>Valider</Text>
-            </TouchableOpacity>
+            <View style={styles.ratingButtons}>
+              <TouchableOpacity 
+                style={[styles.submitRatingButton, styles.skipButton]}
+                onPress={handleSkipRating}
+              >
+                <Text style={styles.skipButtonText}>Passer</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.submitRatingButton}
+                onPress={handleRateSubmit}
+              >
+                <Text style={styles.submitRatingText}>Valider la note</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -456,6 +468,20 @@ const styles = StyleSheet.create({
   completedStarsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  ratingButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 10,
+  },
+  skipButton: {
+    backgroundColor: '#f8f8f8',
+    borderColor: '#ddd',
+    borderWidth: 1,
+  },
+  skipButtonText: {
+    color: '#666',
   }
 });
 
