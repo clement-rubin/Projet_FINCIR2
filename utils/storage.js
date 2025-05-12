@@ -99,11 +99,8 @@ export const createTask = async (task) => {
       calendarEventId: null  // Ajout du champ pour l'ID d'événement calendrier
     };
     
-    // Essayer d'ajouter la tâche au calendrier
-    const eventId = await addTaskToCalendar(newTask);
-    if (eventId) {
-      newTask.calendarEventId = eventId;
-    }
+    // Remarque: Nous n'ajoutons plus automatiquement la tâche au calendrier ici
+    // Cette logique est gérée dans TasksScreen.js
     
     const updatedTasks = [...tasks, newTask];
     await saveTasks(updatedTasks);
@@ -561,11 +558,8 @@ export const createTimedTask = async (task) => {
       newTimedTask.expiresAt = expiresAt.toISOString();
     }
     
-    // Essayer d'ajouter la tâche au calendrier
-    const eventId = await addTaskToCalendar(newTimedTask);
-    if (eventId) {
-      newTimedTask.calendarEventId = eventId;
-    }
+    // Remarque: Nous n'ajoutons plus automatiquement la tâche au calendrier ici
+    // Cette logique est gérée dans TasksScreen.js
     
     const updatedTimedTasks = [...timedTasks, newTimedTask];
     const userKey = await getUserSpecificKey(TIMED_TASKS_KEY);
