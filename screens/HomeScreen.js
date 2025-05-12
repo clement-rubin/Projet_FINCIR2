@@ -29,6 +29,7 @@ import { retrievePoints, retrieveDailyTasks } from '../utils/storage';
 import ProgressBar from '../components/ProgressBar';
 import Icon, { COLORS } from '../components/common/Icon';
 import { SCREEN, calculateLevel, generateUniqueId } from '../utils/constants';
+import { addTaskToCalendar } from '../services/calendarService';
 
 const { width, height } = Dimensions.get('window');
 
