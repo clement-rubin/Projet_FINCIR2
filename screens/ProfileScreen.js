@@ -103,7 +103,7 @@ const BADGES = {
   }
 };
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }) => {
   // État du profil
   const [totalPoints, setTotalPoints] = useState(0);
   const [level, setLevel] = useState(1);
@@ -892,6 +892,14 @@ const ProfileScreen = () => {
               <Text style={styles.logoutText}>Déconnexion</Text>
             </TouchableOpacity>
           </View>
+          
+          <TouchableOpacity 
+            style={styles.aboutButton}
+            onPress={() => navigation.navigate('AboutUs')}
+          >
+            <Icon name="information-circle-outline" size={20} color={COLORS.textSecondary} style={styles.actionIcon} />
+            <Text style={styles.aboutButtonText}>À propos de ChallengR</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
       
@@ -1472,6 +1480,22 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     color: COLORS.error,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  aboutButton: {
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e6e9ed',
+    marginTop: 16,
+  },
+  aboutButtonText: {
+    color: COLORS.textSecondary,
     fontSize: 15,
     fontWeight: '600',
   },

@@ -14,6 +14,7 @@ import TasksScreen from '../screens/TasksScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import FriendsScreen from '../screens/FriendsScreen';
 import ConversationScreen from '../screens/ConversationScreen';
+import AboutUsScreen from '../screens/AboutUs';
 import Icon, { COLORS } from '../components/common/Icon';
 
 const Stack = createStackNavigator();
@@ -261,6 +262,38 @@ export default function AppNavigator() {
                 <Ionicons name="arrow-back" size={24} color={COLORS.white} />
               </View>
             ),
+            cardStyleInterpolator: ({ current, layouts }) => {
+              return {
+                cardStyle: {
+                  transform: [
+                    {
+                      translateY: current.progress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [layouts.screen.height, 0],
+                      }),
+                    },
+                  ],
+                  opacity: current.progress,
+                  shadowOpacity: current.progress.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0, 0.3, 0.7],
+                  }),
+                },
+                overlayStyle: {
+                  opacity: current.progress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 0.5],
+                  }),
+                },
+              };
+            },
+          }}
+        />
+        <Stack.Screen 
+          name="AboutUs" 
+          component={AboutUsScreen} 
+          options={{
+            headerShown: false,
             cardStyleInterpolator: ({ current, layouts }) => {
               return {
                 cardStyle: {
