@@ -14,10 +14,11 @@ import {
   Modal,
   TextInput,
   KeyboardAvoidingView,
-  TouchableWithoutFeedback, 
+  TouchableWithoutFeedback,
   Keyboard,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  Share
 } from 'react-native';
 import * as ReactNative from 'react-native';
 const Platform = ReactNative.Platform;
@@ -39,7 +40,7 @@ const BADGES = {
     description: "Vous avez relevé votre premier défi!",
     icon: "trophy",
     color: COLORS.secondary,
-    unlockedAt: 1 // Nombre de défis complétés pour débloquer
+    unlockedAt: 1 // Nombre de défis complétées pour débloquer
   },
   FIVE_CHALLENGES: {
     name: "Engagé",
@@ -62,48 +63,10 @@ const BADGES = {
     icon: "calendar-check",
     color: COLORS.error,
     locked: true // Toujours verrouillé pour la démo
-  },
-  // Nouveaux badges
-  TEN_CHALLENGES: {
-    name: "Déterminé",
-    description: "Vous avez complété 10 défis!",
-    icon: "fire",
-    color: "#E67E22", // Orange foncé
-    unlockedAt: 10
-  },
-  TWENTY_CHALLENGES: {
-    name: "Champion",
-    description: "Vous avez complété 20 défis!",
-    icon: "medal",
-    color: "#8E44AD", // Violet
-    unlockedAt: 20
-  },
-  LEVEL_10: {
-    name: "Expert",
-    description: "Vous avez atteint le niveau 10!",
-    icon: "crown",
-    color: "#F1C40F", // Jaune doré
-    unlockedAt: 0,
-    levelRequired: 10
-  },
-  HARD_CHALLENGE: {
-    name: "Intrépide",
-    description: "Complétez 3 défis difficiles",
-    icon: "mountain",
-    color: "#D35400", // Orange brûlé
-    unlockedAt: 3,
-    specialRequirement: "difficile" // À implémenter dans la logique
-  },
-  EARLY_ADOPTER: {
-    name: "Pionnier",
-    description: "Parmi les premiers utilisateurs de l'application",
-    icon: "rocket",
-    color: "#16A085", // Vert turquoise
-    specialRequirement: "earlyAdopter"
   }
 };
 
-const ProfileScreen = ({ navigation }) => {
+const ProfileScreen = () => {
   // État du profil
   const [totalPoints, setTotalPoints] = useState(0);
   const [level, setLevel] = useState(1);
@@ -264,12 +227,7 @@ const ProfileScreen = ({ navigation }) => {
       const unlockedBadges = [
         { ...BADGES.FIRST_CHALLENGE, unlocked: completedCount >= BADGES.FIRST_CHALLENGE.unlockedAt },
         { ...BADGES.FIVE_CHALLENGES, unlocked: completedCount >= BADGES.FIVE_CHALLENGES.unlockedAt },
-        { ...BADGES.TEN_CHALLENGES, unlocked: completedCount >= BADGES.TEN_CHALLENGES.unlockedAt },
-        { ...BADGES.TWENTY_CHALLENGES, unlocked: completedCount >= BADGES.TWENTY_CHALLENGES.unlockedAt },
         { ...BADGES.LEVEL_5, unlocked: levelInfo.level >= BADGES.LEVEL_5.levelRequired },
-        { ...BADGES.LEVEL_10, unlocked: levelInfo.level >= BADGES.LEVEL_10.levelRequired },
-        { ...BADGES.HARD_CHALLENGE, unlocked: false }, // Implémenter la logique pour les défis difficiles plus tard
-        { ...BADGES.EARLY_ADOPTER, unlocked: true }, // Pour démonstration, on considère l'utilisateur comme un early adopter
         { ...BADGES.CONSISTENT, unlocked: !BADGES.CONSISTENT.locked }
       ];
       
@@ -379,31 +337,34 @@ const ProfileScreen = ({ navigation }) => {
   
   const selectFromGallery = async () => {
     try {
-        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-        if (permissionResult.granted === false) {
-            Alert.alert("Permission requise", "Vous devez autoriser l'accès à la galerie pour changer votre photo");
-            return;
-        }
-
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
+      // Demande les permissions pour accéder à la galerie
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert("Permission requise", "Vous devez autoriser l'accès à la galerie pour changer votre photo");
+        return;
+      }
+      
+      // Lance le sélecteur d'image
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      
+      if (!result.canceled) {
+        // Met à jour l'image dans le formulaire d'édition
+        setEditedProfile({
+          ...editedProfile,
+          profileImage: result.assets[0].uri
         });
-
-        if (!result.canceled) {
-            setEditedProfile({
-                ...editedProfile,
-                profileImage: result.assets[0].uri
-            });
-        }
+      }
     } catch (error) {
-        console.error("Erreur lors de la sélection d'image:", error);
-        Alert.alert("Erreur", "Impossible de sélectionner cette image");
+      console.error("Erreur lors de la sélection d'image:", error);
+      Alert.alert("Erreur", "Impossible de sélectionner cette image");
     }
-};
+  };
   
   const handlePhotoCapture = (photoUri) => {
     // Met à jour l'image dans le formulaire d'édition
@@ -644,6 +605,47 @@ const ProfileScreen = ({ navigation }) => {
     return levelInfo.pointsForNextLevel;
   };
 
+  const handleShareProfile = async () => {
+    // Afficher un indicateur de chargement
+    setIsLoading(true);
+    try {
+      console.log("Tentative de partage de profil...");
+      
+      // Créer un contenu de partage plus simple pour garantir la compatibilité
+      const shareContent = {
+        message: `🌟 Découvrez mon profil sur l'application Défis! 🌟\n\nUtilisateur: ${userProfile.username}\nNiveau: ${level} (${getUserTitle()})\nPoints: ${totalPoints}\nDéfis complétés: ${completedTasks}\n\nRejoignez-moi et relevons des défis ensemble!`,
+        title: "Mon Profil de Défis" // Pour les plateformes Android
+      };
+      
+      console.log("Contenu de partage préparé:", shareContent);
+      
+      // Utilisation d'un bloc try/catch spécifique pour l'appel Share.share
+      try {
+        const result = await Share.share(shareContent);
+        
+        if (result.action === Share.sharedAction) {
+          console.log("Profil partagé avec succès");
+          Alert.alert("Succès", "Votre profil a été partagé avec succès!");
+        } else if (result.action === Share.dismissedAction) {
+          console.log("Partage annulé par l'utilisateur");
+        }
+      } catch (shareError) {
+        console.error("Erreur spécifique au partage:", shareError);
+        throw shareError; // Remonter l'erreur pour la traiter dans le bloc catch principal
+      }
+    } catch (error) {
+      console.error("Erreur lors du partage du profil:", error);
+      Alert.alert(
+        "Erreur de partage", 
+        "Impossible de partager votre profil. " + 
+        (error.message ? `Erreur: ${error.message}` : "Veuillez réessayer.")
+      );
+    } finally {
+      // S'assurer que l'indicateur de chargement est toujours désactivé
+      setIsLoading(false);
+    }
+  };
+
   if (isLoading && !userProfile.username) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -842,16 +844,7 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.secondaryActionsContainer}>
             <TouchableOpacity 
               style={styles.secondaryActionButton}
-              onPress={() => {
-                Alert.alert(
-                  "Partager le profil",
-                  "Partagez votre profil avec vos amis",
-                  [
-                    { text: "Annuler", style: "cancel" },
-                    { text: "Partager", onPress: () => console.log("Partage du profil") }
-                  ]
-                );
-              }}
+              onPress={handleShareProfile}
             >
               <Icon name="share-social-outline" size={20} color={COLORS.secondary} style={styles.actionIcon} />
               <Text style={styles.secondaryActionText}>Partager</Text>
@@ -892,14 +885,6 @@ const ProfileScreen = ({ navigation }) => {
               <Text style={styles.logoutText}>Déconnexion</Text>
             </TouchableOpacity>
           </View>
-          
-          <TouchableOpacity 
-            style={styles.aboutButton}
-            onPress={() => navigation.navigate('AboutUs')}
-          >
-            <Icon name="information-circle-outline" size={20} color={COLORS.textSecondary} style={styles.actionIcon} />
-            <Text style={styles.aboutButtonText}>À propos de ChallengR</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
       
@@ -1480,22 +1465,6 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     color: COLORS.error,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  aboutButton: {
-    backgroundColor: COLORS.background,
-    borderRadius: 12,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e6e9ed',
-    marginTop: 16,
-  },
-  aboutButtonText: {
-    color: COLORS.textSecondary,
     fontSize: 15,
     fontWeight: '600',
   },
