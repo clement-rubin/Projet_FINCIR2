@@ -37,27 +37,54 @@ export const getOrCreateChallengrCalendar = async () => {
       }
     }
 
-    // Créer un nouveau calendrier
-    const defaultCalendarSource = Platform.OS === 'ios'
+    // Créer un objet source par défaut selon la plateforme
+    let defaultCalendarSource = Platform.OS === 'ios'
       ? await getDefaultCalendarSource()
-      : { isLocalAccount: true, name: 'ChallengR' };
+      : { isLocalAccount: true, name: 'ChallengR', id: 'local' };
+      
+    // Assurer que l'objet source est valide
+    if (!defaultCalendarSource || typeof defaultCalendarSource !== 'object') {
+      defaultCalendarSource = { isLocalAccount: true, name: 'ChallengR', id: 'local' };
+    }
+    
+    // Assurer que l'ID de la source est défini
+    if (!defaultCalendarSource.id) {
+      defaultCalendarSource.id = 'local';
+    }
 
-    const newCalendar = await Calendar.createCalendarAsync({
+    const calendarOptions = {
       title: 'ChallengR',
       color: COLORS.primary,
       entityType: Calendar.EntityTypes.EVENT,
-      sourceId: defaultCalendarSource.id,
-      source: defaultCalendarSource,
-      name: 'challengr',
+      name: Platform.OS === 'android' ? 'ChallengR' : 'challengr',
       ownerAccount: 'personal',
       accessLevel: Calendar.CalendarAccessLevel.OWNER,
-    });
+    };
+
+    // Ajouter les propriétés spécifiques à la plateforme
+    if (Platform.OS === 'ios') {
+      calendarOptions.sourceId = defaultCalendarSource.id;
+      calendarOptions.source = defaultCalendarSource;
+    } else {
+      // Pour Android
+      calendarOptions.sourceId = defaultCalendarSource.id;
+      // Pas besoin d'ajouter source sur Android
+    }
+
+    console.log('Création du calendrier avec options:', JSON.stringify(calendarOptions));
+    
+    const newCalendar = await Calendar.createCalendarAsync(calendarOptions);
+    console.log('Calendrier créé avec ID:', newCalendar);
 
     // Enregistrer l'ID du nouveau calendrier
     await AsyncStorage.setItem(CALENDAR_ID_KEY, newCalendar);
     return newCalendar;
   } catch (error) {
     console.error('Erreur lors de la création du calendrier:', error);
+    Alert.alert(
+      "Erreur calendrier", 
+      "Impossible de créer le calendrier: " + error.message
+    );
     return null;
   }
 };
@@ -66,9 +93,31 @@ export const getOrCreateChallengrCalendar = async () => {
  * Obtient la source du calendrier par défaut sur iOS
  */
 const getDefaultCalendarSource = async () => {
-  const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
-  const defaultCalendars = calendars.filter(cal => cal.source.name === 'Default');
-  return defaultCalendars[0].source;
+  try {
+    const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+    
+    // Filtrer les calendriers qui ont une source valide
+    const validCalendars = calendars.filter(cal => cal && cal.source);
+    
+    if (validCalendars.length === 0) {
+      // Aucun calendrier avec source valide trouvé
+      return { isLocalAccount: true, name: 'Local', id: 'local' };
+    }
+    
+    // Essayer de trouver un calendrier par défaut
+    const defaultCalendars = validCalendars.filter(cal => cal.source.name === 'Default');
+    
+    if (defaultCalendars.length > 0) {
+      return defaultCalendars[0].source;
+    }
+    
+    // Si aucun calendrier par défaut n'est trouvé, utiliser le premier calendrier disponible
+    return validCalendars[0].source;
+  } catch (error) {
+    console.error('Erreur lors de la récupération de la source du calendrier:', error);
+    // Retourner un objet source par défaut en cas d'erreur
+    return { isLocalAccount: true, name: 'Local', id: 'local' };
+  }
 };
 
 /**

@@ -1155,19 +1155,17 @@ const TasksScreen = ({ navigation }) => {
       difficulty: difficulty,
       difficultyLabel: difficultyInfo.name,
       category: selectedCategory,
-      addToCalendar: addToCalendar // Ajout de l'option de calendrier
     };
     
     try {
-      // Créer le défi sans l'ajouter au calendrier via createTask (nous le ferons manuellement ensuite)
+      // Créer le défi dans la base de données
       const createdTask = await createTask(newTask);
       
       if (!createdTask) {
         throw new Error("Échec de la création du défi");
       }
 
-      // Si l'option d'ajout au calendrier est activée, ajouter manuellement le défi au calendrier
-      // avec la date personnalisée sélectionnée par l'utilisateur
+      // Ajouter au calendrier uniquement si l'option est activée
       if (addToCalendar) {
         const eventId = await addTaskToCalendar(createdTask, selectedDate);
         if (eventId) {
@@ -1184,6 +1182,7 @@ const TasksScreen = ({ navigation }) => {
         }
       }
       
+      // Mettre à jour l'état local
       const updatedTasks = [...tasks, createdTask];
       setTasks(updatedTasks);
       
