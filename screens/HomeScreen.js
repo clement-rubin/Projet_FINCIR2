@@ -16,7 +16,8 @@ import {
   Easing,
   TouchableWithoutFeedback,
   Modal,
-  Linking
+  Linking,
+  TextInput // Add this import
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -597,11 +598,35 @@ export default function HomeScreen({ navigation }) {
   };
 
   // Gérer l'ouverture de la modal de carte
-  const handleOpenMapModal = () => {
+  const handleOpenMapModal = async () => {
     if (locationPermissionStatus !== 'granted') {
-      requestLocationPermission();
-    } else {
+      await requestLocationPermission();
+    }
+    if (locationPermissionStatus === 'granted') {
+      if (!location) {
+        try {
+          const currentLocation = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          setLocation(currentLocation);
+          loadNearbyChallenges(currentLocation.coords);
+        } catch (error) {
+          console.error('Erreur lors de la récupération de la localisation:', error);
+          Alert.alert(
+            "Erreur",
+            "Impossible de récupérer votre position. Veuillez réessayer.",
+            [{ text: "OK" }]
+          );
+          return;
+        }
+      }
       setShowMapModal(true);
+    } else {
+      Alert.alert(
+        "Localisation requise",
+        "Pour accéder à la carte, vous devez autoriser l'accès à votre position.",
+        [{ text: "OK" }]
+      );
     }
   };
 
@@ -833,38 +858,63 @@ export default function HomeScreen({ navigation }) {
     );
   };
 
-  // Function to handle adding a new challenge
-  const handleAddChallenge = async (coordinate) => {
+  // State for new activity details
+  const [newActivity, setNewActivity] = useState({
+    title: "Nouvelle activité",
+    description: "",
+    coordinate: { latitude: 0, longitude: 0 }, // Initialize with default coordinates
+  });
+
+  // State for managing selected point details
+  const [selectedPoint, setSelectedPoint] = useState(null);
+
+  // Function to handle selecting a point (existing or new)
+  const handleSelectPoint = (point) => {
+    setSelectedPoint(point);
+  };
+
+  // Function to handle saving changes to a point
+  const handleSavePoint = async () => {
+    if (!selectedPoint) return;
+
     try {
-      const newChallenge = {
-        id: generateUniqueId(),
-        title: "Nouveau défi",
-        description: "Décrivez votre défi ici",
-        points: 10,
-        difficulty: "EASY",
-        category: "CUSTOM",
-        latitude: coordinate.latitude,
-        longitude: coordinate.longitude,
-        distance: 0, // Distance is irrelevant for custom challenges
-      };
+      const updatedChallenges = nearbyChallenges.map((challenge) =>
+        challenge.id === selectedPoint.id ? selectedPoint : challenge
+      );
+      setNearbyChallenges(updatedChallenges);
 
-      // Add the new challenge to the list of nearby challenges
-      setNearbyChallenges((prevChallenges) => [...prevChallenges, newChallenge]);
+      // Save updated challenges to AsyncStorage if it's a custom point
+      if (selectedPoint.category === "CUSTOM") {
+        await AsyncStorage.setItem('@custom_challenges', JSON.stringify(updatedChallenges));
+      }
 
-      // Optionally save the new challenge to AsyncStorage
-      const savedChallenges = await AsyncStorage.getItem('@custom_challenges');
-      const challenges = savedChallenges ? JSON.parse(savedChallenges) : [];
-      challenges.push(newChallenge);
-      await AsyncStorage.setItem('@custom_challenges', JSON.stringify(challenges));
-
-      Alert.alert("Succès", "Défi ajouté à la carte !");
+      Alert.alert("Succès", "Les modifications ont été enregistrées !");
+      setSelectedPoint(null);
     } catch (error) {
-      console.error("Erreur lors de l'ajout du défi :", error);
-      Alert.alert("Erreur", "Impossible d'ajouter le défi.");
+      console.error("Erreur lors de la sauvegarde du point :", error);
+      Alert.alert("Erreur", "Impossible de sauvegarder les modifications.");
     }
   };
 
-  // Load custom challenges from AsyncStorage
+  // Function to navigate to a point's location
+  const navigateToPoint = (point) => {
+    if (!point) return;
+
+    const scheme = Platform.OS === 'ios' ? 'maps:' : 'geo:';
+    const url = `${scheme}0,0?q=${point.latitude},${point.longitude}(${point.title})`;
+
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(url);
+        } else {
+          Alert.alert("Erreur", "Impossible d'ouvrir l'application de cartographie.");
+        }
+      })
+      .catch((err) => console.error("Erreur lors de l'ouverture de la carte :", err));
+  };
+
+  // Charger les défis personnalisés depuis AsyncStorage
   const loadCustomChallenges = async () => {
     try {
       const savedChallenges = await AsyncStorage.getItem('@custom_challenges');
@@ -883,6 +933,43 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     loadCustomChallenges();
   }, []);
+
+  // Function to handle adding a new challenge
+  const handleAddChallenge = async () => {
+    if (!newActivity.coordinate) {
+      Alert.alert("Erreur", "Veuillez sélectionner un emplacement sur la carte.");
+      return;
+    }
+
+    try {
+      const newChallenge = {
+        id: generateUniqueId(),
+        title: newActivity.title,
+        description: newActivity.description || "Description de l'activité",
+        points: 10,
+        difficulty: "EASY",
+        category: "CUSTOM",
+        latitude: newActivity.coordinate.latitude,
+        longitude: newActivity.coordinate.longitude,
+        distance: 0, // Distance is irrelevant for custom challenges
+      };
+
+      // Add the new challenge to the list of nearby challenges
+      setNearbyChallenges((prevChallenges) => [...prevChallenges, newChallenge]);
+
+      // Optionally save the new challenge to AsyncStorage
+      const savedChallenges = await AsyncStorage.getItem('@custom_challenges');
+      const challenges = savedChallenges ? JSON.parse(savedChallenges) : [];
+      challenges.push(newChallenge);
+      await AsyncStorage.setItem('@custom_challenges', JSON.stringify(challenges));
+
+      Alert.alert("Succès", "Nouvelle activité ajoutée à la carte !");
+      setNewActivity({ title: "Nouvelle activité", description: "", coordinate: null });
+    } catch (error) {
+      console.error("Erreur lors de l'ajout de l'activité :", error);
+      Alert.alert("Erreur", "Impossible d'ajouter l'activité.");
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -1277,24 +1364,7 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {!location ? (
-            <View style={styles.locationLoadingContainer}>
-              <Icon name="location" size={60} color={COLORS.primary} style={styles.locationIcon} />
-              <Text style={styles.locationText}>
-                {locationPermissionStatus === 'granted' 
-                  ? 'Récupération de votre position...' 
-                  : 'Autorisation de localisation requise'}
-              </Text>
-              {locationPermissionStatus !== 'granted' && (
-                <TouchableOpacity 
-                  style={styles.authLocationButton}
-                  onPress={requestLocationPermission}
-                >
-                  <Text style={styles.authLocationButtonText}>Autoriser la localisation</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          ) : (
+          {location ? (
             <View style={styles.mapContentContainer}>
               <MapView
                 style={styles.map}
@@ -1306,9 +1376,14 @@ export default function HomeScreen({ navigation }) {
                 }}
                 showsUserLocation={true}
                 showsMyLocationButton={true}
-                onLongPress={(e) => handleAddChallenge(e.nativeEvent.coordinate)}
+                onPress={(e) =>
+                  setNewActivity((prev) => ({
+                    ...prev,
+                    coordinate: e.nativeEvent.coordinate,
+                  }))
+                }
               >
-                {/* Marqueur pour chaque défi à proximité */}
+                {/* Markers for nearby challenges */}
                 {nearbyChallenges.map((challenge) => (
                   <Marker
                     key={challenge.id}
@@ -1318,13 +1393,7 @@ export default function HomeScreen({ navigation }) {
                     }}
                     title={challenge.title}
                     description={challenge.description}
-                    onPress={() => {
-                      if (selectedChallenge?.id !== challenge.id) {
-                        setSelectedChallenge(challenge);
-                        const routeDetails = calculateRouteInfo(challenge);
-                        setRouteInfo(routeDetails);
-                      }
-                    }}
+                    onPress={() => handleSelectPoint(challenge)}
                   >
                     <View style={[styles.challengeMarker, getCategoryStyle(challenge.category)]}>
                       <Icon
@@ -1335,45 +1404,117 @@ export default function HomeScreen({ navigation }) {
                     </View>
                   </Marker>
                 ))}
+
+                {/* Marker for the new activity */}
+                {newActivity.coordinate && (
+                  <Marker
+                    coordinate={newActivity.coordinate}
+                    pinColor="blue"
+                    title={newActivity.title}
+                    description={newActivity.description || "Description de l'activité"}
+                    onPress={() =>
+                      handleSelectPoint({
+                        ...newActivity,
+                        id: generateUniqueId(),
+                        category: "CUSTOM",
+                      })
+                    }
+                  />
+                )}
               </MapView>
-              
-              {/* Afficher les informations de route si un défi est sélectionné */}
-              {selectedChallenge && routeInfo && (
-                <View style={styles.routeInfoContainer}>
-                  <View style={styles.routeInfoHeader}>
-                    <Text style={styles.routeInfoTitle}>Direction vers: {selectedChallenge.title}</Text>
-                    <TouchableOpacity onPress={() => setSelectedChallenge(null)} style={styles.closeRouteButton}>
-                      <Icon name="close" size={18} color={COLORS.white} />
-                    </TouchableOpacity>
-                  </View>
-                  
-                  <View style={styles.routeInfoDetails}>
-                    <View style={styles.routeInfoItem}>
-                      <Icon name="walk" size={22} color={COLORS.primary} />
-                      <Text style={styles.routeInfoText}>{routeInfo.distance.toFixed(1)} km</Text>
-                    </View>
-                    <View style={styles.routeInfoItem}>
-                      <Icon name="time" size={22} color={COLORS.secondary} />
-                      <Text style={styles.routeInfoText}>
-                        {routeInfo.duration < 60 
-                          ? `${routeInfo.duration} min` 
-                          : `${Math.floor(routeInfo.duration / 60)}h ${routeInfo.duration % 60}min`}
-                      </Text>
-                    </View>
-                    <TouchableOpacity 
-                      style={styles.directionsButton}
-                      onPress={openMapsWithDirections}
-                    >
-                      <Text style={styles.directionsButtonText}>Y aller</Text>
-                      <Icon name="navigate" size={16} color={COLORS.white} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
+
+              {/* Input for new activity details */}
+              <View style={styles.newActivityDetails}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Titre de l'activité"
+                  value={newActivity.title}
+                  onChangeText={(text) =>
+                    setNewActivity((prev) => ({ ...prev, title: text }))
+                  }
+                />
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Description de l'activité"
+                  value={newActivity.description}
+                  onChangeText={(text) =>
+                    setNewActivity((prev) => ({ ...prev, description: text }))
+                  }
+                  multiline
+                />
+                <TouchableOpacity
+                  style={styles.addActivityButton}
+                  onPress={handleAddChallenge}
+                >
+                  <Text style={styles.addActivityButtonText}>Ajouter l'activité</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.locationLoadingContainer}>
+              <Icon name="location" size={60} color={COLORS.primary} style={styles.locationIcon} />
+              <Text style={styles.locationText}>
+                {locationPermissionStatus === 'granted'
+                  ? 'Récupération de votre position...'
+                  : 'Autorisation de localisation requise'}
+              </Text>
+              {locationPermissionStatus !== 'granted' && (
+                <TouchableOpacity
+                  style={styles.authLocationButton}
+                  onPress={requestLocationPermission}
+                >
+                  <Text style={styles.authLocationButtonText}>Autoriser la localisation</Text>
+                </TouchableOpacity>
               )}
             </View>
           )}
         </View>
       </Modal>
+
+      {/* Modal for editing or navigating to a selected point */}
+      {selectedPoint && (
+        <Modal
+          visible={!!selectedPoint}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setSelectedPoint(null)}
+        >
+          <View style={styles.pointModalContainer}>
+            <Text style={styles.pointModalTitle}>Modifier le point</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Titre"
+              value={selectedPoint.title}
+              onChangeText={(text) =>
+                setSelectedPoint((prev) => ({ ...prev, title: text }))
+              }
+            />
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Description"
+              value={selectedPoint.description}
+              onChangeText={(text) =>
+                setSelectedPoint((prev) => ({ ...prev, description: text }))
+              }
+              multiline
+            />
+            <View style={styles.pointModalActions}>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSavePoint}
+              >
+                <Text style={styles.saveButtonText}>Enregistrer</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.navigateButton}
+                onPress={() => navigateToPoint(selectedPoint)}
+              >
+                <Text style={styles.navigateButtonText}>S'y rendre</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -2066,7 +2207,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 5,
-    elevation: 5,
+    elevation:  5,
   },
   routeInfoHeader: {
     flexDirection: 'row',
@@ -2117,6 +2258,77 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginRight: 5,
   },
+  newActivityDetails: {
+    padding: 10,
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  input: {
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 10,
+    fontSize: 16,
+  },
+  textArea: {
+    height: 60,
+    textAlignVertical: 'top',
+  },
+  addActivityButton: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  addActivityButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  pointModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 20,
+  },
+  pointModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.white,
+    marginBottom: 20,
+  },
+  pointModalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  saveButton: {
+    backgroundColor: COLORS.primary,
+    padding: 10,
+    borderRadius: 10,
+    marginRight: 10,
+  },
+  saveButtonText: {
+    color: COLORS.white,
+    fontWeight: 'bold',
+  },
+  navigateButton: {
+    backgroundColor: COLORS.secondary,
+    padding: 10,
+    borderRadius: 10,
+  },
+  navigateButtonText: {
+    color: COLORS.white,
+    fontWeight: 'bold',
+  },
 });
 
 const getCategoryStyle = (category) => {
@@ -2151,4 +2363,5 @@ const getCategoryIcon = (category) => {
     default:
       return 'help';
   }
+
 };
