@@ -16,10 +16,12 @@ import {
   ScrollView,
   SafeAreaView,
   Alert,
-  SectionList
+  SectionList,
+  Switch,
+  Platform
 } from 'react-native';
 import * as ReactNative from 'react-native';
-const Platform = ReactNative.Platform;
+import DateTimePicker from '@react-native-community/datetimepicker';
 import Task from '../components/Task';
 import Icon, { COLORS } from '../components/common/Icon';
 import LevelUpAnimation from '../components/LevelUpAnimation';
@@ -34,18 +36,26 @@ import {
   retrieveTimedTasks,
   updateStreak,
   retrieveStreak,
-  createTimedTask
+  createTimedTask,
+  createTask
 } from '../utils/storage';
 import { 
-  DIFFICULTY_LEVELS, 
-  SCREEN, 
-  calculateLevel, 
-  generateUniqueId, 
-  CHALLENGE_CATEGORIES, 
-  CHALLENGE_TYPES 
+  CHALLENGE_TYPES, 
+  CHALLENGE_CATEGORIES,
+  calculateLevel,
+  DIFFICULTY_LEVELS,
+  generateUniqueId 
 } from '../utils/constants';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
+import { 
+  requestCalendarPermissions, 
+  addTaskToCalendar
+} from '../services/calendarService';
+import {
+  formatDate,
+  formatTime,
+  getTimeRemaining,
+  getRelativeTime
+} from '../utils/dateUtils';
 
 // Suppression du composant CustomNavBar
 
@@ -509,6 +519,137 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
     zIndex: 999,
   },
+  calendarOptionContainer: {
+    marginBottom: 16,
+  },
+  calendarOptionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  calendarOptionText: {
+    fontSize: 16,
+    color: COLORS.textPrimary,
+  },
+  datePickerContainer: {
+    marginTop: 12,
+    backgroundColor: '#f8faff',
+    borderRadius: 12,
+    padding: 12,
+  },
+  datePickerLabel: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 8,
+  },
+  datePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e1e8f0',
+    borderRadius: 10,
+    padding: 12,
+  },
+  datePickerIcon: {
+    marginRight: 8,
+  },
+  datePickerText: {
+    flex: 1,
+    fontSize: 15,
+    color: COLORS.textPrimary,
+  },
+  datePickerModalContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    zIndex: 1000,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+  },
+  datePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  datePickerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+  },
+  datePickerContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  simpleDatePicker: {
+    width: '100%',
+  },
+  quickDateOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  quickDateButton: {
+    backgroundColor: COLORS.secondary + '20',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  quickDateButtonText: {
+    color: COLORS.secondary,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  manualDatePicker: {
+    backgroundColor: '#f8faff',
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 20,
+  },
+  dateInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  dateInputLabel: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+    width: 60,
+  },
+  dateInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#e1e8f0',
+    borderRadius: 8,
+    padding: 8,
+    backgroundColor: '#fff',
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  confirmDateButton: {
+    backgroundColor: COLORS.secondary,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  confirmDateButtonText: {
+    color: COLORS.white,
+    fontWeight: '600',
+    fontSize: 16,
+  },
 });
 
 const TasksScreen = ({ navigation }) => {
@@ -528,6 +669,10 @@ const TasksScreen = ({ navigation }) => {
   const [showLevelInfo, setShowLevelInfo] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [addToCalendar, setAddToCalendar] = useState(true);
+  const [calendarPermissionRequested, setCalendarPermissionRequested] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   
   // État pour organiser les défis en sections
   const [taskSections, setTaskSections] = useState([]);
@@ -568,11 +713,31 @@ const TasksScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    // Charger les données en premier
+    // Demander les permissions de calendrier au démarrage
+    if (!calendarPermissionRequested) {
+      requestCalendarPermissions();
+      setCalendarPermissionRequested(true);
+    }
+    
+    // Charger les données
     loadUserData();
     loadTaskRatings();
     
-    // Ajouter un léger délai avant de lancer les animations
+    // Configurer l'écouteur de focus pour recharger les données quand on revient sur cet écran
+    const unsubscribe = navigation.addListener('focus', () => {
+      // Recharger les données à chaque fois que l'écran retrouve le focus
+      loadUserData();
+      loadTaskRatings();
+    });
+    
+    // Nettoyer les écouteurs quand le composant est démonté
+    return () => {
+      unsubscribe();
+    };
+  }, [navigation]);
+  
+  // Effet séparé pour les animations afin d'éviter les mises à jour pendant le rendu initial
+  useEffect(() => {
     const timeout = setTimeout(() => {
       // Animation at component mount
       Animated.parallel([
@@ -587,22 +752,11 @@ const TasksScreen = ({ navigation }) => {
           useNativeDriver: true,
         }),
       ]).start();
-    }, 300); // Délai de 300ms pour laisser le temps aux données de se charger
+    }, 300); // Délai de 300ms
     
-    // Configurer l'écouteur de focus pour recharger les données quand on revient sur cet écran
-    const unsubscribe = navigation.addListener('focus', () => {
-      // Recharger les données à chaque fois que l'écran retrouve le focus
-      loadUserData();
-      loadTaskRatings();
-    });
-    
-    // Nettoyer les timeouts et écouteurs quand le composant est démonté
-    return () => {
-      clearTimeout(timeout);
-      unsubscribe();
-    };
-  }, [navigation]);
-  
+    return () => clearTimeout(timeout);
+  }, []); // Dépendances vides pour ne l'exécuter qu'une seule fois
+
   const loadUserData = async () => {
     try {
       setIsLoading(true);
@@ -995,21 +1149,42 @@ const TasksScreen = ({ navigation }) => {
     const difficultyInfo = DIFFICULTY_LEVELS[difficulty];
     
     const newTask = {
-      id: generateUniqueId(),
       title: newTaskTitle.trim(),
       description: newTaskDescription.trim() || 'Aucune description',
       points: difficultyInfo.points,
       difficulty: difficulty,
       difficultyLabel: difficultyInfo.name,
       category: selectedCategory,
-      completed: false,
-      createdAt: new Date().toISOString(),
+      addToCalendar: addToCalendar // Ajout de l'option de calendrier
     };
     
     try {
-      const updatedTasks = [...tasks, newTask];
-      await saveTasks(updatedTasks);
+      // Créer le défi sans l'ajouter au calendrier via createTask (nous le ferons manuellement ensuite)
+      const createdTask = await createTask(newTask);
       
+      if (!createdTask) {
+        throw new Error("Échec de la création du défi");
+      }
+
+      // Si l'option d'ajout au calendrier est activée, ajouter manuellement le défi au calendrier
+      // avec la date personnalisée sélectionnée par l'utilisateur
+      if (addToCalendar) {
+        const eventId = await addTaskToCalendar(createdTask, selectedDate);
+        if (eventId) {
+          // Mettre à jour le défi avec l'ID de l'événement calendrier
+          const updatedTasks = tasks.map(task => 
+            task.id === createdTask.id 
+              ? { ...task, calendarEventId: eventId } 
+              : task
+          );
+          setTasks(updatedTasks);
+          
+          // Sauvegarder la mise à jour dans AsyncStorage
+          await saveTasks(updatedTasks);
+        }
+      }
+      
+      const updatedTasks = [...tasks, createdTask];
       setTasks(updatedTasks);
       
       // Mettre à jour les sections après l'ajout
@@ -1029,7 +1204,16 @@ const TasksScreen = ({ navigation }) => {
       toggleAddTaskForm();
       
       // Confirmation
-      Alert.alert("Défi créé !", "Votre nouveau défi a été ajouté avec succès.");
+      Alert.alert(
+        "Défi créé !", 
+        addToCalendar ? 
+          `Votre nouveau défi a été ajouté avec succès et planifié dans votre calendrier pour le ${selectedDate.toLocaleDateString('fr-FR', {
+            weekday: 'long', 
+            day: 'numeric', 
+            month: 'long'
+          })}.` :
+          "Votre nouveau défi a été ajouté avec succès."
+      );
     } catch (error) {
       console.error("Error adding task:", error);
       Alert.alert("Erreur", "Impossible d'ajouter ce défi");
@@ -1425,6 +1609,172 @@ const TasksScreen = ({ navigation }) => {
                   
                   {renderCategorySelector()}
                   {renderDifficultySelector()}
+                  
+                  {/* Option d'ajout au calendrier avec sélection de date */}
+                  <View style={styles.calendarOptionContainer}>
+                    <Text style={styles.difficultyLabel}>Calendrier:</Text>
+                    <View style={styles.calendarOptionRow}>
+                      <Text style={styles.calendarOptionText}>
+                        Planifier dans mon calendrier
+                      </Text>
+                      <Switch
+                        value={addToCalendar}
+                        onValueChange={setAddToCalendar}
+                        trackColor={{ false: "#d1d8e0", true: `${COLORS.secondary}80` }}
+                        thumbColor={addToCalendar ? COLORS.secondary : "#f4f3f4"}
+                      />
+                    </View>
+                    
+                    {/* Date picker visible seulement si addToCalendar est activé */}
+                    {addToCalendar && (
+                      <View style={styles.datePickerContainer}>
+                        <Text style={styles.datePickerLabel}>Quand souhaitez-vous réaliser ce défi ?</Text>
+                        <TouchableOpacity 
+                          style={styles.datePickerButton}
+                          onPress={() => setShowDatePicker(true)}
+                        >
+                          <Icon name="calendar" size={20} color={COLORS.secondary} style={styles.datePickerIcon} />
+                          <Text style={styles.datePickerText}>
+                            {selectedDate.toLocaleDateString('fr-FR', {
+                              weekday: 'long',
+                              day: 'numeric',
+                              month: 'long'
+                            })}
+                          </Text>
+                          <Icon name="chevron-down" size={18} color={COLORS.textSecondary} />
+                        </TouchableOpacity>
+                        
+                        {/* Date Picker modal pour une meilleure expérience utilisateur */}
+                        {showDatePicker && (
+                          <View style={styles.datePickerModalContainer}>
+                            <View style={styles.datePickerHeader}>
+                              <Text style={styles.datePickerTitle}>Choisir une date</Text>
+                              <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                                <Icon name="close" size={24} color={COLORS.textSecondary} />
+                              </TouchableOpacity>
+                            </View>
+                            
+                            {/* Calendrier natif */}
+                            <View style={styles.datePickerContent}>
+                              {Platform.OS === 'android' ? (
+                                // Utiliser le sélecteur de date natif sur Android
+                                <DateTimePicker
+                                  testID="dateTimePicker"
+                                  value={selectedDate}
+                                  mode="date"
+                                  is24Hour={true}
+                                  display="calendar"
+                                  onChange={(event, date) => {
+                                    setShowDatePicker(false);
+                                    if (date) setSelectedDate(date);
+                                  }}
+                                  minimumDate={new Date()}
+                                />
+                              ) : (
+                                // Alternative simple pour iOS ou si DateTimePicker n'est pas disponible
+                                <View style={styles.simpleDatePicker}>
+                                  {/* Options de date rapides */}
+                                  <View style={styles.quickDateOptions}>
+                                    <TouchableOpacity
+                                      style={styles.quickDateButton}
+                                      onPress={() => {
+                                        setSelectedDate(new Date());
+                                        setShowDatePicker(false);
+                                      }}
+                                    >
+                                      <Text style={styles.quickDateButtonText}>Aujourd'hui</Text>
+                                    </TouchableOpacity>
+                                    
+                                    <TouchableOpacity
+                                      style={styles.quickDateButton}
+                                      onPress={() => {
+                                        const tomorrow = new Date();
+                                        tomorrow.setDate(tomorrow.getDate() + 1);
+                                        setSelectedDate(tomorrow);
+                                        setShowDatePicker(false);
+                                      }}
+                                    >
+                                      <Text style={styles.quickDateButtonText}>Demain</Text>
+                                    </TouchableOpacity>
+                                    
+                                    <TouchableOpacity
+                                      style={styles.quickDateButton}
+                                      onPress={() => {
+                                        const nextWeek = new Date();
+                                        nextWeek.setDate(nextWeek.getDate() + 7);
+                                        setSelectedDate(nextWeek);
+                                        setShowDatePicker(false);
+                                      }}
+                                    >
+                                      <Text style={styles.quickDateButtonText}>Semaine prochaine</Text>
+                                    </TouchableOpacity>
+                                  </View>
+                                  
+                                  {/* Sélecteur manuel (simple) */}
+                                  <View style={styles.manualDatePicker}>
+                                    <View style={styles.dateInputRow}>
+                                      <Text style={styles.dateInputLabel}>Jour:</Text>
+                                      <TextInput
+                                        style={styles.dateInput}
+                                        value={selectedDate.getDate().toString()}
+                                        keyboardType="number-pad"
+                                        maxLength={2}
+                                        onChangeText={(text) => {
+                                          const day = parseInt(text) || 1;
+                                          const newDate = new Date(selectedDate);
+                                          newDate.setDate(day);
+                                          setSelectedDate(newDate);
+                                        }}
+                                      />
+                                    </View>
+                                    
+                                    <View style={styles.dateInputRow}>
+                                      <Text style={styles.dateInputLabel}>Mois:</Text>
+                                      <TextInput
+                                        style={styles.dateInput}
+                                        value={(selectedDate.getMonth() + 1).toString()}
+                                        keyboardType="number-pad"
+                                        maxLength={2}
+                                        onChangeText={(text) => {
+                                          const month = parseInt(text) || 1;
+                                          const newDate = new Date(selectedDate);
+                                          newDate.setMonth(month - 1);
+                                          setSelectedDate(newDate);
+                                        }}
+                                      />
+                                    </View>
+                                    
+                                    <View style={styles.dateInputRow}>
+                                      <Text style={styles.dateInputLabel}>Année:</Text>
+                                      <TextInput
+                                        style={styles.dateInput}
+                                        value={selectedDate.getFullYear().toString()}
+                                        keyboardType="number-pad"
+                                        maxLength={4}
+                                        onChangeText={(text) => {
+                                          const year = parseInt(text) || 2023;
+                                          const newDate = new Date(selectedDate);
+                                          newDate.setFullYear(year);
+                                          setSelectedDate(newDate);
+                                        }}
+                                      />
+                                    </View>
+                                  </View>
+                                  
+                                  <TouchableOpacity
+                                    style={styles.confirmDateButton}
+                                    onPress={() => setShowDatePicker(false)}
+                                  >
+                                    <Text style={styles.confirmDateButtonText}>Confirmer</Text>
+                                  </TouchableOpacity>
+                                </View>
+                              )}
+                            </View>
+                          </View>
+                        )}
+                      </View>
+                    )}
+                  </View>
                   
                   <TouchableOpacity
                     style={styles.submitButton}

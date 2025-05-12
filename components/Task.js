@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import Icon from './common/Icon';
 import { CHALLENGE_TYPES, CHALLENGE_CATEGORIES } from '../utils/constants';
+import { formatDate, getTimeRemaining, getRelativeTime } from '../utils/dateUtils';
 
 const Task = ({ 
   title, 
@@ -53,24 +54,25 @@ const Task = ({
   }, []);
 
   // Calcul du temps restant pour les défis temporaires
-  const getTimeRemaining = () => {
+  const getRemainingTimeText = () => {
     if (!expiresAt) return null;
     
-    const now = new Date();
+    // Utiliser notre fonction utilitaire pour obtenir un texte convivial
+    return getTimeRemaining(expiresAt);
+  };
+  
+  // Formater la date d'expiration pour l'affichage
+  const getExpirationDateText = () => {
+    if (!expiresAt) return null;
+    
     const expireDate = new Date(expiresAt);
-    const diffMs = expireDate - now;
     
-    if (diffMs <= 0) return 'Expiré';
-    
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const diffHrs = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
-    if (diffDays > 0) {
-      return `${diffDays}j ${diffHrs}h restants`;
-    } else {
-      const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      return `${diffHrs}h ${diffMins}m restants`;
-    }
+    // Utiliser notre fonction de formatage avec des options adaptées
+    return formatDate(expireDate, { 
+      showWeekday: true, 
+      showTime: true, 
+      showYear: false 
+    });
   };
   
   // Style spécifique selon le type de défi et la catégorie
@@ -122,7 +124,8 @@ const Task = ({
   };
   
   const categoryInfo = getCategoryInfo();
-  const timeRemaining = getTimeRemaining();
+  const timeRemainingText = getRemainingTimeText();
+  const expirationDateText = getExpirationDateText();
 
   const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState(0);
@@ -234,10 +237,10 @@ const Task = ({
             <Text style={[styles.pointsText, { color: difficultyColor }]}>+{points} points</Text>
           </View>
           
-          {timeRemaining && (
+          {timeRemainingText && (
             <View style={styles.timeContainer}>
               <Icon name="time" size={14} color="#e74c3c" style={styles.timeIcon} />
-              <Text style={styles.timeText}>{timeRemaining}</Text>
+              <Text style={styles.timeText}>{timeRemainingText}</Text>
             </View>
           )}
           
