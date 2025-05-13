@@ -39,6 +39,7 @@ export const COLORS = {
   textPrimary: '#2c3e50',
   textSecondary: '#7f8c8d',
   textLight: '#95a5a6',
+  quiz: { color: '#8e44ad' }
 };
 
 export default Icon;
