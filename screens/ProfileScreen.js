@@ -66,7 +66,7 @@ const BADGES = {
   }
 };
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }) => {
   // État du profil
   const [totalPoints, setTotalPoints] = useState(0);
   const [level, setLevel] = useState(1);
@@ -851,40 +851,48 @@ const ProfileScreen = () => {
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={[styles.secondaryActionButton, styles.logoutButton]}
-              onPress={() => {
-                Alert.alert(
-                  "Déconnexion",
-                  "Êtes-vous sûr de vouloir vous déconnecter ?",
-                  [
-                    { text: "Annuler", style: "cancel" },
-                    { 
-                      text: "Déconnexion", 
-                      onPress: async () => {
-                        try {
-                          const result = await logoutUser();
-                          if (result.success) {
-                            // Rafraîchir l'application pour afficher l'écran de connexion
-                            // Ceci force une mise à jour de l'état d'authentification dans App.js
-                            ReactNative.DevSettings.reload();
-                          } else {
-                            Alert.alert("Erreur", "Impossible de se déconnecter. Veuillez réessayer.");
-                          }
-                        } catch (error) {
-                          console.error("Erreur lors de la déconnexion:", error);
-                          Alert.alert("Erreur", "Une erreur est survenue lors de la déconnexion.");
-                        }
-                      },
-                      style: "destructive"
-                    }
-                  ]
-                );
-              }}
+              style={styles.secondaryActionButton}
+              onPress={() => navigation.navigate('AboutUs')}
             >
-              <Icon name="log-out-outline" size={20} color={COLORS.error} style={styles.actionIcon} />
-              <Text style={styles.logoutText}>Déconnexion</Text>
+              <Icon name="information-circle-outline" size={20} color={COLORS.secondary} style={styles.actionIcon} />
+              <Text style={styles.secondaryActionText}>À propos</Text>
             </TouchableOpacity>
           </View>
+          
+          <TouchableOpacity 
+            style={[styles.secondaryActionButton, styles.logoutButton, {marginTop: 12}]}
+            onPress={() => {
+              Alert.alert(
+                "Déconnexion",
+                "Êtes-vous sûr de vouloir vous déconnecter ?",
+                [
+                  { text: "Annuler", style: "cancel" },
+                  { 
+                    text: "Déconnexion", 
+                    onPress: async () => {
+                      try {
+                        const result = await logoutUser();
+                        if (result.success) {
+                          // Rafraîchir l'application pour afficher l'écran de connexion
+                          // Ceci force une mise à jour de l'état d'authentification dans App.js
+                          ReactNative.DevSettings.reload();
+                        } else {
+                          Alert.alert("Erreur", "Impossible de se déconnecter. Veuillez réessayer.");
+                        }
+                      } catch (error) {
+                        console.error("Erreur lors de la déconnexion:", error);
+                        Alert.alert("Erreur", "Une erreur est survenue lors de la déconnexion.");
+                      }
+                    },
+                    style: "destructive"
+                  }
+                ]
+              );
+            }}
+          >
+            <Icon name="log-out-outline" size={20} color={COLORS.error} style={styles.actionIcon} />
+            <Text style={styles.logoutText}>Déconnexion</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
       

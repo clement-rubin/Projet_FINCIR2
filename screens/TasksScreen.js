@@ -1547,13 +1547,6 @@ const TasksScreen = ({ navigation }) => {
             
             <View style={styles.headerActions}>
               <TouchableOpacity
-                style={styles.infoButton}
-                onPress={() => navigation.navigate('AboutUs')}
-              >
-                <Icon name="information-circle" size={24} color="#fff" />
-              </TouchableOpacity>
-              
-              <TouchableOpacity
                 style={styles.levelInfoButton}
                 onPress={handleLevelInfoPress}
               >

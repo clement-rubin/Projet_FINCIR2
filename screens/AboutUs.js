@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -8,12 +8,55 @@ import {
   TouchableOpacity,
   StatusBar,
   Animated,
-  Image
+  Image,
+  Linking,
+  Dimensions,
+  Platform
 } from 'react-native';
 import Icon, { COLORS } from '../components/common/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 
+const { width } = Dimensions.get('window');
+
 const AboutUsScreen = ({ navigation }) => {
+  // Animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  
+  useEffect(() => {
+    // Animation séquentielle pour l'entrée des éléments
+    Animated.stagger(150, [
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true
+        })
+      ]),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        useNativeDriver: true
+      })
+    ]).start();
+  }, []);
+
+  const handleOpenLink = (url) => {
+    Linking.canOpenURL(url).then(supported => {
+      if (supported) {
+        Linking.openURL(url);
+      } else {
+        console.log("Don't know how to open URI: " + url);
+      }
+    });
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
@@ -38,20 +81,53 @@ const AboutUsScreen = ({ navigation }) => {
       </View>
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Logo et introduction animés */}
+        <Animated.View 
+          style={[
+            styles.logoContainer, 
+            { 
+              opacity: fadeAnim,
+              transform: [
+                { translateY: slideAnim },
+                { scale: scaleAnim }
+              ] 
+            }
+          ]}
+        >
+          <Image 
+            source={require('../assets/icon.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.appName}>ChallengR</Text>
+          <Text style={styles.tagline}>Relevez des défis, progressez, excellez !</Text>
+        </Animated.View>
+
         {/* Section Introduction */}
-        <View style={styles.section}>
+        <Animated.View 
+          style={[
+            styles.card, 
+            styles.shadowCard, 
+            { 
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}
+        >
           <Text style={styles.sectionTitle}>Bienvenue sur ChallengR</Text>
           <Text style={styles.description}>
             ChallengR est votre compagnon de développement personnel qui transforme vos objectifs en défis stimulants et amusants. Notre application vous aide à progresser chaque jour en relevant des défis adaptés à vos intérêts et à votre niveau.
           </Text>
-        </View>
+        </Animated.View>
 
         {/* Section Fonctionnement */}
-        <View style={styles.section}>
+        <View style={[styles.card, styles.shadowCard]}>
           <Text style={styles.sectionTitle}>Comment ça marche ?</Text>
           <View style={styles.featureContainer}>
             <View style={styles.feature}>
-              <Icon name="calendar" size={40} color={COLORS.primary} />
+              <View style={[styles.iconCircle, { backgroundColor: '#e3f2fd' }]}>
+                <Icon name="calendar" size={30} color={COLORS.primary} />
+              </View>
               <Text style={styles.featureTitle}>Défis Quotidiens</Text>
               <Text style={styles.featureDescription}>
                 Recevez des défis personnalisés chaque jour pour maintenir votre motivation
@@ -59,7 +135,9 @@ const AboutUsScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.feature}>
-              <Icon name="trophy" size={40} color={COLORS.warning} />
+              <View style={[styles.iconCircle, { backgroundColor: '#fff8e1' }]}>
+                <Icon name="trophy" size={30} color={COLORS.warning} />
+              </View>
               <Text style={styles.featureTitle}>Gagnez des Points</Text>
               <Text style={styles.featureDescription}>
                 Complétez des défis pour gagner des points et monter de niveau
@@ -67,7 +145,9 @@ const AboutUsScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.feature}>
-              <Icon name="people" size={40} color={COLORS.success} />
+              <View style={[styles.iconCircle, { backgroundColor: '#e8f5e9' }]}>
+                <Icon name="people" size={30} color={COLORS.success} />
+              </View>
               <Text style={styles.featureTitle}>Communauté</Text>
               <Text style={styles.featureDescription}>
                 Connectez-vous avec d'autres utilisateurs et partagez vos succès
@@ -77,32 +157,178 @@ const AboutUsScreen = ({ navigation }) => {
         </View>
 
         {/* Section Avantages */}
-        <View style={styles.section}>
+        <View style={[styles.card, styles.shadowCard]}>
           <Text style={styles.sectionTitle}>Pourquoi ChallengR ?</Text>
           <View style={styles.benefitsList}>
             <View style={styles.benefitItem}>
               <Icon name="checkmark-circle" size={24} color={COLORS.success} />
-              <Text style={styles.benefitText}>Progression personnalisée</Text>
+              <Text style={styles.benefitText}>Progression personnalisée en fonction de votre niveau</Text>
             </View>
             <View style={styles.benefitItem}>
               <Icon name="checkmark-circle" size={24} color={COLORS.success} />
-              <Text style={styles.benefitText}>Défis variés et adaptés</Text>
+              <Text style={styles.benefitText}>Défis variés dans différentes catégories</Text>
             </View>
             <View style={styles.benefitItem}>
               <Icon name="checkmark-circle" size={24} color={COLORS.success} />
-              <Text style={styles.benefitText}>Suivi de vos performances</Text>
+              <Text style={styles.benefitText}>Suivi détaillé de vos performances</Text>
             </View>
             <View style={styles.benefitItem}>
               <Icon name="checkmark-circle" size={24} color={COLORS.success} />
-              <Text style={styles.benefitText}>Interface intuitive</Text>
+              <Text style={styles.benefitText}>Interface intuitive et expérience utilisateur fluide</Text>
+            </View>
+            <View style={styles.benefitItem}>
+              <Icon name="checkmark-circle" size={24} color={COLORS.success} />
+              <Text style={styles.benefitText}>Système de badges et de récompenses motivant</Text>
             </View>
           </View>
         </View>
 
-        {/* Section Contact/Version */}
-        <View style={[styles.section, styles.lastSection]}>
-          <Text style={styles.version}>Version 1.0.0</Text>
-          <Text style={styles.copyright}>© 2024 ChallengR. Tous droits réservés.</Text>
+        {/* Section Notre équipe */}
+        <View style={[styles.card, styles.shadowCard]}>
+          <Text style={styles.sectionTitle}>Notre Équipe</Text>
+          <Text style={styles.teamIntro}>
+            ChallengR est développé par une équipe passionnée d'ingénieurs et de designers dédiés à créer la meilleure expérience pour vous.
+          </Text>
+          
+          <View style={styles.teamGrid}>
+            <View style={styles.teamMember}>
+              <View style={styles.avatarContainer}>
+                <Icon name="person-circle" size={60} color={COLORS.primary} />
+              </View>
+              <Text style={styles.memberName}>Emile DUMONT</Text>
+              <Text style={styles.memberRole}> Developer</Text>
+            </View>
+            
+            <View style={styles.teamMember}>
+              <View style={styles.avatarContainer}>
+                <Icon name="person-circle" size={60} color={COLORS.secondary} />
+              </View>
+              <Text style={styles.memberName}>Bryan OLOT</Text>
+              <Text style={styles.memberRole}> Developer</Text>
+            </View>
+            
+            <View style={styles.teamMember}>
+              <View style={styles.avatarContainer}>
+                <Icon name="person-circle" size={60} color={COLORS.success} />
+              </View>
+              <Text style={styles.memberName}>Valentin LEWANDOSKI</Text>
+              <Text style={styles.memberRole}> Developer</Text>
+            </View>
+            
+            <View style={styles.teamMember}>
+              <View style={styles.avatarContainer}>
+                <Icon name="person-circle" size={60} color={COLORS.warning} />
+              </View>
+              <Text style={styles.memberName}>Erwan GRAIRE</Text>
+              <Text style={styles.memberRole}> Developer</Text>
+            </View>
+            <View style={styles.teamMember}>
+              <View style={styles.avatarContainer}>
+                <Icon name="person-circle" size={60} color={COLORS.warning} />
+              </View>
+              <Text style={styles.memberName}>Ilian EL-MAHI</Text>
+              <Text style={styles.memberRole}> Developer</Text>
+            </View>
+            <View style={styles.teamMember}>
+              <View style={styles.avatarContainer}>
+                <Icon name="person-circle" size={60} color={COLORS.warning} />
+              </View>
+              <Text style={styles.memberName}>Clément RUBIN</Text>
+              <Text style={styles.memberRole}> Developer</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Section FAQ */}
+        <View style={[styles.card, styles.shadowCard]}>
+          <Text style={styles.sectionTitle}>Questions fréquentes</Text>
+          
+          <View style={styles.faqItem}>
+            <Text style={styles.faqQuestion}>Comment gagner plus de points ?</Text>
+            <Text style={styles.faqAnswer}>
+              Vous pouvez gagner des points en complétant des défis quotidiens, des défis à long terme, ou en maintenant une série de défis complétés sur plusieurs jours consécutifs.
+            </Text>
+          </View>
+          
+          <View style={styles.faqItem}>
+            <Text style={styles.faqQuestion}>Puis-je créer mes propres défis ?</Text>
+            <Text style={styles.faqAnswer}>
+              Oui ! Vous pouvez créer des défis personnalisés depuis l'écran "Mes Défis" en appuyant sur le bouton "+ Nouveau défi".
+            </Text>
+          </View>
+          
+          <View style={styles.faqItem}>
+            <Text style={styles.faqQuestion}>Comment débloquer des badges ?</Text>
+            <Text style={styles.faqAnswer}>
+              Les badges sont débloqués en atteignant certains objectifs, comme compléter un nombre spécifique de défis ou atteindre un certain niveau.
+            </Text>
+          </View>
+        </View>
+
+        {/* Section Contact et réseaux sociaux */}
+        <View style={[styles.card, styles.shadowCard]}>
+          <Text style={styles.sectionTitle}>Nous contacter</Text>
+          <Text style={styles.contactText}>
+            Vous avez des questions ou des suggestions ? N'hésitez pas à nous contacter !
+          </Text>
+          
+          <View style={styles.socialContainer}>
+            <TouchableOpacity 
+              style={[styles.socialButton, { backgroundColor: '#3b5998' }]}
+              onPress={() => handleOpenLink('https://facebook.com')}
+            >
+              <Icon name="logo-facebook" size={24} color={COLORS.white} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.socialButton, { backgroundColor: '#1da1f2' }]}
+              onPress={() => handleOpenLink('https://twitter.com')}
+            >
+              <Icon name="logo-twitter" size={24} color={COLORS.white} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.socialButton, { backgroundColor: '#c32aa3' }]}
+              onPress={() => handleOpenLink('https://instagram.com')}
+            >
+              <Icon name="logo-instagram" size={24} color={COLORS.white} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.socialButton, { backgroundColor: '#0a66c2' }]}
+              onPress={() => handleOpenLink('https://linkedin.com')}
+            >
+              <Icon name="logo-linkedin" size={24} color={COLORS.white} />
+            </TouchableOpacity>
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.emailButton}
+            onPress={() => handleOpenLink('mailto:contact@challengr.app')}
+          >
+            <Icon name="mail" size={20} color={COLORS.white} style={styles.emailIcon} />
+            <Text style={styles.emailButtonText}>contact@challengr.app</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Section Version */}
+        <View style={[styles.card, styles.shadowCard, styles.lastSection]}>
+          <Text style={styles.version}>Version 1.2.0</Text>
+          <Text style={styles.releaseNotes}>Dernière mise à jour : 10 mai 2025</Text>
+          <Text style={styles.copyright}>© 2025 ChallengR. Tous droits réservés.</Text>
+          
+          <TouchableOpacity 
+            style={styles.privacyLink}
+            onPress={() => handleOpenLink('https://www.challengr.app/privacy')}
+          >
+            <Text style={styles.privacyText}>Politique de confidentialité</Text>
+          </TouchableOpacity>
+          
+          <View style={styles.divider} />
+          
+          <Text style={styles.madeLove}>
+            Fait avec <Icon name="heart" size={14} color="red" /> en France
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -139,11 +365,42 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+    paddingHorizontal: 16,
+    paddingTop: 10,
   },
-  section: {
+  logoContainer: {
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    borderRadius: 20,
+  },
+  appName: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginTop: 10,
+  },
+  tagline: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    marginTop: 5,
+  },
+  card: {
     backgroundColor: COLORS.white,
+    borderRadius: 16,
     padding: 20,
-    marginBottom: 12,
+    marginBottom: 16,
+    marginHorizontal: 2,
+  },
+  shadowCard: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   sectionTitle: {
     fontSize: 22,
@@ -163,6 +420,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
+  iconCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
   featureTitle: {
     fontSize: 18,
     fontWeight: '600',
@@ -175,32 +445,172 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 20,
+    lineHeight: 22,
   },
   benefitsList: {
     marginTop: 10,
   },
   benefitItem: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   benefitText: {
     fontSize: 16,
     color: COLORS.textPrimary,
     marginLeft: 12,
+    flex: 1,
+    lineHeight: 22,
+  },
+  teamIntro: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    marginBottom: 20,
+    lineHeight: 24,
+  },
+  teamGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  teamMember: {
+    width: '48%',
+    alignItems: 'center',
+    marginBottom: 25,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+    padding: 15,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+  },
+  avatarContainer: {
+    marginBottom: 10,
+  },
+  memberName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.dark,
+    marginBottom: 5,
+  },
+  memberRole: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+  },
+  faqItem: {
+    marginBottom: 20,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+    padding: 15,
+  },
+  faqQuestion: {
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: COLORS.dark,
+    marginBottom: 10,
+  },
+  faqAnswer: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+    lineHeight: 22,
+  },
+  contactText: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    marginBottom: 20,
+    lineHeight: 24,
+    textAlign: 'center',
+  },
+  socialContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  socialButton: {
+    width: 55,
+    height: 55,
+    borderRadius: 27.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
+    marginHorizontal: 6,
+  },
+  emailButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  emailIcon: {
+    marginRight: 10,
+  },
+  emailButtonText: {
+    fontSize: 16,
+    color: COLORS.white,
+    fontWeight: '600',
   },
   lastSection: {
     alignItems: 'center',
     marginBottom: 30,
+    paddingTop: 15,
   },
   version: {
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '500',
     color: COLORS.textSecondary,
     marginBottom: 8,
+  },
+  releaseNotes: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 12,
   },
   copyright: {
     fontSize: 14,
     color: COLORS.textLight,
+    marginBottom: 15,
+  },
+  privacyLink: {
+    marginVertical: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    backgroundColor: 'rgba(74, 102, 247, 0.1)',
+    borderRadius: 20,
+  },
+  privacyText: {
+    fontSize: 14,
+    color: COLORS.primary,
+    fontWeight: '500',
+  },
+  divider: {
+    width: '80%',
+    height: 1,
+    backgroundColor: '#e0e0e0',
+    marginVertical: 20,
+  },
+  madeLove: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    flexDirection: 'row',
+    alignItems: 'center',
   }
 });
 

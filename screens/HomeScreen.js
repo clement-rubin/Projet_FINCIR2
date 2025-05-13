@@ -1032,12 +1032,6 @@ export default function HomeScreen({ navigation }) {
                 <View style={styles.greetingContainer}>
                   <Text style={styles.welcomeText}>Bienvenue sur</Text>
                   <Text style={styles.appTitle}>ChallengR</Text>
-                  <TouchableOpacity 
-                    style={styles.aboutButton}
-                    onPress={() => navigation.navigate('AboutUs')}
-                  >
-                    <Icon name="information-circle" size={20} color="rgba(255, 255, 255, 0.7)" />
-                  </TouchableOpacity>
                 </View>
                 
                 <View style={styles.taglineContainer}>
@@ -2362,12 +2356,6 @@ const styles = StyleSheet.create({
   navigateButtonText: {
     color: COLORS.white,
     fontWeight: 'bold',
-  },
-  aboutButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    padding: 5,
   },
 });
 
