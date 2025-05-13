@@ -651,7 +651,7 @@ export default function HomeScreen({ navigation }) {
           duration: 800, 
           useNativeDriver: true 
         }),
-     ]),
+    ]),
 
       // Animation des cartes de statistiques
       Animated.stagger(150, [
@@ -859,11 +859,11 @@ export default function HomeScreen({ navigation }) {
     );
   };
 
-  // State for new activity details
+  // Ensure the newActivity coordinate is properly initialized and validated
   const [newActivity, setNewActivity] = useState({
     title: "Nouvelle activité",
     description: "",
-    coordinate: { latitude: 0, longitude: 0 }, // Initialize with default coordinates
+    coordinate: null, // Initialize as null to avoid errors
   });
 
   // State for managing selected point details
@@ -970,6 +970,30 @@ export default function HomeScreen({ navigation }) {
       console.error("Erreur lors de l'ajout de l'activité :", error);
       Alert.alert("Erreur", "Impossible d'ajouter l'activité.");
     }
+  };
+
+  // Function to navigate to a selected activity using GPS
+  const navigateToActivity = (activity) => {
+    if (!activity) return;
+
+    const lat = activity.latitude;
+    const lng = activity.longitude;
+    const label = encodeURIComponent(activity.title);
+
+    const url =
+      Platform.OS === 'ios'
+        ? `http://maps.apple.com/?daddr=${lat},${lng}&q=${label}`
+        : `geo:0,0?q=${lat},${lng}(${label})`;
+
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(url);
+        } else {
+          Alert.alert("Erreur", "Impossible d'ouvrir l'application de cartographie.");
+        }
+      })
+      .catch((err) => console.error("Erreur lors de l'ouverture de la carte :", err));
   };
 
   return (
@@ -1377,12 +1401,15 @@ export default function HomeScreen({ navigation }) {
                 }}
                 showsUserLocation={true}
                 showsMyLocationButton={true}
-                onPress={(e) =>
-                  setNewActivity((prev) => ({
-                    ...prev,
-                    coordinate: e.nativeEvent.coordinate,
-                  }))
-                }
+                onPress={(e) => {
+                  const { coordinate } = e.nativeEvent;
+                  if (coordinate) {
+                    setNewActivity((prev) => ({
+                      ...prev,
+                      coordinate, // Set the coordinate when a point is selected
+                    }));
+                  }
+                }}
               >
                 {/* Markers for nearby challenges */}
                 {nearbyChallenges.map((challenge) => (
@@ -1394,7 +1421,7 @@ export default function HomeScreen({ navigation }) {
                     }}
                     title={challenge.title}
                     description={challenge.description}
-                    onPress={() => handleSelectPoint(challenge)}
+                    onPress={() => navigateToActivity(challenge)} // Use the fixed function
                   >
                     <View style={[styles.challengeMarker, getCategoryStyle(challenge.category)]}>
                       <Icon
@@ -2173,7 +2200,7 @@ const styles = StyleSheet.create({
     color: COLORS.dark,
     marginBottom: 5,
   },
-  calloutDescription: {
+   calloutDescription: {
     fontSize: 12,
     color: COLORS.textSecondary,
     marginBottom: 5,
