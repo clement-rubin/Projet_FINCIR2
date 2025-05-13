@@ -129,7 +129,6 @@ const Task = ({
 
   const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState(0);
-
   const handleComplete = () => {
     setShowRating(true);
   };
