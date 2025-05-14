@@ -724,7 +724,7 @@ const ProfileScreen = ({ navigation }) => {
           </View>
           
           <ProgressBar 
-            progress={progress} 
+            progress={Number(progress.toFixed(1))} 
             total={100} 
             height={12}
             barColor={COLORS.secondary}
