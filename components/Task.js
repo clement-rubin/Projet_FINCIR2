@@ -129,11 +129,7 @@ const Task = ({
 
   const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState(0);
-
   const handleComplete = () => {
-    // Valider directement le défi
-    onComplete();
-    // Afficher l'option de notation
     setShowRating(true);
   };
 
@@ -141,10 +137,16 @@ const Task = ({
     if (onRate) {
       onRate(rating);
     }
+    if (onComplete) {
+      onComplete();
+    }
     setShowRating(false);
   };
 
   const handleSkipRating = () => {
+    if (onComplete) {
+      onComplete();
+    }
     setShowRating(false);
   };
 

@@ -717,24 +717,24 @@ const TasksScreen = ({ navigation }) => {
       requestCalendarPermissions();
       setCalendarPermissionRequested(true);
     }
-    
-    // Charger les données
     loadUserData();
     loadTaskRatings();
-    
-    // Configurer l'écouteur de focus pour recharger les données quand on revient sur cet écran
     const unsubscribe = navigation.addListener('focus', () => {
-      // Recharger les données à chaque fois que l'écran retrouve le focus
       loadUserData();
       loadTaskRatings();
     });
-    
-    // Nettoyer les écouteurs quand le composant est démonté
     return () => {
       unsubscribe();
     };
   }, [navigation]);
-  
+
+  // Filtrage automatique quand les listes sont chargées
+  useEffect(() => {
+    if (!isLoading) {
+      applyFilter(filter);
+    }
+  }, [tasks, dailyTasks, timedTasks, filter, isLoading]);
+
   // Effet séparé pour les animations afin d'éviter les mises à jour pendant le rendu initial
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -759,38 +759,19 @@ const TasksScreen = ({ navigation }) => {
   const loadUserData = async () => {
     try {
       setIsLoading(true);
-      
-      // Charger les défis standards
       const savedTasks = await retrieveTasks() || [];
       setTasks(savedTasks);
-      
-      // Charger les défis quotidiens
       const dailyTasksList = await retrieveDailyTasks() || [];
       setDailyTasks(dailyTasksList);
-      
-      // Charger les défis temporaires (à durée limitée)
       const timedTasksList = await retrieveTimedTasks() || [];
       setTimedTasks(timedTasksList);
-      
-      // Charger les informations de série
       const userStreak = await retrieveStreak();
       setStreak(userStreak);
-      
-      // Charger les points et calculer le niveau
       const userPoints = await retrievePoints() || 0;
       setPoints(userPoints);
-      
-      // Utiliser la fonction centralisée pour calculer le niveau
       const levelInfo = calculateLevel(userPoints);
       setLevel(levelInfo.level);
-      
-      // Organiser tous les défis en sections
       organizeTasks(savedTasks, dailyTasksList, timedTasksList);
-      
-      // Appliquer le filtre actuel à tous les défis
-      const allTasks = [...dailyTasksList, ...timedTasksList, ...savedTasks];
-      applyFilter(filter, allTasks);
-      
       setIsLoading(false);
     } catch (error) {
       console.error("Error loading user data:", error);
@@ -866,10 +847,8 @@ const TasksScreen = ({ navigation }) => {
   
   const applyFilter = (filterType, tasksList = tasks) => {
     setFilter(filterType);
-    
     // Récupérer toutes les tâches
     const allTasksArray = [...dailyTasks, ...timedTasks, ...tasks];
-    
     // Mettre à jour les tâches filtrées pour l'affichage
     let filtered;
     if (filterType === 'all') {
@@ -879,13 +858,9 @@ const TasksScreen = ({ navigation }) => {
     } else if (filterType === 'completed') {
       filtered = allTasksArray.filter(task => task.completed);
     }
-    
     setFilteredTasks(filtered);
-    
     // Mettre à jour les sections avec le nouveau filtre
     const sections = [];
-    
-    // Section pour les séries si l'utilisateur a une série en cours
     if (streak.count > 0) {
       sections.push({
         title: `🔥 Série de ${streak.count} jour${streak.count > 1 ? 's' : ''}`,
@@ -893,13 +868,11 @@ const TasksScreen = ({ navigation }) => {
         info: `Maintenez votre série en complétant au moins un défi chaque jour. Votre dernière activité: ${new Date(streak.lastCompletionDate).toLocaleDateString()}`
       });
     }
-
     // Filtrer les défis selon le type et le filtre actuel
     const filterByType = (tasks, type) => {
       if (filterType === 'all') return tasks;
       return tasks.filter(task => filterType === 'completed' ? task.completed : !task.completed);
     };
-
     // Section pour les défis quotidiens
     const filteredDailyTasks = filterByType(dailyTasks);
     if (filteredDailyTasks.length > 0) {
@@ -909,7 +882,6 @@ const TasksScreen = ({ navigation }) => {
         info: "Ces défis se renouvellent chaque jour. Complétez-les pour maintenir votre série!"
       });
     }
-
     // Section pour les défis temporaires
     const filteredTimedTasks = filterByType(timedTasks);
     if (filteredTimedTasks.length > 0) {
@@ -919,20 +891,17 @@ const TasksScreen = ({ navigation }) => {
         info: "Attention! Ces défis expirent bientôt. Relevez-les avant qu'il ne soit trop tard."
       });
     }
-
     // Section pour les défis standards
     const filteredRegularTasks = filterByType(tasks);
     if (filteredRegularTasks.length > 0) {
       const activeRegularTasks = filteredRegularTasks.filter(task => !task.completed);
       const completedRegularTasks = filteredRegularTasks.filter(task => task.completed);
-
       if (filterType !== 'completed' && activeRegularTasks.length > 0) {
         sections.push({
           title: "📝 Mes défis en cours",
           data: activeRegularTasks
         });
       }
-
       if (filterType !== 'active' && completedRegularTasks.length > 0) {
         sections.push({
           title: "✅ Défis complétés",
@@ -940,7 +909,6 @@ const TasksScreen = ({ navigation }) => {
         });
       }
     }
-
     setTaskSections(sections);
   };
 
@@ -998,56 +966,16 @@ const TasksScreen = ({ navigation }) => {
   
   const handleCompleteTask = async (id) => {
     try {
-      // Trouver d'abord le défi dans toutes les catégories
-      let task = null;
-      let taskType = null;
-      
-      // Vérifier dans les défis standards
-      const standardTask = tasks.find(t => t.id === id);
-      if (standardTask) {
-        task = standardTask;
-        taskType = 'standard';
-      }
-      
-      // Vérifier dans les défis quotidiens
-      if (!task) {
-        const dailyTask = dailyTasks.find(t => t.id === id);
-        if (dailyTask) {
-          task = dailyTask;
-          taskType = 'daily';
-        }
-      }
-      
-      // Vérifier dans les défis temporaires
-      if (!task) {
-        const timedTask = timedTasks.find(t => t.id === id);
-        if (timedTask) {
-          task = timedTask;
-          taskType = 'timed';
-        }
-      }
-      
+      // Trouver le défi (pour les points et le type)
+      let task = tasks.find(t => t.id === id) || dailyTasks.find(t => t.id === id) || timedTasks.find(t => t.id === id);
       if (!task || task.completed) return;
-
-      // Marquer immédiatement le défi comme complété dans l'état local
-      const updateTaskLocally = (tasksList, taskId) => {
-        return tasksList.map(t => t.id === taskId ? { ...t, completed: true } : t);
-      };
-
-      if (taskType === 'standard') {
-        setTasks(updateTaskLocally(tasks, id));
-      } else if (taskType === 'daily') {
-        setDailyTasks(updateTaskLocally(dailyTasks, id));
-      } else if (taskType === 'timed') {
-        setTimedTasks(updateTaskLocally(timedTasks, id));
-      }
 
       // Calculer les points avec le bonus
       const levelInfo = calculateLevel(points);
       const bonusMultiplier = levelInfo.bonusMultiplier;
       const basePoints = task.points;
       const pointsToAdd = Math.floor(basePoints * bonusMultiplier);
-      
+
       // Mettre à jour les points et le défi dans la base de données
       await Promise.all([
         addPoints(pointsToAdd),
@@ -1055,42 +983,31 @@ const TasksScreen = ({ navigation }) => {
       ]);
 
       // Mettre à jour la série si c'est un défi quotidien
-      if (taskType === 'daily') {
-        const updatedStreak = await updateStreak();
-        setStreak(updatedStreak);
+      if (task.type === CHALLENGE_TYPES.DAILY) {
+        await updateStreak();
       }
 
-      // Mettre à jour l'état avec les nouveaux points
-      const newPoints = points + pointsToAdd;
-      setPoints(newPoints);
-
-      // Vérifier le passage de niveau
-      const newLevelInfo = calculateLevel(newPoints);
-      if (newLevelInfo.level > levelInfo.level) {
-        setLevelUpInfo({
-          newLevel: newLevelInfo.level,
-          previousTitle: levelInfo.title,
-          newTitle: newLevelInfo.title,
-          advantages: newLevelInfo.advantages || []
-        });
-        setShowLevelUpAnimation(true);
-      }
-
-      // Réorganiser les sections
-      const allTasks = [
-        ...updateTaskLocally(dailyTasks, id),
-        ...updateTaskLocally(timedTasks, id),
-        ...updateTaskLocally(tasks, id)
-      ];
-      organizeTasks(tasks, dailyTasks, timedTasks);
-      applyFilter(filter, allTasks);
-
+      // Recharger toutes les données et appliquer le filtre
+      await loadUserData();
     } catch (error) {
       console.error("Error completing task:", error);
       Alert.alert("Erreur", "Impossible de compléter ce défi");
     }
   };
   
+  // Optimisation : ne recharge pas toute la liste dans handleRateTask
+  const handleRateTask = async (taskId, rating) => {
+    try {
+      const userKey = '@challengr_task_ratings';
+      const updatedRatings = { ...taskRatings, [taskId]: rating };
+      await AsyncStorage.setItem(userKey, JSON.stringify(updatedRatings));
+      setTaskRatings(updatedRatings);
+      // Pas de loadUserData ici, juste mise à jour locale
+    } catch (error) {
+      console.error("Error saving rating:", error);
+    }
+  };
+
   const handleDeleteTask = async (id) => {
     Alert.alert(
       "Supprimer ce défi",
@@ -1184,7 +1101,8 @@ const TasksScreen = ({ navigation }) => {
       // Mettre à jour l'état local
       const updatedTasks = [...tasks, createdTask];
       setTasks(updatedTasks);
-      
+      // Sauvegarder la liste des tâches pour la persistance
+      await saveTasks(updatedTasks);
       // Mettre à jour les sections après l'ajout
       organizeTasks(updatedTasks, dailyTasks, timedTasks);
       
@@ -1401,21 +1319,6 @@ const TasksScreen = ({ navigation }) => {
       {section.info && <Text style={styles.sectionInfo}>{section.info}</Text>}
     </View>
   );
-
-  const handleRateTask = async (taskId, rating) => {
-    try {
-      const userKey = '@challengr_task_ratings';
-      const updatedRatings = { ...taskRatings, [taskId]: rating };
-      
-      await AsyncStorage.setItem(userKey, JSON.stringify(updatedRatings));
-      setTaskRatings(updatedRatings);
-      
-      // Mettre à jour la liste des tâches pour refléter la nouvelle notation
-      loadUserData();
-    } catch (error) {
-      console.error("Error saving rating:", error);
-    }
-  };
 
   const renderItem = ({ item, section, index }) => {
     const difficultyInfo = DIFFICULTY_LEVELS[item.difficulty] || DIFFICULTY_LEVELS.MEDIUM;

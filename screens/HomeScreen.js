@@ -1096,7 +1096,7 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.levelProgress}>Prochain niveau : {level + 1}</Text>
               </View>
               <ProgressBar 
-                progress={progress} 
+                progress={Math.round(progress * 10) / 10} 
                 total={100} 
                 height={12}
                 barColor={COLORS.secondary}
@@ -2198,7 +2198,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: COLORS.dark,
-    marginBottom: 5,
+       marginBottom: 5,
   },
    calloutDescription: {
     fontSize: 12,

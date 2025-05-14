@@ -117,21 +117,56 @@ export const createTask = async (task) => {
  */
 export const completeTask = async (taskId) => {
   try {
-    // Récupérer les tâches actuelles
-    const tasks = await retrieveTasks();
-    
-    // Mettre à jour la tâche spécifique
-    const updatedTasks = tasks.map(task => 
-      task.id === taskId ? { ...task, completed: true } : task
-    );
-    
-    // Enregistrer les tâches mises à jour
-    await saveTasks(updatedTasks);
-    
-    // Ajouter aux tâches complétées
-    await addCompletedTask(taskId);
-    
-    return updatedTasks;
+    // 1. Tâches standards
+    let tasks = await retrieveTasks();
+    let found = false;
+    let updatedTasks = tasks.map(task => {
+      if (task.id === taskId) {
+        found = true;
+        return { ...task, completed: true };
+      }
+      return task;
+    });
+    if (found) {
+      await saveTasks(updatedTasks);
+      await addCompletedTask(taskId);
+      return updatedTasks;
+    }
+
+    // 2. Tâches quotidiennes
+    let dailyTasks = await retrieveDailyTasks();
+    let updatedDailyTasks = dailyTasks.map(task => {
+      if (task.id === taskId) {
+        found = true;
+        return { ...task, completed: true };
+      }
+      return task;
+    });
+    if (found) {
+      const userKey = await getUserSpecificKey(DAILY_TASKS_KEY);
+      await AsyncStorage.setItem(userKey, JSON.stringify(updatedDailyTasks));
+      await addCompletedTask(taskId);
+      return updatedDailyTasks;
+    }
+
+    // 3. Tâches temporaires
+    let timedTasks = await retrieveTimedTasks();
+    let updatedTimedTasks = timedTasks.map(task => {
+      if (task.id === taskId) {
+        found = true;
+        return { ...task, completed: true };
+      }
+      return task;
+    });
+    if (found) {
+      const userKey = await getUserSpecificKey(TIMED_TASKS_KEY);
+      await AsyncStorage.setItem(userKey, JSON.stringify(updatedTimedTasks));
+      await addCompletedTask(taskId);
+      return updatedTimedTasks;
+    }
+
+    // Si la tâche n'a pas été trouvée
+    return [];
   } catch (error) {
     console.error('Erreur lors de la complétion de la tâche:', error);
     return [];
