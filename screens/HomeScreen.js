@@ -1551,6 +1551,34 @@ export default function HomeScreen({ navigation }) {
 
           {location ? (
             <View style={styles.mapContentContainer}>
+              {/* Input for new activity details */}
+              <View style={styles.newActivityDetails}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Titre de l'activité"
+                  value={newActivity.title}
+                  onChangeText={(text) =>
+                    setNewActivity((prev) => ({ ...prev, title: text }))
+                  }
+                />
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Description de l'activité"
+                  value={newActivity.description}
+                  onChangeText={(text) =>
+                    setNewActivity((prev) => ({ ...prev, description: text }))
+                  }
+                  multiline
+                />
+                <TouchableOpacity
+                  style={styles.addActivityButton}
+                  onPress={handleAddChallenge}
+                >
+                  <Text style={styles.addActivityButtonText}>Ajouter l'activité</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Map at the bottom */}
               <MapView
                 style={styles.map}
                 initialRegion={{
@@ -1581,7 +1609,7 @@ export default function HomeScreen({ navigation }) {
                     }}
                     title={challenge.title}
                     description={challenge.description}
-                    onPress={() => navigateToActivity(challenge)} // Use the fixed function
+                    onPress={() => navigateToActivity(challenge)}
                   >
                     <View style={[styles.challengeMarker, getCategoryStyle(challenge.category)]}>
                       <Icon
@@ -1610,33 +1638,6 @@ export default function HomeScreen({ navigation }) {
                   />
                 )}
               </MapView>
-
-              {/* Input for new activity details */}
-              <View style={styles.newActivityDetails}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Titre de l'activité"
-                  value={newActivity.title}
-                  onChangeText={(text) =>
-                    setNewActivity((prev) => ({ ...prev, title: text }))
-                  }
-                />
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  placeholder="Description de l'activité"
-                  value={newActivity.description}
-                  onChangeText={(text) =>
-                    setNewActivity((prev) => ({ ...prev, description: text }))
-                  }
-                  multiline
-                />
-                <TouchableOpacity
-                  style={styles.addActivityButton}
-                  onPress={handleAddChallenge}
-                >
-                  <Text style={styles.addActivityButtonText}>Ajouter l'activité</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           ) : (
             <View style={styles.locationLoadingContainer}>

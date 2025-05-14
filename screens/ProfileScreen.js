@@ -501,10 +501,8 @@ const ProfileScreen = ({ navigation }) => {
                 
                 <ScrollView style={styles.editProfileForm}>
                   <View style={styles.profileImageEditContainer}>
-                    <TouchableOpacity 
-                      style={styles.profileImageEdit}
-                      onPress={pickImage}
-                    >
+                    {/* Suppression de la possibilité de cliquer sur la photo */}
+                    <View style={styles.profileImageEdit}>
                       {editedProfile.profileImage ? (
                         <Image 
                           source={{ uri: editedProfile.profileImage }} 
@@ -519,8 +517,11 @@ const ProfileScreen = ({ navigation }) => {
                       <View style={styles.cameraIconContainer}>
                         <Icon name="camera" size={18} color={COLORS.white} />
                       </View>
+                    </View>
+                    {/* Le bouton "Changer la photo" reste cliquable */}
+                    <TouchableOpacity onPress={pickImage}>
+                      <Text style={styles.changePhotoText}>Changer la photo</Text>
                     </TouchableOpacity>
-                    <Text style={styles.changePhotoText}>Changer la photo</Text>
                   </View>
                   
                   <View style={styles.formField}>
