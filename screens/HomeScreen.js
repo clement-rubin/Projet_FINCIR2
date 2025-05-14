@@ -30,7 +30,7 @@ import * as Haptics from 'expo-haptics';
 import MapView from 'react-native-maps';
 import { Marker } from 'react-native-maps';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { retrievePoints, retrieveDailyTasks, retrieveCompletedTasks, retrieveQuizTasks, checkQuizAnswer } from '../utils/storage';
+import { retrievePoints, retrieveDailyTasks, retrieveCompletedTasks, retrieveQuizTasks, checkQuizAnswer, retrieveTasks } from '../utils/storage';
 import ProgressBar from '../components/ProgressBar';
 import Icon, { COLORS } from '../components/common/Icon';
 import { SCREEN, calculateLevel, generateUniqueId, CHALLENGE_TYPES } from '../utils/constants';
@@ -974,6 +974,23 @@ export default function HomeScreen({ navigation }) {
       .catch((err) => console.error("Erreur lors de l'ouverture de la carte :", err));
   };
 
+  // Dictionnaire pour traduire les catégories en français
+const CATEGORY_LABELS_FR = {
+  FITNESS: "Sport",
+  MINDFULNESS: "Méditation",
+  LEARNING: "Lecture / Apprentissage",
+  SOCIAL: "Social",
+  PRODUCTIVITY: "Productivité",
+  CREATIVITY: "Créativité",
+  WELLBEING: "Bien-être",
+  NUTRITION: "Nutrition",
+  CULTURE: "Culture",
+  QUIZ: "Question du jour",
+  "QUESTION DU JOUR": "Question du jour",
+  CUSTOM: "Personnalisé",
+  AUTRE: "Autre"
+};
+
   // Ajoutez un état pour le timer jusqu'à minuit
   const [midnightTimer, setMidnightTimer] = useState(getTimeUntilMidnight());
 
@@ -986,6 +1003,57 @@ export default function HomeScreen({ navigation }) {
       return () => clearInterval(interval);
     }
   }, [isButtonDisabled]);
+
+  // Ajout pour la modale de détail de progression
+  const [showProgressDetail, setShowProgressDetail] = useState(false);
+  const [categoryPoints, setCategoryPoints] = useState({});
+  const [categoryTotal, setCategoryTotal] = useState(0);
+
+  // Fonction utilitaire pour calculer les points par catégorie
+  const calculateCategoryPoints = async () => {
+    try {
+      // Récupérer toutes les tâches (standards, quotidiennes)
+      const [allTasks, dailyTasks, quizTasks] = await Promise.all([
+        retrieveTasks ? retrieveTasks() : [],
+        retrieveDailyTasks ? retrieveDailyTasks() : [],
+        retrieveQuizTasks ? retrieveQuizTasks() : [],
+      ]);
+      // Prendre toutes les tâches complétées (standards + quotidiennes)
+      const completedTasks = [...(allTasks || []), ...(dailyTasks || [])].filter(t => t.completed);
+
+      // Calcul des points par catégorie pour les tâches
+      const pointsByCategory = {};
+      let total = 0;
+      completedTasks.forEach(task => {
+        const cat = task.category || 'AUTRE';
+        pointsByCategory[cat] = (pointsByCategory[cat] || 0) + (task.points || 0);
+        total += (task.points || 0);
+      });
+
+      // Ajouter les points des quiz complétés sous la catégorie "QUESTION DU JOUR"
+      if (quizTasks && Array.isArray(quizTasks)) {
+        quizTasks.forEach(q => {
+          if (q.completed) {
+            const cat = 'QUESTION DU JOUR';
+            pointsByCategory[cat] = (pointsByCategory[cat] || 0) + (q.points || 0);
+            total += (q.points || 0);
+          }
+        });
+      }
+
+      setCategoryPoints(pointsByCategory);
+      setCategoryTotal(total);
+    } catch (e) {
+      setCategoryPoints({});
+      setCategoryTotal(0);
+    }
+  };
+
+  // Ouvre la modale et calcule les points par catégorie
+  const openProgressDetail = async () => {
+    await calculateCategoryPoints();
+    setShowProgressDetail(true);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -1085,13 +1153,16 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.levelTitle}>Niveau {level}</Text>
                 <Text style={styles.levelProgress}>Prochain niveau : {level + 1}</Text>
               </View>
-              <ProgressBar 
-                progress={Math.round(progress * 10) / 10} 
-                total={100} 
-                height={12}
-                barColor={COLORS.secondary}
-                backgroundColor="#eef2fd"
-              />
+              {/* Rendre la barre de progression cliquable */}
+              <TouchableOpacity activeOpacity={0.8} onPress={openProgressDetail}>
+                <ProgressBar 
+                  progress={Math.round(progress * 10) / 10} 
+                  total={100} 
+                  height={12}
+                  barColor={COLORS.secondary}
+                  backgroundColor="#eef2fd"
+                />
+              </TouchableOpacity>
             </Animated.View>
 
             {/* Défi du jour mis en évidence */}
@@ -1682,6 +1753,70 @@ export default function HomeScreen({ navigation }) {
           </View>
         </Modal>
       )}
+
+      {/* Modale de détail de progression */}
+      <Modal
+        visible={showProgressDetail}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowProgressDetail(false)}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.4)',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <View style={{
+            backgroundColor: COLORS.white,
+            borderRadius: 20,
+            padding: 24,
+            width: '85%',
+            maxHeight: '70%'
+          }}>
+            <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16, color: COLORS.primary, textAlign: 'center' }}>
+              Détail de la progression
+            </Text>
+            <Text style={{ fontSize: 15, color: COLORS.textSecondary, marginBottom: 12, textAlign: 'center' }}>
+              Points gagnés par catégorie
+            </Text>
+            <ScrollView style={{ maxHeight: 250 }}>
+              {Object.keys(categoryPoints).length === 0 && (
+                <Text style={{ color: COLORS.textLight, textAlign: 'center', marginVertical: 20 }}>
+                  Aucun défi complété pour le moment.
+                </Text>
+              )}
+              {Object.entries(categoryPoints).map(([cat, pts]) => (
+                <View key={cat} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <Text style={{ fontSize: 16, color: COLORS.textPrimary }}>
+                    {CATEGORY_LABELS_FR[cat] || cat}
+                  </Text>
+                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: COLORS.secondary }}>
+                    {pts} pts
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+            <View style={{ borderTopWidth: 1, borderTopColor: '#eee', marginTop: 16, paddingTop: 12 }}>
+              <Text style={{ fontWeight: 'bold', fontSize: 16, color: COLORS.primary, textAlign: 'right' }}>
+                Total : {categoryTotal} pts
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={{
+                marginTop: 18,
+                backgroundColor: COLORS.secondary,
+                borderRadius: 10,
+                paddingVertical: 12,
+                alignItems: 'center'
+              }}
+              onPress={() => setShowProgressDetail(false)}
+            >
+              <Text style={{ color: COLORS.white, fontWeight: 'bold', fontSize: 16 }}>Fermer</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

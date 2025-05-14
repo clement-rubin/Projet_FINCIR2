@@ -496,7 +496,18 @@ const generateAndSaveDailyTasks = async () => {
       difficulty: "EASY",
       category: "PRODUCTIVITY"
     }
-  ];
+  ].map(task => ({
+    ...task,
+    // Ajout d'un champ categoryLabel en français
+    categoryLabel:
+      task.category === "FITNESS" ? "Sport" :
+      task.category === "MINDFULNESS" ? "Méditation" :
+      task.category === "LEARNING" ? "Lecture / Apprentissage" :
+      task.category === "SOCIAL" ? "Social" :
+      task.category === "PRODUCTIVITY" ? "Productivité" :
+      task.category === "CREATIVITY" ? "Créativité" :
+      "Autre"
+  }));
   
   // Sélectionner aléatoirement 3 défis quotidiens
   const selectedIndices = new Set();

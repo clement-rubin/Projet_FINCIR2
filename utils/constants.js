@@ -29,7 +29,6 @@ export const CHALLENGE_CATEGORIES = {
   PRODUCTIVITY: { id: 'productivity', name: "Productivité", icon: "timer", color: "#f1c40f" },
   MINDFULNESS: { id: 'mindfulness', name: "Bien-être mental", icon: "leaf", color: "#16a085" },
   CUSTOM: { id: 'custom', name: "Personnalisé", icon: "create", color: "#34495e" },
-  QUIZ: { id: 'quiz', name: "Culture Générale", icon: "help-circle", color: "#8e44ad" },
   SPORT: {
     id: 'sport',
     name: 'Sport',
@@ -69,7 +68,6 @@ export const CHALLENGE_TYPES = {
   TIMED: 'timed',         // Défis à durée limitée
   STREAK: 'streak',       // Défis qui demandent une série de complétion consécutive
   COMMUNITY: 'community', // Défis de la communauté
-  QUIZ: 'quiz',           // Questions de culture générale
   COMPLETED: 'completed'  // Défis complétés par l'utilisateur
 };
 
