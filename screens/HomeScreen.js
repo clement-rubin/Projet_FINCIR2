@@ -29,7 +29,7 @@ import * as Haptics from 'expo-haptics';
 // Fix the MapView import to work with react-native-maps v1.18.0
 import MapView from 'react-native-maps';
 import { Marker } from 'react-native-maps';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { retrievePoints, retrieveDailyTasks, retrieveCompletedTasks, retrieveQuizTasks, checkQuizAnswer } from '../utils/storage';
 import ProgressBar from '../components/ProgressBar';
 import Icon, { COLORS } from '../components/common/Icon';
@@ -115,6 +115,14 @@ export default function HomeScreen({ navigation }) {
     // Charger le nombre de défis complétés et le temps du prochain défi
     loadChallengeCompletion();
   }, []);
+
+  // Recharge les points et le défi du jour à chaque focus de l'écran
+  useFocusEffect(
+    React.useCallback(() => {
+      loadUserData();
+      loadDailyChallenge();
+    }, [])
+  );
 
   // Animation de pulsation continue pour attirer l'attention
   const startPulseAnimation = () => {
