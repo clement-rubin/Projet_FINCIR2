@@ -11,7 +11,8 @@ import {
   Alert,
   Image,
   Animated,
-  Easing
+  Easing,
+  SafeAreaView // Ajouté ici
 } from 'react-native';
 import Icon, { COLORS } from '../components/common/Icon';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -558,7 +559,7 @@ const FriendsScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.searchContainer}>
         <Icon name="search" size={20} color={COLORS.textSecondary} style={styles.searchIcon} />
         <TextInput
@@ -747,7 +748,7 @@ const FriendsScreen = ({ navigation }) => {
           }
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
