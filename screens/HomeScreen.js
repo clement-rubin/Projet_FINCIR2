@@ -17,19 +17,23 @@ import {
   TouchableWithoutFeedback,
   Modal,
   Linking,
-  TextInput // Add this import
+  TextInput, // Add this import
+  ActivityIndicator,
+  Switch
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import * as Location from 'expo-location';
+import * as Haptics from 'expo-haptics';
 // Fix the MapView import to work with react-native-maps v1.18.0
 import MapView from 'react-native-maps';
 import { Marker } from 'react-native-maps';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { retrievePoints, retrieveDailyTasks } from '../utils/storage';
+import { useNavigation } from '@react-navigation/native';
+import { retrievePoints, retrieveDailyTasks, retrieveCompletedTasks, retrieveQuizTasks, checkQuizAnswer } from '../utils/storage';
 import ProgressBar from '../components/ProgressBar';
 import Icon, { COLORS } from '../components/common/Icon';
-import { SCREEN, calculateLevel, generateUniqueId } from '../utils/constants';
+import { SCREEN, calculateLevel, generateUniqueId, CHALLENGE_TYPES } from '../utils/constants';
 import { addTaskToCalendar } from '../services/calendarService';
 
 const { width, height } = Dimensions.get('window');
@@ -46,6 +50,23 @@ export default function HomeScreen({ navigation }) {
   const [nextChallengeTime, setNextChallengeTime] = useState(null);
   const [countdownTimer, setCountdownTimer] = useState(null);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  
+  // Variable d'état pour les quiz
+  const [dailyQuiz, setDailyQuiz] = useState(null);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [quizResult, setQuizResult] = useState(null);
+  
+  // Charger la question de quiz quotidienne
+  const loadDailyQuiz = async () => {
+    try {
+      const quizTasks = await retrieveQuizTasks() || [];
+      if (quizTasks.length > 0) {
+        setDailyQuiz(quizTasks[0]);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement du quiz quotidien:', error);
+    }
+  };
   
   // États pour la fonctionnalité de carte
   const [location, setLocation] = useState(null);
@@ -87,6 +108,9 @@ export default function HomeScreen({ navigation }) {
 
     // Charger un défi quotidien pour l'afficher en évidence
     loadDailyChallenge();
+    
+    // Charger la question de quiz quotidienne
+    loadDailyQuiz();
     
     // Charger le nombre de défis complétés et le temps du prochain défi
     loadChallengeCompletion();
@@ -1219,6 +1243,142 @@ export default function HomeScreen({ navigation }) {
               </View>
             )}
 
+            {/* Question de culture générale quotidienne */}
+            {dailyQuiz && (
+              <View style={styles.dailyQuizContainer}>
+                <View style={styles.dailyQuizHeader}>
+                  <View style={styles.headerLeft}>
+                    <Icon name="help-circle" size={22} color={COLORS.quiz.color || "#8e44ad"} />
+                    <Text style={styles.dailyQuizTitle}>Question du jour</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.quizContent}>
+                  <Text style={styles.quizQuestion}>{dailyQuiz.title}</Text>
+                  <Text style={styles.quizDescription}>{dailyQuiz.description}</Text>
+                  
+                  {!dailyQuiz.completed && !quizResult && (
+                    <View style={styles.quizAnswers}>
+                      {dailyQuiz.answers.map((answer, index) => (
+                        <TouchableOpacity 
+                          key={index}
+                          style={[
+                            styles.answerButton,
+                            selectedAnswer === answer && styles.selectedAnswerButton
+                          ]}
+                          onPress={() => setSelectedAnswer(answer)}
+                        >
+                          <Text 
+                            style={[
+                              styles.answerText,
+                              selectedAnswer === answer && styles.selectedAnswerText
+                            ]}
+                          >
+                            {answer}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                      
+                      <TouchableOpacity 
+                        style={[
+                          styles.submitAnswerButton,
+                          !selectedAnswer && styles.disabledButton
+                        ]}
+                        disabled={!selectedAnswer}
+                        onPress={async () => {
+                          try {
+                            if (!selectedAnswer) return;
+                            
+                            const result = await checkQuizAnswer(dailyQuiz.id, selectedAnswer);
+                            setQuizResult(result);
+                            
+                            if (result.isCorrect) {
+                              // Mettre à jour les points
+                              const newPoints = points + dailyQuiz.points;
+                              setPoints(newPoints);
+                              
+                              // Recalculer le niveau
+                              const levelInfo = calculateLevel(newPoints);
+                              setLevel(levelInfo.level);
+                              setProgress(levelInfo.progress);
+                              
+                              // Animation de félicitation
+                              Haptics.notificationAsync(
+                                Haptics.NotificationFeedbackType.Success
+                              );
+                              showRewardAnimation();
+                            } else {
+                              // Vibration d'erreur
+                              Haptics.notificationAsync(
+                                Haptics.NotificationFeedbackType.Error
+                              );
+                            }
+                          } catch (error) {
+                            console.error('Erreur lors de la vérification de la réponse:', error);
+                            Alert.alert('Erreur', 'Une erreur est survenue lors de la vérification de votre réponse.');
+                          }
+                        }}
+                      >
+                        <Text style={styles.submitAnswerText}>
+                          Valider ma réponse
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  
+                  {quizResult && (
+                    <View style={styles.quizResultContainer}>
+                      <View style={[
+                        styles.resultIcon,
+                        quizResult.isCorrect ? styles.correctResultIcon : styles.incorrectResultIcon
+                      ]}>
+                        <Icon 
+                          name={quizResult.isCorrect ? "checkmark" : "close"} 
+                          size={30} 
+                          color={COLORS.white} 
+                        />
+                      </View>
+                      <Text style={styles.resultMessage}>{quizResult.message}</Text>
+                      {!quizResult.isCorrect && (
+                        <Text style={styles.correctAnswerText}>
+                          La bonne réponse était: {quizResult.correctAnswer}
+                        </Text>
+                      )}
+                      <TouchableOpacity 
+                        style={styles.nextQuizButton}
+                        onPress={async () => {
+                          // Réinitialiser l'état
+                          setSelectedAnswer(null);
+                          setQuizResult(null);
+                          
+                          // Recharger une nouvelle question
+                          await loadDailyQuiz();
+                        }}
+                      >
+                        <Text style={styles.nextQuizButtonText}>
+                          {quizResult.isCorrect ? "Super !" : "J'ai compris"}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  
+                  {dailyQuiz.completed && !quizResult && (
+                    <View style={styles.quizResultContainer}>
+                      <View style={styles.correctResultIcon}>
+                        <Icon name="checkmark" size={30} color={COLORS.white} />
+                      </View>
+                      <Text style={styles.resultMessage}>
+                        Vous avez déjà répondu à la question du jour !
+                      </Text>
+                      <Text style={styles.completedQuizPoints}>
+                        +{dailyQuiz.points} points
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            )}
+
             {/* Actions rapides */}
             <Text style={styles.sectionTitle}>Actions rapides</Text>
             <Animated.View style={[
@@ -1391,6 +1551,34 @@ export default function HomeScreen({ navigation }) {
 
           {location ? (
             <View style={styles.mapContentContainer}>
+              {/* Input for new activity details */}
+              <View style={styles.newActivityDetails}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Titre de l'activité"
+                  value={newActivity.title}
+                  onChangeText={(text) =>
+                    setNewActivity((prev) => ({ ...prev, title: text }))
+                  }
+                />
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Description de l'activité"
+                  value={newActivity.description}
+                  onChangeText={(text) =>
+                    setNewActivity((prev) => ({ ...prev, description: text }))
+                  }
+                  multiline
+                />
+                <TouchableOpacity
+                  style={styles.addActivityButton}
+                  onPress={handleAddChallenge}
+                >
+                  <Text style={styles.addActivityButtonText}>Ajouter l'activité</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Map at the bottom */}
               <MapView
                 style={styles.map}
                 initialRegion={{
@@ -1421,7 +1609,7 @@ export default function HomeScreen({ navigation }) {
                     }}
                     title={challenge.title}
                     description={challenge.description}
-                    onPress={() => navigateToActivity(challenge)} // Use the fixed function
+                    onPress={() => navigateToActivity(challenge)}
                   >
                     <View style={[styles.challengeMarker, getCategoryStyle(challenge.category)]}>
                       <Icon
@@ -1450,33 +1638,6 @@ export default function HomeScreen({ navigation }) {
                   />
                 )}
               </MapView>
-
-              {/* Input for new activity details */}
-              <View style={styles.newActivityDetails}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Titre de l'activité"
-                  value={newActivity.title}
-                  onChangeText={(text) =>
-                    setNewActivity((prev) => ({ ...prev, title: text }))
-                  }
-                />
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  placeholder="Description de l'activité"
-                  value={newActivity.description}
-                  onChangeText={(text) =>
-                    setNewActivity((prev) => ({ ...prev, description: text }))
-                  }
-                  multiline
-                />
-                <TouchableOpacity
-                  style={styles.addActivityButton}
-                  onPress={handleAddChallenge}
-                >
-                  <Text style={styles.addActivityButtonText}>Ajouter l'activité</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           ) : (
             <View style={styles.locationLoadingContainer}>
@@ -2355,6 +2516,142 @@ const styles = StyleSheet.create({
   },
   navigateButtonText: {
     color: COLORS.white,
+    fontWeight: 'bold',
+  },
+  // Styles pour le quiz quotidien
+  dailyQuizContainer: {
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    marginBottom: 25,
+    padding: 20,
+    shadowColor: COLORS.black,
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#f0f3f8',
+  },
+  dailyQuizHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  dailyQuizTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.dark,
+    marginLeft: 8,
+  },
+  quizContent: {
+    backgroundColor: '#f9fafc',
+    borderRadius: 15,
+    padding: 15,
+  },
+  quizQuestion: {
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: COLORS.dark,
+    marginBottom: 8,
+  },
+  quizDescription: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 15,
+    lineHeight: 20,
+  },
+  quizAnswers: {
+    marginBottom: 10,
+  },
+  answerButton: {
+    backgroundColor: '#f0f3f8',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#e1e8f0',
+  },
+  selectedAnswerButton: {
+    backgroundColor: COLORS.primary + '20',
+    borderColor: COLORS.primary,
+  },
+  answerText: {
+    fontSize: 15,
+    color: COLORS.textPrimary,
+  },
+  selectedAnswerText: {
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  submitAnswerButton: {
+    backgroundColor: COLORS.quiz.color || '#8e44ad',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 10,
+    shadowColor: COLORS.quiz.color || '#8e44ad',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  submitAnswerText: {
+    color: COLORS.white,
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  quizResultContainer: {
+    alignItems: 'center',
+    padding: 15,
+  },
+  resultIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  correctResultIcon: {
+    backgroundColor: COLORS.success,
+  },
+  incorrectResultIcon: {
+    backgroundColor: COLORS.error,
+  },
+  resultMessage: {
+    fontSize: 16,
+    color: COLORS.textPrimary,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  correctAnswerText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  completedQuizPoints: {
+    fontSize: 16,
+    color: COLORS.success,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  nextQuizButton: {
+    backgroundColor: COLORS.quiz.color || '#8e44ad',
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 30,
+    shadowColor: COLORS.quiz.color || '#8e44ad',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  nextQuizButtonText: {
+    color: COLORS.white,
+    fontSize: 15,
     fontWeight: 'bold',
   },
 });

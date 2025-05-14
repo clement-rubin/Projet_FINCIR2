@@ -6,11 +6,13 @@ import { addTaskToCalendar, removeTaskFromCalendar, updateTaskInCalendar } from 
 const TASKS_STORAGE_KEY = '@challengr_tasks';
 const DAILY_TASKS_KEY = '@challengr_daily_tasks';
 const TIMED_TASKS_KEY = '@challengr_timed_tasks';
+const QUIZ_TASKS_KEY = '@challengr_quiz_tasks';
 const POINTS_STORAGE_KEY = '@challengr_points';
 const COMPLETED_TASKS_KEY = '@challengr_completed_tasks';
 const USER_PROFILE_KEY = '@challengr_user_profile';
 const STREAK_KEY = '@challengr_streak';
 const LAST_DAILY_REFRESH_KEY = '@challengr_last_daily_refresh';
+const LAST_QUIZ_REFRESH_KEY = '@challengr_last_quiz_refresh';
 const CURRENT_USER_KEY = '@challengr_current_user'; // Ajout de la clé utilisée dans authService
 
 /**
@@ -711,5 +713,251 @@ export const updateStreak = async () => {
   } catch (error) {
     console.error('Erreur lors de la mise à jour de la série:', error);
     return { count: 0, lastCompletionDate: null };
+  }
+};
+
+/**
+ * Récupère les questions de quiz quotidiennes
+ */
+export const retrieveQuizTasks = async () => {
+  try {
+    // Vérifier si les questions de quiz doivent être rafraîchies
+    await refreshQuizTasksIfNeeded();
+    
+    const userKey = await getUserSpecificKey(QUIZ_TASKS_KEY);
+    const quizTasksJson = await AsyncStorage.getItem(userKey);
+    
+    if (quizTasksJson !== null) {
+      return JSON.parse(quizTasksJson);
+    }
+    
+    // Si aucune question de quiz n'existe, en générer de nouvelles
+    return await generateAndSaveQuizTasks();
+  } catch (error) {
+    console.error('Erreur lors de la récupération des questions de quiz:', error);
+    return [];
+  }
+};
+
+/**
+ * Vérifie si les questions de quiz doivent être rafraîchies (une fois par jour)
+ */
+export const refreshQuizTasksIfNeeded = async () => {
+  try {
+    const userKey = await getUserSpecificKey(LAST_QUIZ_REFRESH_KEY);
+    const lastRefreshJson = await AsyncStorage.getItem(userKey);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    
+    let lastRefresh = 0;
+    if (lastRefreshJson !== null) {
+      lastRefresh = parseInt(lastRefreshJson, 10);
+    }
+    
+    // Si la dernière actualisation n'est pas d'aujourd'hui, régénérer les questions
+    if (lastRefresh < today) {
+      await generateAndSaveQuizTasks();
+      await AsyncStorage.setItem(userKey, today.toString());
+    }
+  } catch (error) {
+    console.error('Erreur lors de la vérification de l\'actualisation des questions de quiz:', error);
+  }
+};
+
+/**
+ * Génère de nouvelles questions de quiz
+ */
+const generateAndSaveQuizTasks = async () => {
+  // Liste des questions de quiz possibles
+  const possibleQuizTasks = [
+    {
+      title: "Quelle est la capitale de l'Australie?",
+      description: "Indice: Ce n'est pas Sydney",
+      answers: ["Canberra", "Sydney", "Melbourne", "Brisbane"],
+      correctAnswer: "Canberra",
+      points: 20,
+      difficulty: "MEDIUM",
+      category: "QUIZ"
+    },
+    {
+      title: "Quel est l'élément chimique le plus abondant dans l'univers?",
+      description: "C'est aussi le plus léger",
+      answers: ["Hydrogène", "Hélium", "Oxygène", "Carbone"],
+      correctAnswer: "Hydrogène",
+      points: 15,
+      difficulty: "EASY",
+      category: "QUIZ"
+    },
+    {
+      title: "Qui a peint 'La Nuit étoilée'?",
+      description: "Un célèbre peintre post-impressionniste",
+      answers: ["Vincent van Gogh", "Pablo Picasso", "Claude Monet", "Leonardo da Vinci"],
+      correctAnswer: "Vincent van Gogh",
+      points: 20,
+      difficulty: "MEDIUM",
+      category: "QUIZ"
+    },
+    {
+      title: "En quelle année a eu lieu la révolution française?",
+      description: "Un événement qui a marqué l'histoire de France",
+      answers: ["1789", "1769", "1799", "1776"],
+      correctAnswer: "1789",
+      points: 25,
+      difficulty: "MEDIUM",
+      category: "QUIZ"
+    },
+    {
+      title: "Quel est le plus grand océan du monde?",
+      description: "Il couvre environ un tiers de la surface de la Terre",
+      answers: ["Océan Pacifique", "Océan Atlantique", "Océan Indien", "Océan Arctique"],
+      correctAnswer: "Océan Pacifique",
+      points: 15,
+      difficulty: "EASY",
+      category: "QUIZ"
+    },
+    {
+      title: "Quelle est la planète la plus proche du Soleil?",
+      description: "C'est aussi la plus petite planète du système solaire",
+      answers: ["Mercure", "Vénus", "Mars", "Jupiter"],
+      correctAnswer: "Mercure",
+      points: 15,
+      difficulty: "EASY",
+      category: "QUIZ"
+    },
+    {
+      title: "Qui a écrit 'Les Misérables'?",
+      description: "Un célèbre écrivain français du 19ème siècle",
+      answers: ["Victor Hugo", "Alexandre Dumas", "Honoré de Balzac", "Émile Zola"],
+      correctAnswer: "Victor Hugo",
+      points: 20,
+      difficulty: "MEDIUM",
+      category: "QUIZ"
+    },
+    {
+      title: "Quelle est la plus haute montagne du monde?",
+      description: "Située dans la chaîne de l'Himalaya",
+      answers: ["Mont Everest", "K2", "Mont Blanc", "Kilimandjaro"],
+      correctAnswer: "Mont Everest",
+      points: 15,
+      difficulty: "EASY",
+      category: "QUIZ"
+    },
+    {
+      title: "Quel pays a remporté la Coupe du Monde de football en 2018?",
+      description: "Un pays européen",
+      answers: ["France", "Brésil", "Allemagne", "Argentine"],
+      correctAnswer: "France",
+      points: 15,
+      difficulty: "EASY",
+      category: "QUIZ"
+    },
+    {
+      title: "Quel est le plus grand désert du monde?",
+      description: "Contrairement à ce que l'on pense, ce n'est pas le Sahara",
+      answers: ["Antarctique", "Sahara", "Kalahari", "Gobi"],
+      correctAnswer: "Antarctique",
+      points: 30,
+      difficulty: "HARD",
+      category: "QUIZ"
+    },
+    {
+      title: "Qui a formulé la théorie de la relativité?",
+      description: "Un physicien allemand très célèbre",
+      answers: ["Albert Einstein", "Isaac Newton", "Stephen Hawking", "Niels Bohr"],
+      correctAnswer: "Albert Einstein",
+      points: 20,
+      difficulty: "MEDIUM",
+      category: "QUIZ"
+    },
+    {
+      title: "Quel est le plus grand mammifère terrestre?",
+      description: "On le trouve principalement en Afrique",
+      answers: ["Éléphant d'Afrique", "Girafe", "Rhinocéros blanc", "Hippopotame"],
+      correctAnswer: "Éléphant d'Afrique",
+      points: 15,
+      difficulty: "EASY",
+      category: "QUIZ"
+    }
+  ];
+  
+  // Sélectionner aléatoirement une question de quiz quotidienne
+  const randomIndex = Math.floor(Math.random() * possibleQuizTasks.length);
+  const quizTask = possibleQuizTasks[randomIndex];
+  
+  // Créer la question de quiz
+  const dailyQuiz = {
+    id: generateUniqueId(),
+    title: quizTask.title,
+    description: quizTask.description,
+    answers: quizTask.answers,
+    correctAnswer: quizTask.correctAnswer,
+    points: quizTask.points,
+    difficulty: quizTask.difficulty,
+    category: quizTask.category,
+    type: CHALLENGE_TYPES.QUIZ,
+    completed: false,
+    calendarEventId: null,
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(new Date().setHours(23, 59, 59, 999)).toISOString()
+  };
+  
+  // Sauvegarder la question de quiz
+  const userKey = await getUserSpecificKey(QUIZ_TASKS_KEY);
+  await AsyncStorage.setItem(userKey, JSON.stringify([dailyQuiz]));
+  
+  return [dailyQuiz];
+};
+
+/**
+ * Vérifie si la réponse à la question de quiz est correcte
+ */
+export const checkQuizAnswer = async (quizId, answer) => {
+  try {
+    const quizTasks = await retrieveQuizTasks();
+    const quiz = quizTasks.find(q => q.id === quizId);
+    
+    if (!quiz) {
+      return { success: false, message: "Question non trouvée" };
+    }
+    
+    const isCorrect = quiz.correctAnswer === answer;
+    
+    if (isCorrect) {
+      // Marquer la question comme complétée
+      const updatedQuizTasks = quizTasks.map(q => {
+        if (q.id === quizId) {
+          return { ...q, completed: true };
+        }
+        return q;
+      });
+      
+      // Sauvegarder la mise à jour
+      const userKey = await getUserSpecificKey(QUIZ_TASKS_KEY);
+      await AsyncStorage.setItem(userKey, JSON.stringify(updatedQuizTasks));
+      
+      // Ajouter aux tâches complétées
+      await addCompletedTask(quizId);
+      
+      // Ajouter les points
+      const pointsToAdd = quiz.points;
+      await addPoints(pointsToAdd);
+      
+      return { 
+        success: true, 
+        isCorrect: true, 
+        points: pointsToAdd, 
+        message: "Bonne réponse! Vous avez gagné " + pointsToAdd + " points."
+      };
+    } else {
+      return { 
+        success: true, 
+        isCorrect: false, 
+        correctAnswer: quiz.correctAnswer,
+        message: "Mauvaise réponse. La bonne réponse était: " + quiz.correctAnswer
+      };
+    }
+  } catch (error) {
+    console.error('Erreur lors de la vérification de la réponse:', error);
+    return { success: false, message: "Une erreur s'est produite" };
   }
 };
