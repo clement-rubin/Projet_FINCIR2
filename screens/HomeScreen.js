@@ -29,7 +29,7 @@ import * as Haptics from 'expo-haptics';
 // Fix the MapView import to work with react-native-maps v1.18.0
 import MapView from 'react-native-maps';
 import { Marker } from 'react-native-maps';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { retrievePoints, retrieveDailyTasks, retrieveCompletedTasks, retrieveQuizTasks, checkQuizAnswer } from '../utils/storage';
 import ProgressBar from '../components/ProgressBar';
 import Icon, { COLORS } from '../components/common/Icon';
@@ -37,6 +37,18 @@ import { SCREEN, calculateLevel, generateUniqueId, CHALLENGE_TYPES } from '../ut
 import { addTaskToCalendar } from '../services/calendarService';
 
 const { width, height } = Dimensions.get('window');
+
+// Ajoutez cette fonction utilitaire pour obtenir le temps restant jusqu'à minuit
+const getTimeUntilMidnight = () => {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  const diff = midnight - now;
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  return { hours, minutes, seconds };
+};
 
 export default function HomeScreen({ navigation }) {
   // États pour l'utilisateur
@@ -414,6 +426,14 @@ export default function HomeScreen({ navigation }) {
     loadChallengeCompletion();
   }, []);
 
+  // Recharge les points et le défi du jour à chaque focus de l'écran
+  useFocusEffect(
+    React.useCallback(() => {
+      loadUserData();
+      loadDailyChallenge();
+    }, [])
+  );
+
   // Animation de pulsation continue pour attirer l'attention
   const startPulseAnimation = () => {
     Animated.loop(
@@ -700,20 +720,16 @@ export default function HomeScreen({ navigation }) {
       const dailyCompletedJson = await AsyncStorage.getItem('@challengr_daily_completed');
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-      
+
       if (dailyCompletedJson) {
         const dailyCompleted = JSON.parse(dailyCompletedJson);
-        
+
         // Vérifier si les informations correspondent à aujourd'hui
         if (dailyCompleted.date === today) {
           setDailyChallengesCompleted(dailyCompleted.count || 0);
-          
-          // Si un prochain défi est programmé et que le délai n'est pas encore passé
-          if (dailyCompleted.nextChallengeTime && dailyCompleted.nextChallengeTime > now.getTime()) {
-            setNextChallengeTime(dailyCompleted.nextChallengeTime);
-            setIsButtonDisabled(true);
-            startCountdown(dailyCompleted.nextChallengeTime);
-          }
+          // Désactive le bouton uniquement si 2 défis sont complétés
+          setIsButtonDisabled((dailyCompleted.count || 0) >= 2);
+          setNextChallengeTime(null);
         } else {
           // C'est un nouveau jour, réinitialiser le compteur
           resetDailyCompletionCounter();
@@ -748,46 +764,7 @@ export default function HomeScreen({ navigation }) {
     }
   };
   
-  // Démarre le compte à rebours
-  const startCountdown = (targetTime) => {
-    if (!targetTime) return;
-    
-    // Calculer le temps restant en secondes
-    const updateCountdown = () => {
-      const now = new Date().getTime();
-      const timeRemaining = Math.max(0, targetTime - now);
-      
-      if (timeRemaining <= 0) {
-        // Le délai est passé, réactiver le bouton
-        clearInterval(countdownTimer);
-        setCountdownTimer(null);
-        setIsButtonDisabled(false);
-        setNextChallengeTime(null);
-        return;
-      }
-      
-      // Convertir en heures:minutes:secondes
-      const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
-      const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-      
-      setNextChallengeTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-    };
-    
-    // Mettre à jour immédiatement puis toutes les secondes
-    updateCountdown();
-    const timer = setInterval(updateCountdown, 1000);
-    setCountdownTimer(timer);
-    
-    // Nettoyer l'intervalle lorsque le composant est démonté
-    return () => {
-      if (countdownTimer) {
-        clearInterval(countdownTimer);
-      }
-    };
-  };
-  
-  // Mettre à jour le compteur de défis complétés
+  // Supprime toute logique de délai/attente
   const updateChallengeCompletion = async () => {
     try {
       const now = new Date();
@@ -818,30 +795,15 @@ export default function HomeScreen({ navigation }) {
       const newCount = dailyCompleted.count + 1;
       dailyCompleted.count = newCount;
       setDailyChallengesCompleted(newCount);
-      
-      // Si l'utilisateur a déjà complété 2 défis, verrouiller jusqu'au lendemain
+
+      // Désactive le bouton uniquement si 2 défis sont complétés
       if (newCount >= 2) {
-        // Définir le délai jusqu'à minuit
-        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-        dailyCompleted.nextChallengeTime = tomorrow.getTime();
-        setNextChallengeTime(tomorrow.getTime());
         setIsButtonDisabled(true);
-        
-        // Afficher un message indiquant que l'utilisateur a atteint la limite
-        Alert.alert(
-          "Limite atteinte",
-          "Vous avez complété votre maximum de 2 défis quotidiens. Revenez demain pour relever de nouveaux défis!",
-          [{ text: "Compris" }]
-        );
       } else {
-        // Sinon, définir un délai de 12 heures
-        const nextTime = now.getTime() + (12 * 60 * 60 * 1000); // 12 heures en millisecondes
-        dailyCompleted.nextChallengeTime = nextTime;
-        setNextChallengeTime(nextTime);
-        setIsButtonDisabled(true);
-        startCountdown(nextTime);
+        setIsButtonDisabled(false);
       }
-      
+      setNextChallengeTime(null);
+
       // Sauvegarder les informations mises à jour
       await AsyncStorage.setItem('@challengr_daily_completed', JSON.stringify(dailyCompleted));
       
@@ -1054,21 +1016,13 @@ export default function HomeScreen({ navigation }) {
 
   // Simuler la complétion d'un défi
   const handleCompleteChallenge = async () => {
-    // Vérifier si l'utilisateur a atteint sa limite quotidienne ou est en période d'attente
+    // Désactive le bouton uniquement si 2 défis sont complétés
     if (isButtonDisabled) {
-      if (dailyChallengesCompleted >= 2) {
-        Alert.alert(
-          "Limite atteinte",
-          "Vous avez déjà complété 2 défis aujourd'hui. Revenez demain pour de nouveaux défis!",
-          [{ text: "Compris" }]
-        );
-      } else {
-        Alert.alert(
-          "Temps d'attente",
-          `Vous devez attendre ${nextChallengeTime} avant de pouvoir compléter un nouveau défi.`,
-          [{ text: "OK" }]
-        );
-      }
+      Alert.alert(
+        "Limite atteinte",
+        "Vous avez déjà complété 2 défis aujourd'hui. Revenez demain pour de nouveaux défis!",
+        [{ text: "Compris" }]
+      );
       return;
     }
 
@@ -1318,10 +1272,22 @@ export default function HomeScreen({ navigation }) {
       .catch((err) => console.error("Erreur lors de l'ouverture de la carte :", err));
   };
 
+  // Ajoutez un état pour le timer jusqu'à minuit
+  const [midnightTimer, setMidnightTimer] = useState(getTimeUntilMidnight());
+
+  // Mettez à jour le timer chaque seconde si la limite est atteinte
+  useEffect(() => {
+    if (isButtonDisabled) {
+      const interval = setInterval(() => {
+        setMidnightTimer(getTimeUntilMidnight());
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [isButtonDisabled]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-      
       <ScrollView 
         style={styles.container} 
         showsVerticalScrollIndicator={false}
@@ -1428,117 +1394,129 @@ export default function HomeScreen({ navigation }) {
 
             {/* Défi du jour mis en évidence */}
             {dailyTask && (
-              <View style={styles.dailyChallengeContainer}>
-                <View style={styles.dailyChallengeHeader}>
-                  <View style={styles.headerLeft}>
-                    <Icon name="calendar" size={22} color={COLORS.primary} />
-                    <Text style={styles.dailyChallengeTitle}>Défi du jour</Text>
-                  </View>
-                  <TouchableOpacity 
-                    style={styles.refreshButton}
-                    onPress={refreshDailyChallenge}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <Animated.View style={{ transform: [{ rotate: pulseAnim.interpolate({
-                        inputRange: [1, 1.2],
-                        outputRange: ['0deg', '360deg']
-                      }) }] }}>
-                        <Icon name="refresh" size={18} color={COLORS.tertiary} />
-                      </Animated.View>
-                    ) : (
-                      <Icon name="refresh" size={18} color={COLORS.secondary} />
-                    )}
-                  </TouchableOpacity>
-                </View>
-                
-                {/* Compteur de défis complétés et délai */}
-                <View style={styles.challengeStatusContainer}>
-                  <View style={styles.challengeCountContainer}>
-                    <Icon name="checkmark-circle" size={16} color={COLORS.success} />
-                    <Text style={styles.challengeCountText}>
-                      {dailyChallengesCompleted}/2 défis complétés aujourd'hui
-                    </Text>
-                  </View>
-                  
-                  {isButtonDisabled && nextChallengeTime && (
-                    <View style={styles.countdownContainer}>
-                      <Icon name="time" size={16} color={COLORS.warning} />
-                      <Text style={styles.countdownText}>
-                        {typeof nextChallengeTime === 'string' 
-                          ? `Prochain défi dans: ${nextChallengeTime}`
-                          : 'Attente du prochain défi...'}
+              <>
+                {dailyChallengesCompleted >= 2 ? (
+                  // Affichage réduit si deux défis sont complétés
+                  <View style={styles.dailyChallengeSmallContainer}>
+                    <View style={styles.dailyChallengeHeaderSmall}>
+                      <Icon name="calendar" size={22} color={COLORS.primary} />
+                      <Text style={styles.dailyChallengeTitleSmall}>Défi du jour</Text>
+                    </View>
+                    <View style={styles.comebackTomorrowContainer}>
+                      <Icon name="moon" size={26} color={COLORS.secondary} style={{ marginBottom: 6 }} />
+                      <Text style={styles.comebackText}>Revenez demain</Text>
+                      <Text style={styles.comebackSubText}>
+                        Prochains défis dans&nbsp;
+                        <Text style={styles.comebackTimer}>
+                          {`${String(midnightTimer.hours).padStart(2, '0')}:${String(midnightTimer.minutes).padStart(2, '0')}:${String(midnightTimer.seconds).padStart(2, '0')}`}
+                        </Text>
                       </Text>
                     </View>
-                  )}
-                </View>
-                
-                <View style={styles.dailyChallengeContent}>
-                  <View style={styles.challengeDetails}>
-                    <Text style={[
-                      styles.challengeTitle,
-                      dailyTask.completed && styles.completedChallengeTitle
-                    ]}>
-                      {dailyTask.title}
-                    </Text>
-                    <Text style={[
-                      styles.challengeDescription,
-                      dailyTask.completed && styles.completedChallengeDescription
-                    ]}>
-                      {dailyTask.description}
-                    </Text>
-                    <View style={styles.challengeInfo}>
-                      <View style={styles.pointsContainer}>
-                        <Icon name="star" size={14} color={COLORS.warning} />
-                        <Text style={styles.pointsText}>{dailyTask.points} points</Text>
+                  </View>
+                ) : (
+                  // Affichage normal si moins de 2 défis complétés
+                  <View style={styles.dailyChallengeContainer}>
+                    <View style={styles.dailyChallengeHeader}>
+                      <View style={styles.headerLeft}>
+                        <Icon name="calendar" size={22} color={COLORS.primary} />
+                        <Text style={styles.dailyChallengeTitle}>Défi du jour</Text>
                       </View>
-                      <View style={[styles.difficultyContainer, {
-                        backgroundColor: dailyTask.difficulty === 'EASY' 
-                          ? 'rgba(46, 204, 113, 0.15)' 
-                          : dailyTask.difficulty === 'MEDIUM'
-                            ? 'rgba(241, 196, 15, 0.15)'
-                            : 'rgba(231, 76, 60, 0.15)'
-                      }]}>
-                        <Text style={[styles.difficultyText, {
-                          color: dailyTask.difficulty === 'EASY' 
-                            ? '#27ae60' 
-                            : dailyTask.difficulty === 'MEDIUM'
-                              ? '#f39c12'
-                              : '#c0392b'
-                        }]}>
-                          {dailyTask.difficulty === 'EASY' 
-                            ? 'Facile' 
-                            : dailyTask.difficulty === 'MEDIUM'
-                              ? 'Moyen'
-                              : 'Difficile'
-                          }
+                      <TouchableOpacity 
+                        style={styles.refreshButton}
+                        onPress={refreshDailyChallenge}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <Animated.View style={{ transform: [{ rotate: pulseAnim.interpolate({
+                            inputRange: [1, 1.2],
+                            outputRange: ['0deg', '360deg']
+                          }) }] }}>
+                            <Icon name="refresh" size={18} color={COLORS.tertiary} />
+                          </Animated.View>
+                        ) : (
+                          <Icon name="refresh" size={18} color={COLORS.secondary} />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                    
+                    {/* Compteur de défis complétés et délai */}
+                    <View style={styles.challengeStatusContainer}>
+                      <View style={styles.challengeCountContainer}>
+                        <Icon name="checkmark-circle" size={16} color={COLORS.success} />
+                        <Text style={styles.challengeCountText}>
+                          {dailyChallengesCompleted}/2 défis complétés aujourd'hui
                         </Text>
                       </View>
                     </View>
-                  </View>
-                  
-                  <TouchableOpacity 
-                    style={[
-                      styles.completeButton,
-                      dailyTask.completed && styles.completedButton,
-                      isButtonDisabled && !dailyTask.completed && styles.disabledButton
-                    ]}
-                    onPress={handleCompleteChallenge}
-                    disabled={dailyTask.completed || isButtonDisabled}
-                  >
-                    {dailyTask.completed ? (
-                      <Icon name="checkmark-circle" size={24} color={COLORS.white} />
-                    ) : isButtonDisabled ? (
-                      <View style={styles.waitingContainer}>
-                        <Icon name="time" size={20} color={COLORS.white} />
-                        <Text style={styles.waitingText}>En attente</Text>
+                    
+                    <View style={styles.dailyChallengeContent}>
+                      <View style={styles.challengeDetails}>
+                        <Text style={[
+                          styles.challengeTitle,
+                          dailyTask.completed && styles.completedChallengeTitle
+                        ]}>
+                          {dailyTask.title}
+                        </Text>
+                        <Text style={[
+                          styles.challengeDescription,
+                          dailyTask.completed && styles.completedChallengeDescription
+                        ]}>
+                          {dailyTask.description}
+                        </Text>
+                        <View style={styles.challengeInfo}>
+                          <View style={styles.pointsContainer}>
+                            <Icon name="star" size={14} color={COLORS.warning} />
+                            <Text style={styles.pointsText}>{dailyTask.points} points</Text>
+                          </View>
+                          <View style={[styles.difficultyContainer, {
+                            backgroundColor: dailyTask.difficulty === 'EASY' 
+                              ? 'rgba(46, 204, 113, 0.15)' 
+                              : dailyTask.difficulty === 'MEDIUM'
+                                ? 'rgba(241, 196, 15, 0.15)'
+                                : 'rgba(231, 76, 60, 0.15)'
+                          }]}>
+                            <Text style={[styles.difficultyText, {
+                              color: dailyTask.difficulty === 'EASY' 
+                                ? '#27ae60' 
+                                : dailyTask.difficulty === 'MEDIUM'
+                                  ? '#f39c12'
+                                  : '#c0392b'
+                            }]}>
+                              {dailyTask.difficulty === 'EASY' 
+                                ? 'Facile' 
+                                : dailyTask.difficulty === 'MEDIUM'
+                                  ? 'Moyen'
+                                  : 'Difficile'
+                              }
+                            </Text>
+                          </View>
+                        </View>
                       </View>
-                    ) : (
-                      <Text style={styles.completeButtonText}>Compléter</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
+                      
+                      <TouchableOpacity 
+                        style={[
+                          styles.completeButton,
+                          dailyTask.completed && styles.completedButton,
+                          isButtonDisabled && !dailyTask.completed && styles.disabledButton
+                        ]}
+                        onPress={handleCompleteChallenge}
+                        disabled={dailyTask.completed || isButtonDisabled}
+                      >
+                        {dailyTask.completed ? (
+                          <Icon name="checkmark-circle" size={24} color={COLORS.white} />
+                        ) : isButtonDisabled ? (
+                          <View style={styles.waitingContainer}>
+                            <Icon name="time" size={20} color={COLORS.white} />
+                            <Text style={styles.waitingText}>En attente</Text>
+                          </View>
+                        ) : (
+                          <Text style={styles.completeButtonText}>Compléter</Text>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </>
             )}
 
             {/* Question de culture générale quotidienne */}
@@ -2229,15 +2207,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#f0f3f8',
   },
+  dailyChallengeSmallContainer: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+  },
   dailyChallengeHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 15,
   },
-  headerLeft: {
+  dailyChallengeHeaderSmall: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 8,
   },
   dailyChallengeTitle: {
     fontSize: 18,
@@ -2245,8 +2237,35 @@ const styles = StyleSheet.create({
     color: COLORS.dark,
     marginLeft: 8,
   },
+  dailyChallengeTitleSmall: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginLeft: 8,
+  },
   refreshButton: {
     padding: 5,
+  },
+  comebackTomorrowContainer: {
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 2,
+  },
+  comebackText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.secondary,
+    marginBottom: 4,
+  },
+  comebackSubText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 2,
+  },
+  comebackTimer: {
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    fontVariant: ['tabular-nums'],
   },
   challengeStatusContainer: {
     flexDirection: 'column',
@@ -2263,16 +2282,6 @@ const styles = StyleSheet.create({
   challengeCountText: {
     fontSize: 14,
     color: COLORS.textSecondary,
-    marginLeft: 5,
-    fontWeight: '500',
-  },
-  countdownContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  countdownText: {
-    fontSize: 14,
-    color: COLORS.warning,
     marginLeft: 5,
     fontWeight: '500',
   },
@@ -2604,6 +2613,7 @@ const styles = StyleSheet.create({
   },
   mapModalTitle: {
     fontSize: 20,
+   
     fontWeight: 'bold',
     color: COLORS.dark,
   },
@@ -2706,8 +2716,7 @@ const styles = StyleSheet.create({
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation:  5,
+    shadowRadius:  5,
   },
   routeInfoHeader: {
     flexDirection: 'row',
