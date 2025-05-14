@@ -711,30 +711,40 @@ const TasksScreen = ({ navigation }) => {
     }
   };
 
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
     // Demander les permissions de calendrier au démarrage
     if (!calendarPermissionRequested) {
       requestCalendarPermissions();
       setCalendarPermissionRequested(true);
     }
-    
     // Charger les données
     loadUserData();
     loadTaskRatings();
-    
+
     // Configurer l'écouteur de focus pour recharger les données quand on revient sur cet écran
     const unsubscribe = navigation.addListener('focus', () => {
-      // Recharger les données à chaque fois que l'écran retrouve le focus
       loadUserData();
       loadTaskRatings();
+      // Réappliquer le filtre actuel à chaque focus
+      applyFilter(filter);
     });
-    
-    // Nettoyer les écouteurs quand le composant est démonté
+
     return () => {
       unsubscribe();
     };
   }, [navigation]);
-  
+
+  // Appliquer le filtre "all" après le premier chargement des données
+  useEffect(() => {
+    if (isFirstRender.current && !isLoading) {
+      applyFilter('all');
+      isFirstRender.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading]);
+
   // Effet séparé pour les animations afin d'éviter les mises à jour pendant le rendu initial
   useEffect(() => {
     const timeout = setTimeout(() => {
