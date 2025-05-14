@@ -67,10 +67,139 @@ export default function HomeScreen({ navigation }) {
   const [dailyQuiz, setDailyQuiz] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [quizResult, setQuizResult] = useState(null);
+  const [quizStreak, setQuizStreak] = useState(0);
+  const [quizProgress, setQuizProgress] = useState(0);
+  const [quizProgressTotal, setQuizProgressTotal] = useState(10);
+  const [quizCooldown, setQuizCooldown] = useState(null);
+  const [quizAnimation, setQuizAnimation] = useState(null);
   
-  // Charger la question de quiz quotidienne
+  // Générer une question de quiz aléatoire
+  const generateRandomQuizQuestion = async () => {
+    try {
+      // Liste de questions quiz prédéfinies
+      const quizQuestions = [
+        {
+          id: generateUniqueId(),
+          title: "Quelle est la capitale de la France?",
+          description: "Choisissez la bonne réponse parmi les options suivantes.",
+          answers: ["Paris", "Londres", "Berlin", "Madrid"],
+          correctAnswer: "Paris",
+          points: 20,
+          type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Quel est l'élément chimique de symbole 'O'?",
+          description: "Testez vos connaissances en chimie!",
+          answers: ["Or", "Osmium", "Oxygène", "Oganesson"],
+          correctAnswer: "Oxygène",
+          points: 15,
+          type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Quelle planète est connue comme la 'planète rouge'?",
+          description: "Une question d'astronomie pour vous!",
+          answers: ["Vénus", "Mars", "Jupiter", "Mercure"],
+          correctAnswer: "Mars",
+          points: 25,
+          type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Qui a écrit 'Roméo et Juliette'?",
+          description: "Un classique de la littérature mondiale.",
+          answers: ["Charles Dickens", "Victor Hugo", "William Shakespeare", "Molière"],
+          correctAnswer: "William Shakespeare",
+          points: 15,
+          type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Quel est le plus grand océan du monde?",
+          description: "Faites appel à vos connaissances en géographie!",
+          answers: ["Océan Atlantique", "Océan Indien", "Océan Arctique", "Océan Pacifique"],
+          correctAnswer: "Océan Pacifique",
+          points: 20,
+          type: "QUIZ"
+        }
+      ];
+      
+      // Sélectionner une question aléatoire
+      const randomIndex = Math.floor(Math.random() * quizQuestions.length);
+      const selectedQuestion = quizQuestions[randomIndex];
+      
+      // Vérifier si cette question n'a pas déjà été posée récemment
+      const recentQuestions = await AsyncStorage.getItem('@recent_quiz_questions');
+      let recentQuestionsArray = recentQuestions ? JSON.parse(recentQuestions) : [];
+      
+      // Si la question a déjà été posée récemment, en choisir une autre
+      if (recentQuestionsArray.includes(selectedQuestion.title)) {
+        // Filtrer les questions qui n'ont pas été posées récemment
+        const freshQuestions = quizQuestions.filter(q => !recentQuestionsArray.includes(q.title));
+        
+        // S'il reste des questions non utilisées, en choisir une aléatoirement
+        if (freshQuestions.length > 0) {
+          const freshIndex = Math.floor(Math.random() * freshQuestions.length);
+          return freshQuestions[freshIndex];
+        }
+        // Sinon, réinitialiser l'historique et utiliser la question initialement sélectionnée
+        recentQuestionsArray = [];
+      }
+      
+      // Ajouter la question à l'historique récent (max 3 questions)
+      recentQuestionsArray.push(selectedQuestion.title);
+      if (recentQuestionsArray.length > 3) {
+        recentQuestionsArray.shift(); // Enlever la plus ancienne question
+      }
+      
+      // Sauvegarder l'historique mis à jour
+      await AsyncStorage.setItem('@recent_quiz_questions', JSON.stringify(recentQuestionsArray));
+      
+      // Retourner la question sélectionnée
+      return selectedQuestion;
+      
+    } catch (error) {
+      console.error('Erreur lors de la génération d\'une question de quiz:', error);
+      return null;
+    }
+  };
+  
+  // Charger la question de quiz quotidienne et les statistiques
   const loadDailyQuiz = async () => {
     try {
+      // Vérifier d'abord s'il y a un cooldown actif
+      const cooldownData = await AsyncStorage.getItem('@challengr_quiz_cooldown');
+      if (cooldownData) {
+        const { until, remainingTime } = JSON.parse(cooldownData);
+        const now = new Date().getTime();
+        
+        if (now < until) {
+          // Le cooldown est toujours actif
+          setQuizCooldown({
+            until,
+            remainingTime: Math.floor((until - now) / 1000)
+          });
+          
+          // Démarrer le compte à rebours
+          startQuizCooldownTimer(until);
+          return;
+        } else {
+          // Le cooldown est terminé, on peut le supprimer
+          await AsyncStorage.removeItem('@challengr_quiz_cooldown');
+        }
+      }
+      
+      // Charger les statistiques du quiz
+      const statsData = await AsyncStorage.getItem('@challengr_quiz_stats');
+      if (statsData) {
+        const stats = JSON.parse(statsData);
+        setQuizStreak(stats.streak || 0);
+        setQuizProgress(stats.progress || 0);
+        setQuizProgressTotal(stats.total || 10);
+      }
+      
+      // Récupérer la question du jour
       const quizTasks = await retrieveQuizTasks() || [];
       if (quizTasks.length > 0) {
         setDailyQuiz(quizTasks[0]);
@@ -78,6 +207,175 @@ export default function HomeScreen({ navigation }) {
     } catch (error) {
       console.error('Erreur lors du chargement du quiz quotidien:', error);
     }
+  };
+  
+  // Démarrer le compte à rebours du cooldown
+  const startQuizCooldownTimer = (endTime) => {
+    // Nettoyer d'abord tout timer existant
+    if (quizCooldown && quizCooldown.timerId) {
+      clearInterval(quizCooldown.timerId);
+    }
+    
+    // Créer un nouveau timer qui met à jour toutes les secondes
+    const timerId = setInterval(() => {
+      const now = new Date().getTime();
+      const remainingTime = Math.floor((endTime - now) / 1000);
+      
+      if (remainingTime <= 0) {
+        // Le temps est écoulé, arrêter le timer et recharger le quiz
+        clearInterval(timerId);
+        setQuizCooldown(null);
+        loadDailyQuiz();
+      } else {
+        // Mettre à jour le temps restant
+        setQuizCooldown(prev => ({
+          ...prev,
+          remainingTime
+        }));
+      }
+    }, 1000);
+    
+    // Stocker l'ID du timer pour pouvoir le nettoyer plus tard
+    setQuizCooldown(prev => ({
+      ...prev,
+      timerId
+    }));
+  };
+  
+  // Gérer la soumission d'une réponse au quiz
+  const handleQuizSubmit = async () => {
+    try {
+      if (!selectedAnswer || !dailyQuiz) return;
+      
+      // Vérifier la réponse
+      const result = await checkQuizAnswer(dailyQuiz.id, selectedAnswer);
+      setQuizResult(result);
+      
+      if (result.isCorrect) {
+        // Réponse correcte!
+        // Vibration de succès
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        
+        // Animation de félicitation
+        setQuizAnimation('correct');
+        
+        // Mettre à jour les points
+        const newPoints = points + dailyQuiz.points;
+        await AsyncStorage.setItem('@challengr_points_storage_key', newPoints.toString());
+        setPoints(newPoints);
+        
+        // Recalculer le niveau
+        const levelInfo = calculateLevel(newPoints);
+        setLevel(levelInfo.level);
+        setProgress(levelInfo.progress);
+        
+        // Mettre à jour les statistiques du quiz
+        const statsData = await AsyncStorage.getItem('@challengr_quiz_stats');
+        const stats = statsData ? JSON.parse(statsData) : { streak: 0, progress: 0, total: 10 };
+        
+        // Augmenter la série et la progression
+        stats.streak += 1;
+        stats.progress += 1;
+        
+        // Si on a complété toutes les questions, réinitialiser la progression mais garder la série
+        if (stats.progress >= stats.total) {
+          showRewardAnimation(); // Récompense bonus pour avoir terminé toute la série
+          stats.progress = 0;
+        }
+        
+        await AsyncStorage.setItem('@challengr_quiz_stats', JSON.stringify(stats));
+        
+        // Mettre à jour l'état
+        setQuizStreak(stats.streak);
+        setQuizProgress(stats.progress);
+        
+        // Après un court délai pour l'animation, charger la prochaine question
+        setTimeout(() => {
+          setQuizAnimation(null);
+          setSelectedAnswer(null);
+          setQuizResult(null);
+          loadNextQuizQuestion();
+        }, 1500);
+      } else {
+        // Réponse incorrecte
+        // Vibration d'erreur
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        
+        // Animation d'échec
+        setQuizAnimation('incorrect');
+        
+        // Réinitialiser la série
+        const statsData = await AsyncStorage.getItem('@challengr_quiz_stats');
+        const stats = statsData ? JSON.parse(statsData) : { streak: 0, progress: 0, total: 10 };
+        stats.streak = 0;
+        await AsyncStorage.setItem('@challengr_quiz_stats', JSON.stringify(stats));
+        setQuizStreak(0);
+        
+        // Définir un cooldown jusqu'au lendemain
+        const now = new Date();
+        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        
+        const cooldownData = {
+          until: tomorrow.getTime(),
+          remainingTime: Math.floor((tomorrow.getTime() - now.getTime()) / 1000)
+        };
+        
+        await AsyncStorage.setItem('@challengr_quiz_cooldown', JSON.stringify(cooldownData));
+        setQuizCooldown(cooldownData);
+        
+        // Démarrer le compte à rebours
+        startQuizCooldownTimer(tomorrow.getTime());
+      }
+    } catch (error) {
+      console.error('Erreur lors de la vérification de la réponse:', error);
+      Alert.alert('Erreur', 'Une erreur est survenue lors de la vérification de votre réponse.');
+    }
+  };
+  
+  // Charger la question suivante
+  const loadNextQuizQuestion = async () => {
+    try {
+      // On pourrait charger la prochaine question depuis une liste ou générer une nouvelle
+      const newQuestion = await generateRandomQuizQuestion();
+      if (newQuestion) {
+        setDailyQuiz(newQuestion);
+      } else {
+        // Si on ne peut pas générer de nouvelle question, réutiliser l'ancienne mais avec une réponse différente
+        const currentQuestion = { ...dailyQuiz };
+        currentQuestion.id = generateUniqueId(); // Changer l'ID pour que ce soit considéré comme une nouvelle question
+        
+        // Mélanger les options de réponse
+        if (currentQuestion.answers && currentQuestion.answers.length > 0) {
+          currentQuestion.answers = shuffleArray([...currentQuestion.answers]);
+        }
+        
+        setDailyQuiz(currentQuestion);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de la prochaine question:', error);
+      Alert.alert('Erreur', 'Impossible de charger la prochaine question.');
+    }
+  };
+  
+  // Fonction pour mélanger un tableau (pour les réponses)
+  const shuffleArray = (array) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  };
+  
+  // Fonction pour formater le temps de cooldown en heures:minutes:secondes
+  const formatCooldownTime = (seconds) => {
+    if (!seconds) return '00:00:00';
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
   
   // États pour la fonctionnalité de carte
@@ -1300,129 +1598,142 @@ const CATEGORY_LABELS_FR = {
                     <Icon name="help-circle" size={22} color={COLORS.quiz.color || "#8e44ad"} />
                     <Text style={styles.dailyQuizTitle}>Question du jour</Text>
                   </View>
+                  {/* Afficher la série de bonnes réponses si > 0 */}
+                  {quizStreak > 0 && (
+                    <View style={styles.quizStreakContainer}>
+                      <Icon name="flame" size={18} color="#f39c12" />
+                      <Text style={styles.quizStreakText}>{quizStreak}</Text>
+                    </View>
+                  )}
                 </View>
                 
+                {/* Barre de progression du quiz */}
+                <View style={styles.quizProgressContainer}>
+                  <View style={styles.quizProgressBackground}>
+                    <View 
+                      style={[
+                        styles.quizProgressFill, 
+                        { width: `${(quizProgress / quizProgressTotal) * 100}%` }
+                      ]} 
+                    />
+                  </View>
+                  <Text style={styles.quizProgressText}>
+                    {quizProgress}/{quizProgressTotal}
+                  </Text>
+                </View>
+                
+                {/* Contenu du quiz */}
                 <View style={styles.quizContent}>
-                  <Text style={styles.quizQuestion}>{dailyQuiz.title}</Text>
-                  <Text style={styles.quizDescription}>{dailyQuiz.description}</Text>
-                  
-                  {!dailyQuiz.completed && !quizResult && (
-                    <View style={styles.quizAnswers}>
-                      {dailyQuiz.answers.map((answer, index) => (
-                        <TouchableOpacity 
-                          key={index}
-                          style={[
-                            styles.answerButton,
-                            selectedAnswer === answer && styles.selectedAnswerButton
-                          ]}
-                          onPress={() => setSelectedAnswer(answer)}
-                        >
-                          <Text 
-                            style={[
-                              styles.answerText,
-                              selectedAnswer === answer && styles.selectedAnswerText
-                            ]}
-                          >
-                            {answer}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
+                  {/* Si en cooldown, afficher le message d'attente */}
+                  {quizCooldown ? (
+                    <View style={styles.quizCooldownContainer}>
+                      <Icon name="time" size={40} color="#e74c3c" style={styles.cooldownIcon} />
+                      <Text style={styles.cooldownTitle}>Oups ! Mauvaise réponse.</Text>
+                      <Text style={styles.cooldownDescription}>
+                        Nouvelle question disponible dans :
+                      </Text>
+                      <View style={styles.cooldownTimerContainer}>
+                        <Text style={styles.cooldownTimer}>
+                          {formatCooldownTime(quizCooldown.remainingTime)}
+                        </Text>
+                      </View>
+                      <TouchableOpacity 
+                        style={styles.cooldownHintButton}
+                        onPress={() => Alert.alert("Astuce", "Lisez bien la question et prenez votre temps pour répondre. Vous pouvez aussi chercher des indices dans l'application !")}
+                      >
+                        <Text style={styles.cooldownHintText}>Besoin d'une astuce ?</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <>
+                      {/* Question normale */}
+                      <Text style={styles.quizQuestion}>{dailyQuiz.title}</Text>
+                      <Text style={styles.quizDescription}>{dailyQuiz.description}</Text>
                       
-                      <TouchableOpacity 
-                        style={[
-                          styles.submitAnswerButton,
-                          !selectedAnswer && styles.disabledButton
-                        ]}
-                        disabled={!selectedAnswer}
-                        onPress={async () => {
-                          try {
-                            if (!selectedAnswer) return;
-                            
-                            const result = await checkQuizAnswer(dailyQuiz.id, selectedAnswer);
-                            setQuizResult(result);
-                            
-                            if (result.isCorrect) {
-                              // Mettre à jour les points
-                              const newPoints = points + dailyQuiz.points;
-                              setPoints(newPoints);
-                              
-                              // Recalculer le niveau
-                              const levelInfo = calculateLevel(newPoints);
-                              setLevel(levelInfo.level);
-                              setProgress(levelInfo.progress);
-                              
-                              // Animation de félicitation
-                              Haptics.notificationAsync(
-                                Haptics.NotificationFeedbackType.Success
-                              );
-                              showRewardAnimation();
-                            } else {
-                              // Vibration d'erreur
-                              Haptics.notificationAsync(
-                                Haptics.NotificationFeedbackType.Error
-                              );
-                            }
-                          } catch (error) {
-                            console.error('Erreur lors de la vérification de la réponse:', error);
-                            Alert.alert('Erreur', 'Une erreur est survenue lors de la vérification de votre réponse.');
-                          }
-                        }}
-                      >
-                        <Text style={styles.submitAnswerText}>
-                          Valider ma réponse
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                  
-                  {quizResult && (
-                    <View style={styles.quizResultContainer}>
-                      <View style={[
-                        styles.resultIcon,
-                        quizResult.isCorrect ? styles.correctResultIcon : styles.incorrectResultIcon
-                      ]}>
-                        <Icon 
-                          name={quizResult.isCorrect ? "checkmark" : "close"} 
-                          size={30} 
-                          color={COLORS.white} 
-                        />
-                      </View>
-                      <Text style={styles.resultMessage}>{quizResult.message}</Text>
-                      {!quizResult.isCorrect && (
-                        <Text style={styles.correctAnswerText}>
-                          La bonne réponse était: {quizResult.correctAnswer}
-                        </Text>
-                      )}
-                      <TouchableOpacity 
-                        style={styles.nextQuizButton}
-                        onPress={async () => {
-                          // Réinitialiser l'état
-                          setSelectedAnswer(null);
-                          setQuizResult(null);
+                      {/* Formulaire de réponse si non complété et pas de résultat affiché */}
+                      {!dailyQuiz.completed && !quizResult && (
+                        <View style={styles.quizAnswers}>
+                          {dailyQuiz.answers.map((answer, index) => (
+                            <TouchableOpacity 
+                              key={index}
+                              style={[
+                                styles.answerButton,
+                                selectedAnswer === answer && styles.selectedAnswerButton
+                              ]}
+                              onPress={() => setSelectedAnswer(answer)}
+                            >
+                              <Text 
+                                style={[
+                                  styles.answerText,
+                                  selectedAnswer === answer && styles.selectedAnswerText
+                                ]}
+                              >
+                                {answer}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
                           
-                          // Recharger une nouvelle question
-                          await loadDailyQuiz();
-                        }}
-                      >
-                        <Text style={styles.nextQuizButtonText}>
-                          {quizResult.isCorrect ? "Super !" : "J'ai compris"}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                  
-                  {dailyQuiz.completed && !quizResult && (
-                    <View style={styles.quizResultContainer}>
-                      <View style={styles.correctResultIcon}>
-                        <Icon name="checkmark" size={30} color={COLORS.white} />
-                      </View>
-                      <Text style={styles.resultMessage}>
-                        Vous avez déjà répondu à la question du jour !
-                      </Text>
-                      <Text style={styles.completedQuizPoints}>
-                        +{dailyQuiz.points} points
-                      </Text>
-                    </View>
+                          <TouchableOpacity 
+                            style={[
+                              styles.submitAnswerButton,
+                              !selectedAnswer && styles.disabledButton
+                            ]}
+                            disabled={!selectedAnswer}
+                            onPress={handleQuizSubmit}
+                          >
+                            <Text style={styles.submitAnswerText}>
+                              Valider ma réponse
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                      
+                      {/* Affichage du résultat */}
+                      {quizResult && (
+                        <View style={[
+                          styles.quizResultContainer,
+                          quizAnimation === 'correct' && styles.correctAnimation,
+                          quizAnimation === 'incorrect' && styles.incorrectAnimation
+                        ]}>
+                          <View style={[
+                            styles.resultIcon,
+                            quizResult.isCorrect ? styles.correctResultIcon : styles.incorrectResultIcon
+                          ]}>
+                            <Icon 
+                              name={quizResult.isCorrect ? "checkmark" : "close"} 
+                              size={30} 
+                              color={COLORS.white} 
+                            />
+                          </View>
+                          <Text style={styles.resultMessage}>{quizResult.message}</Text>
+                          {!quizResult.isCorrect && (
+                            <Text style={styles.correctAnswerText}>
+                              La bonne réponse était: {quizResult.correctAnswer}
+                            </Text>
+                          )}
+                          {quizResult.isCorrect && (
+                            <Text style={styles.pointsEarnedText}>
+                              +{dailyQuiz.points} points
+                            </Text>
+                          )}
+                        </View>
+                      )}
+                      
+                      {/* Si le défi est déjà complété */}
+                      {dailyQuiz.completed && !quizResult && (
+                        <View style={styles.quizResultContainer}>
+                          <View style={styles.correctResultIcon}>
+                            <Icon name="checkmark" size={30} color={COLORS.white} />
+                          </View>
+                          <Text style={styles.resultMessage}>
+                            Vous avez déjà répondu à la question du jour !
+                          </Text>
+                          <Text style={styles.completedQuizPoints}>
+                            +{dailyQuiz.points} points
+                          </Text>
+                        </View>
+                      )}
+                    </>
                   )}
                 </View>
               </View>
@@ -2797,6 +3108,103 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 15,
     fontWeight: 'bold',
+  },
+  quizStreakContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(243, 156, 18, 0.1)',
+    borderRadius: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  quizStreakText: {
+    color: '#f39c12',
+    fontWeight: 'bold',
+    fontSize: 14,
+    marginLeft: 5,
+  },
+  quizProgressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingHorizontal: 5,
+  },
+  quizProgressBackground: {
+    flex: 1,
+    height: 8,
+    backgroundColor: '#eee',
+    borderRadius: 4,
+    marginRight: 10,
+    overflow: 'hidden',
+  },
+  quizProgressFill: {
+    height: '100%',
+    backgroundColor: COLORS.quiz.color || '#8e44ad',
+    borderRadius: 4,
+  },
+  quizProgressText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  correctAnimation: {
+    backgroundColor: 'rgba(46, 204, 113, 0.2)',
+    borderRadius: 12,
+    transform: [{scale: 1.02}],
+  },
+  incorrectAnimation: {
+    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+    borderRadius: 12,
+    transform: [{scale: 1.02}],
+  },
+  pointsEarnedText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.success,
+    marginTop: 10,
+  },
+  quizCooldownContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  cooldownIcon: {
+    marginBottom: 20,
+  },
+  cooldownTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#e74c3c',
+    marginBottom: 10,
+  },
+  cooldownDescription: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  cooldownTimerContainer: {
+    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    marginBottom: 20,
+  },
+  cooldownTimer: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#e74c3c',
+  },
+  cooldownHintButton: {
+    borderWidth: 1,
+    borderColor: COLORS.secondary,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+  },
+  cooldownHintText: {
+    color: COLORS.secondary,
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 
