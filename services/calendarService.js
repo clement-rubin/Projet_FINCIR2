@@ -12,7 +12,14 @@ const CALENDAR_ID_KEY = '@challengr_calendar_id';
  */
 export const requestCalendarPermissions = async () => {
   try {
-    const { status } = await Calendar.requestCalendarPermissionsAsync();
+    // Correction : demander les permissions pour les événements (Android/iOS)
+    let statusObj;
+    if (Platform.OS === 'ios') {
+      statusObj = await Calendar.requestCalendarPermissionsAsync();
+    } else {
+      statusObj = await Calendar.requestPermissionsAsync();
+    }
+    const status = statusObj.status || statusObj.granted ? 'granted' : 'denied';
     return status === 'granted';
   } catch (error) {
     console.error('Erreur lors de la demande des permissions calendrier:', error);
@@ -26,6 +33,7 @@ export const requestCalendarPermissions = async () => {
  */
 export const getOrCreateChallengrCalendar = async () => {
   try {
+    // NE PAS demander la permission ici ! (Supposons qu'elle a déjà été demandée)
     // Vérifier si l'ID du calendrier est déjà enregistré
     const savedCalendarId = await AsyncStorage.getItem(CALENDAR_ID_KEY);
     if (savedCalendarId) {
@@ -59,16 +67,28 @@ export const getOrCreateChallengrCalendar = async () => {
       defaultCalendarSource.id = 'local';
     }
 
-    const calendarOptions = {
-      title: 'ChallengR',
-      color: COLORS.primary,
-      entityType: Calendar.EntityTypes.EVENT,
-      name: Platform.OS === 'android' ? 'ChallengR' : 'challengr',
-      ownerAccount: 'personal',
-      accessLevel: Calendar.CalendarAccessLevel.OWNER,
-      source: defaultCalendarSource, // Toujours fournir la source
-      sourceId: defaultCalendarSource.id // Toujours fournir l'id de la source
-    };
+    let calendarOptions;
+    if (Platform.OS === 'ios') {
+      calendarOptions = {
+        title: 'ChallengR',
+        color: COLORS.primary,
+        entityType: Calendar.EntityTypes.EVENT,
+        name: 'challengr',
+        ownerAccount: 'personal',
+        accessLevel: Calendar.CalendarAccessLevel.OWNER,
+        source: defaultCalendarSource,
+      };
+    } else {
+      calendarOptions = {
+        title: 'ChallengR',
+        color: COLORS.primary,
+        entityType: Calendar.EntityTypes.EVENT,
+        name: 'ChallengR',
+        ownerAccount: 'personal',
+        accessLevel: Calendar.CalendarAccessLevel.OWNER,
+        sourceId: defaultCalendarSource.id, // Android attend sourceId
+      };
+    }
 
     console.log('Création du calendrier avec options:', JSON.stringify(calendarOptions));
     

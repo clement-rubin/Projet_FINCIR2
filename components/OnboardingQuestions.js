@@ -183,8 +183,16 @@ const OnboardingQuestions = ({ isVisible, onComplete }) => {
   const saveUserProfile = async () => {
     try {
       // Récupérer le profil actuel pour y ajouter les nouvelles données
-      const currentProfile = await retrieveUserProfile() || {};
-      
+      let currentProfile = await retrieveUserProfile();
+      if (!currentProfile) {
+        currentProfile = {
+          username: 'Utilisateur',
+          bio: '',
+          interests: [],
+          profileImage: null,
+          isFirstLogin: false
+        };
+      }
       // Créer un objet profil avec les réponses
       const profileData = {
         ...currentProfile,
@@ -194,10 +202,8 @@ const OnboardingQuestions = ({ isVisible, onComplete }) => {
         profileImage: answers.profilePicture || currentProfile.profileImage || null,
         isFirstLogin: false,  // Marquer que le processus d'onboarding est terminé
       };
-      
       // Sauvegarder dans le stockage
       await storeUserProfile(profileData);
-      
       // Terminer l'onboarding
       onComplete && onComplete(profileData);
     } catch (error) {

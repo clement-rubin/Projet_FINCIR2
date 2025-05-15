@@ -1169,25 +1169,34 @@ const TasksScreen = ({ navigation }) => {
     try {
       // Créer le défi dans la base de données
       const createdTask = await createTask(newTask);
-      
+
       if (!createdTask) {
         throw new Error("Échec de la création du défi");
       }
 
       // Ajouter au calendrier uniquement si l'option est activée
       if (addToCalendar) {
-        const eventId = await addTaskToCalendar(createdTask, selectedDate);
-        if (eventId) {
-          // Mettre à jour le défi avec l'ID de l'événement calendrier
-          const updatedTasks = tasks.map(task => 
-            task.id === createdTask.id 
-              ? { ...task, calendarEventId: eventId } 
-              : task
+        // Demander la permission ici, juste avant d'ajouter au calendrier
+        const hasPermission = await requestCalendarPermissions();
+        if (hasPermission) {
+          const eventId = await addTaskToCalendar(createdTask, selectedDate);
+          if (eventId) {
+            // Mettre à jour le défi avec l'ID de l'événement calendrier
+            const updatedTasks = tasks.map(task => 
+              task.id === createdTask.id 
+                ? { ...task, calendarEventId: eventId } 
+                : task
+            );
+            setTasks(updatedTasks);
+            
+            // Sauvegarder la mise à jour dans AsyncStorage
+            await saveTasks(updatedTasks);
+          }
+        } else {
+          Alert.alert(
+            "Permission requise",
+            "Vous devez autoriser l'accès au calendrier pour ajouter ce défi à votre agenda."
           );
-          setTasks(updatedTasks);
-          
-          // Sauvegarder la mise à jour dans AsyncStorage
-          await saveTasks(updatedTasks);
         }
       }
       

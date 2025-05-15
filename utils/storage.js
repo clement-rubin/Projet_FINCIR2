@@ -285,45 +285,43 @@ export const deleteTask = async (taskId) => {
  */
 export const retrievePoints = async () => {
   try {
-    const userKey = await getUserSpecificKey(POINTS_STORAGE_KEY);
-    const pointsJson = await AsyncStorage.getItem(userKey);
-    
-    if (pointsJson !== null) {
-      return parseInt(pointsJson, 10);
-    }
-    
-    // Si aucun point n'existe, retourner 0
-    return 0;
-  } catch (error) {
-    console.error('Erreur lors de la récupération des points:', error);
+    const points = await AsyncStorage.getItem(POINTS_STORAGE_KEY);
+    return points ? parseInt(points, 10) : 0;
+  } catch (e) {
+    console.error("Erreur lors de la récupération des points:", e);
     return 0;
   }
 };
 
 /**
- * Ajoute des points au total
- */
-export const addPoints = async (pointsToAdd) => {
-  try {
-    const currentPoints = await retrievePoints();
-    const newPoints = currentPoints + pointsToAdd;
-    const userKey = await getUserSpecificKey(POINTS_STORAGE_KEY);
-    await AsyncStorage.setItem(userKey, newPoints.toString());
-    return newPoints;
-  } catch (error) {
-    console.error('Erreur lors de l\'ajout de points:', error);
-    return 0;
-  }
-};
-
-/**
- * Enregistre les points dans le stockage
+ * Stocker les points de l'utilisateur (assurez-vous que cette fonction REMPLACE les points précédents)
  */
 export const storePoints = async (points) => {
   try {
+    // Stocke exactement la valeur passée, remplaçant l'ancienne valeur
     await AsyncStorage.setItem(POINTS_STORAGE_KEY, points.toString());
+    return points;
   } catch (e) {
-    // Gestion d'erreur silencieuse
+    console.error("Erreur lors du stockage des points:", e);
+    return null;
+  }
+};
+
+/**
+ * Nouvelle fonction pour ajouter des points (si elle n'existe pas encore)
+ */
+export const addPoints = async (pointsToAdd) => {
+  try {
+    // Récupérer les points actuels
+    const currentPoints = await retrievePoints() || 0;
+    // Ajouter les nouveaux points
+    const newPoints = currentPoints + pointsToAdd;
+    // Stocker le nouveau total
+    await AsyncStorage.setItem(POINTS_STORAGE_KEY, newPoints.toString());
+    return newPoints;
+  } catch (e) {
+    console.error("Erreur lors de l'ajout des points:", e);
+    return null;
   }
 };
 
