@@ -25,7 +25,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import * as Location from 'expo-location';
-import * as Haptics from 'expo-haptics';
+import haptics from '../utils/haptics';
 // Fix the MapView import to work with react-native-maps v1.18.0
 import MapView from 'react-native-maps';
 import { Marker } from 'react-native-maps';
@@ -36,7 +36,7 @@ import Icon, { COLORS } from '../components/common/Icon';
 import { SCREEN, calculateLevel, generateUniqueId, CHALLENGE_TYPES } from '../utils/constants';
 import { addTaskToCalendar } from '../services/calendarService';
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = SCREEN;
 
 // Ajoutez cette fonction utilitaire pour obtenir le temps restant jusqu'à minuit
 const getTimeUntilMidnight = () => {
@@ -2034,7 +2034,6 @@ const CATEGORY_LABELS_FR = {
           visible={!!selectedPoint}
           animationType="slide"
           transparent={true}
-          onRequestClose={() => setSelectedPoint(null)}
         >
           <View style={styles.pointModalContainer}>
             <Text style={styles.pointModalTitle}>Modifier le point</Text>
@@ -2136,6 +2135,9 @@ const CATEGORY_LABELS_FR = {
           </View>
         </View>
       </Modal>
+
+      {/* Ajout d'un espace blanc pour éviter le chevauchement avec la barre de navigation */}
+      <View style={{ height: 40 }} />
     </SafeAreaView>
   );
 }
@@ -2143,7 +2145,7 @@ const CATEGORY_LABELS_FR = {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.primary, // Utilisation de la couleur primaire pour correspondre au dégradé de l'en-tête
+    backgroundColor: COLORS.primary,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   container: {
@@ -2151,7 +2153,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f6fa',
   },
   headerContainer: {
-    height: 280,
+    height: 220, // Hauteur réduite pour éviter le débordement
     width: '100%',
     overflow: 'hidden',
   },
@@ -2165,7 +2167,7 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? 40 : 20,
+    paddingTop: Platform.OS === 'android' ? 60 : 40, // Plus d'espace en haut
     paddingHorizontal: 20,
     justifyContent: 'center',
   },
@@ -2240,19 +2242,25 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    marginTop: -30,
+    marginTop: -40, // Fait chevaucher la carte blanche sur la partie bleue
     paddingHorizontal: 15,
     paddingBottom: 30,
   },
   contentCard: {
     backgroundColor: COLORS.white,
-    borderRadius: 25,
+    borderTopLeftRadius: 30, // Arrondi plus marqué pour l'effet carte
+    borderTopRightRadius: 30,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
     padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
+    // Ajoute une bordure pour bien séparer la carte du fond bleu
+    borderWidth: 1,
+    borderColor: '#e6e9ed',
   },
   statsContainer: {
     flexDirection: 'row',

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, ActivityIndicator, Text, Image, Animated, Dimensions, Easing } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import * as Haptics from 'expo-haptics';
+import haptics, { ImpactFeedbackStyle, NotificationFeedbackType } from './utils/haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import AppNavigator from './navigation/AppNavigator';
 import OnboardingQuestions from './components/OnboardingQuestions';
@@ -38,10 +38,10 @@ export default function App() {
   const animateSplashScreen = () => {
     // Séquence d'effets haptiques
     const triggerHapticSequence = () => {
-      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), 200);
-      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 600);
-      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 1200);
-      setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), 2000);
+      setTimeout(() => haptics.impactAsync(ImpactFeedbackStyle.Light), 200);
+      setTimeout(() => haptics.impactAsync(ImpactFeedbackStyle.Medium), 600);
+      setTimeout(() => haptics.impactAsync(ImpactFeedbackStyle.Heavy), 1200);
+      setTimeout(() => haptics.notificationAsync(NotificationFeedbackType.Success), 2000);
     };
 
     // Déclencher la séquence haptique

@@ -20,7 +20,6 @@ import {
   Switch,
   Platform
 } from 'react-native';
-import * as ReactNative from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Task from '../components/Task';
 import Icon, { COLORS } from '../components/common/Icon';
@@ -44,7 +43,8 @@ import {
   CHALLENGE_CATEGORIES,
   calculateLevel,
   DIFFICULTY_LEVELS,
-  generateUniqueId 
+  generateUniqueId,
+  SCREEN 
 } from '../utils/constants';
 import { 
   requestCalendarPermissions, 
@@ -1848,6 +1848,9 @@ const TasksScreen = ({ navigation }) => {
           onClose={() => setShowLevelUpAnimation(false)}
         />
       </View>
+      
+      {/* Espace blanc ajouté en bas de la page des défis */}
+      <View style={{ height: 40 }} />
     </SafeAreaView>
   );
 };
