@@ -317,6 +317,17 @@ export const addPoints = async (pointsToAdd) => {
 };
 
 /**
+ * Enregistre les points dans le stockage
+ */
+export const storePoints = async (points) => {
+  try {
+    await AsyncStorage.setItem(POINTS_STORAGE_KEY, points.toString());
+  } catch (e) {
+    // Gestion d'erreur silencieuse
+  }
+};
+
+/**
  * Récupère le profil utilisateur depuis le stockage
  */
 export const retrieveUserProfile = async () => {

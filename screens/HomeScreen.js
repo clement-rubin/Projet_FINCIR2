@@ -30,7 +30,7 @@ import * as Haptics from 'expo-haptics';
 import MapView from 'react-native-maps';
 import { Marker } from 'react-native-maps';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { retrievePoints, retrieveDailyTasks, retrieveCompletedTasks, retrieveQuizTasks, checkQuizAnswer, retrieveTasks } from '../utils/storage';
+import { retrievePoints, retrieveDailyTasks, retrieveQuizTasks, checkQuizAnswer, retrieveTasks, storePoints } from '../utils/storage';
 import ProgressBar from '../components/ProgressBar';
 import Icon, { COLORS } from '../components/common/Icon';
 import { SCREEN, calculateLevel, generateUniqueId, CHALLENGE_TYPES } from '../utils/constants';
@@ -200,12 +200,15 @@ export default function HomeScreen({ navigation }) {
       }
       
       // Récupérer la question du jour
-      const quizTasks = await retrieveQuizTasks() || [];
+      const quizTasks = await (typeof retrieveQuizTasks === 'function' ? retrieveQuizTasks() : Promise.resolve([])) || [];
       if (quizTasks.length > 0) {
         setDailyQuiz(quizTasks[0]);
+      } else {
+        setDailyQuiz(null);
       }
     } catch (error) {
       console.error('Erreur lors du chargement du quiz quotidien:', error);
+      setDailyQuiz(null);
     }
   };
   
@@ -261,7 +264,7 @@ export default function HomeScreen({ navigation }) {
         
         // Mettre à jour les points
         const newPoints = points + dailyQuiz.points;
-        await AsyncStorage.setItem('@challengr_points_storage_key', newPoints.toString());
+        await storePoints(newPoints); // <-- Utilisez la fonction utilitaire standard
         setPoints(newPoints);
         
         // Recalculer le niveau
@@ -457,9 +460,10 @@ export default function HomeScreen({ navigation }) {
   // Charger les points et calculer le niveau
   const loadUserData = async () => {
     try {
+      // Correction : Ne jamais remettre à zéro les points ici !
       const userPoints = await retrievePoints() || 0;
       setPoints(userPoints);
-      
+
       // Utiliser la fonction de calcul de niveau centralisée
       const levelInfo = calculateLevel(userPoints);
       setLevel(levelInfo.level);
@@ -473,7 +477,13 @@ export default function HomeScreen({ navigation }) {
   // Charger un défi quotidien
   const loadDailyChallenge = async () => {
     try {
-      const dailyTasks = await retrieveDailyTasks() || [];
+      let dailyTasks = await retrieveDailyTasks() || [];
+      // Si aucun défi n'est trouvé, attendre la génération puis recharger
+      if (!dailyTasks || dailyTasks.length === 0) {
+        // Attendre un court instant pour laisser le temps à la génération asynchrone
+        await new Promise(res => setTimeout(res, 300));
+        dailyTasks = await retrieveDailyTasks() || [];
+      }
       if (dailyTasks.length > 0) {
         // Prendre le premier défi non complété, ou le premier défi s'ils sont tous complétés
         const task = dailyTasks.find(task => !task.completed) || dailyTasks[0];
@@ -1048,9 +1058,7 @@ export default function HomeScreen({ navigation }) {
       // Ajouter les points à l'utilisateur
       const currentPoints = await retrievePoints() || 0;
       const newPoints = currentPoints + dailyTask.points;
-      await AsyncStorage.setItem('@challengr_points_storage_key', newPoints.toString());
-      
-      // Mettre à jour les points dans l'interface utilisateur
+      await storePoints(newPoints); // <-- Utilisez la fonction utilitaire standard
       setPoints(newPoints);
       
       // Recalculer le niveau
@@ -2010,7 +2018,7 @@ const CATEGORY_LABELS_FR = {
               {locationPermissionStatus !== 'granted' && (
                 <TouchableOpacity
                   style={styles.authLocationButton}
-                  onPress={requestLocationPermission}
+                  onPress={ requestLocationPermission}
                 >
                   <Text style={styles.authLocationButtonText}>Autoriser la localisation</Text>
                 </TouchableOpacity>

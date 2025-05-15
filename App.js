@@ -9,6 +9,7 @@ import { retrieveUserProfile, storeUserProfile } from './utils/storage';
 import LoginScreen from './screens/LoginScreen';
 import { isUserAuthenticated, getAuthUser } from './services/authService';
 import { COLORS } from './components/common/Icon';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function App() {
   const [isFirstLogin, setIsFirstLogin] = useState(null);
@@ -16,6 +17,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authUser, setAuthUser] = useState(null);
   const [splashFinished, setSplashFinished] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
   
   // Animations
   const logoScale = useRef(new Animated.Value(0.3)).current;
@@ -213,6 +215,31 @@ export default function App() {
     }
   };
 
+  // Ajout du handler pour le mode invité
+  const handleGuestLogin = () => {
+    setIsGuest(true);
+    setIsAuthenticated(true);
+    setAuthUser({ username: 'Invité', isGuest: true });
+    setIsFirstLogin(false);
+  };
+
+  // Fonction pour déconnexion (invité ou utilisateur normal)
+  const handleLogout = async () => {
+    if (isGuest) {
+      // Suppression de toutes les données locales pour le mode invité
+      try {
+        await AsyncStorage.clear();
+      } catch (e) {
+        console.warn('Erreur lors de la suppression des données invité:', e);
+      }
+    }
+    setIsAuthenticated(false);
+    setAuthUser(null);
+    setIsGuest(false);
+    setIsFirstLogin(true);
+    // Ne pas remettre les points à zéro ailleurs dans l'app !
+  };
+
   // Afficher le splash screen animé
   if (!splashFinished || isLoading) {
     return (
@@ -322,13 +349,13 @@ export default function App() {
 
   // Si l'utilisateur n'est pas authentifié, afficher l'écran de connexion
   if (!isAuthenticated) {
-    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} onGuestLogin={handleGuestLogin} />;
   }
 
   return (
     <>
       <StatusBar style="light" />
-      <AppNavigator />
+      <AppNavigator isGuest={isGuest} onLogout={handleLogout} />
       
       {/* Afficher les questions d'onboarding si c'est la première connexion */}
       <OnboardingQuestions 
