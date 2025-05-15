@@ -1747,112 +1747,6 @@ const CATEGORY_LABELS_FR = {
               </View>
             )}
 
-            {/* Actions rapides */}
-            <Text style={styles.sectionTitle}>Actions rapides</Text>
-            <Animated.View style={[
-              styles.buttonsContainer, 
-              { 
-                opacity: actionButtonsOpacity, 
-                transform: [{ translateY: actionButtonsAnim }] 
-              }
-            ]}>
-              {/* Bouton Mes Défis */}
-              <TouchableOpacity 
-                style={styles.actionButton} 
-                onPress={() => navigation.navigate('Tasks')}
-                activeOpacity={0.9}
-              >
-                <LinearGradient
-                  colors={['#3498db', '#2980b9']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
-                >
-                  <View style={styles.actionContent}>
-                    <View style={styles.actionIconContainer}>
-                      <Icon name="list" size={22} color={COLORS.white} style={styles.buttonIcon} />
-                    </View>
-                    <Text style={styles.buttonText}>Mes Défis</Text>
-                  </View>
-                  <View style={styles.arrowContainer}>
-                    <Icon name="chevron-forward" size={22} color={COLORS.white} />
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-
-              {/* Bouton Mon Profil */}
-              <TouchableOpacity 
-                style={styles.actionButton} 
-                onPress={() => navigation.navigate('Profile')}
-                activeOpacity={0.9}
-              >
-                <LinearGradient
-                  colors={['#9b59b6', '#8e44ad']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
-                >
-                  <View style={styles.actionContent}>
-                    <View style={styles.actionIconContainer}>
-                      <Icon name="person" size={22} color={COLORS.white} style={styles.buttonIcon} />
-                    </View>
-                    <Text style={styles.buttonText}>Mon Profil</Text>
-                  </View>
-                  <View style={styles.arrowContainer}>
-                    <Icon name="chevron-forward" size={22} color={COLORS.white} />
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-              
-              {/* Bouton Mes Amis */}
-              <TouchableOpacity 
-                style={styles.actionButton} 
-                onPress={() => navigation.navigate('Friends')}
-                activeOpacity={0.9}
-              >
-                <LinearGradient
-                  colors={['#2ecc71', '#27ae60']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
-                >
-                  <View style={styles.actionContent}>
-                    <View style={styles.actionIconContainer}>
-                      <Icon name="people" size={22} color={COLORS.white} style={styles.buttonIcon} />
-                    </View>
-                    <Text style={styles.buttonText}>Mes Amis</Text>
-                  </View>
-                  <View style={styles.arrowContainer}>
-                    <Icon name="chevron-forward" size={22} color={COLORS.white} />
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-              
-              {/* Bouton Défis Autour de Moi */}
-              <TouchableOpacity 
-                style={styles.actionButton} 
-                onPress={handleOpenMapModal}
-                activeOpacity={0.9}
-              >
-                <LinearGradient
-                  colors={['#e74c3c', '#c0392b']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
-                >
-                  <View style={styles.actionContent}>
-                    <View style={styles.actionIconContainer}>
-                      <Icon name="map" size={22} color={COLORS.white} style={styles.buttonIcon} />
-                    </View>
-                    <Text style={styles.buttonText}>Défis Autour de Moi</Text>
-                  </View>
-                  <View style={styles.arrowContainer}>
-                    <Icon name="chevron-forward" size={22} color={COLORS.white} />
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-            </Animated.View>
-
             {/* Section d'inspiration quotidienne */}
             <View style={styles.inspirationSection}>
               <View style={styles.quoteContainer}>
@@ -2136,8 +2030,8 @@ const CATEGORY_LABELS_FR = {
         </View>
       </Modal>
 
-      {/* Ajout d'un espace blanc pour éviter le chevauchement avec la barre de navigation */}
-      <View style={{ height: 40 }} />
+      {/* Ajustons l'espace blanc en bas pour éviter que le contenu ne soit masqué par la nouvelle barre de navigation */}
+      <View style={{ height: 90 }} />
     </SafeAreaView>
   );
 }
@@ -2530,58 +2424,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.dark,
   },
-  buttonsContainer: {
-    marginBottom: 25,
-    gap: 12,
-  },
-  actionButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: COLORS.black,
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  buttonGradient: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  actionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  actionIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
-  },
-  arrowContainer: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontSize: 17,
-    color: COLORS.white,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
   inspirationSection: {
     backgroundColor: '#f9fafc',
     borderRadius: 20,
     padding: 20,
+    marginTop: 20, // Augmenter la marge supérieure puisque les actions rapides sont supprimées
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#f0f3f8',
   },
   quoteContainer: {
     flexDirection: 'row',
