@@ -1,7 +1,7 @@
 import * as Calendar from 'expo-calendar';
 import { Platform, Alert } from 'react-native';
-import { COLORS } from '../components/common/Icon';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { COLORS } from '../components/common/Icon';
 
 // Clé pour stocker l'ID du calendrier ChallengR
 const CALENDAR_ID_KEY = '@challengr_calendar_id';
@@ -38,10 +38,17 @@ export const getOrCreateChallengrCalendar = async () => {
     }
 
     // Créer un objet source par défaut selon la plateforme
-    let defaultCalendarSource = Platform.OS === 'ios'
-      ? await getDefaultCalendarSource()
-      : { isLocalAccount: true, name: 'ChallengR', id: 'local' };
-      
+    let defaultCalendarSource;
+    if (Platform.OS === 'ios') {
+      defaultCalendarSource = await getDefaultCalendarSource();
+    } else {
+      // Pour Android, il faut une source locale
+      const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+      defaultCalendarSource = calendars.find(cal => cal.source && cal.source.isLocalAccount) 
+        ? calendars.find(cal => cal.source && cal.source.isLocalAccount).source
+        : { isLocalAccount: true, name: 'ChallengR', id: 'local' };
+    }
+
     // Assurer que l'objet source est valide
     if (!defaultCalendarSource || typeof defaultCalendarSource !== 'object') {
       defaultCalendarSource = { isLocalAccount: true, name: 'ChallengR', id: 'local' };
@@ -59,17 +66,9 @@ export const getOrCreateChallengrCalendar = async () => {
       name: Platform.OS === 'android' ? 'ChallengR' : 'challengr',
       ownerAccount: 'personal',
       accessLevel: Calendar.CalendarAccessLevel.OWNER,
+      source: defaultCalendarSource, // Toujours fournir la source
+      sourceId: defaultCalendarSource.id // Toujours fournir l'id de la source
     };
-
-    // Ajouter les propriétés spécifiques à la plateforme
-    if (Platform.OS === 'ios') {
-      calendarOptions.sourceId = defaultCalendarSource.id;
-      calendarOptions.source = defaultCalendarSource;
-    } else {
-      // Pour Android
-      calendarOptions.sourceId = defaultCalendarSource.id;
-      // Pas besoin d'ajouter source sur Android
-    }
 
     console.log('Création du calendrier avec options:', JSON.stringify(calendarOptions));
     

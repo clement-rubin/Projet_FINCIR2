@@ -1,31 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
-  View, 
-  Text, 
   StyleSheet, 
-  TouchableOpacity, 
-  ScrollView, 
-  Image, 
+  Platform, 
   Animated, 
-  Easing,
-  Pressable,
-  SafeAreaView,
-  StatusBar,
-  Modal,
-  TextInput,
-  KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
+  SafeAreaView, 
+  StatusBar, 
+  ScrollView, 
+  Text, 
+  View, 
+  TouchableOpacity, 
+  Image, 
+  Modal, 
+  KeyboardAvoidingView, 
+  TouchableWithoutFeedback, 
+  TextInput, 
+  ActivityIndicator, 
+  Pressable, 
   Alert,
-  ActivityIndicator,
-  Share
+  Keyboard, // Ajouté ici pour corriger l'erreur
+  Easing // Ajoutez ceci pour corriger l'erreur Easing
 } from 'react-native';
-import * as ReactNative from 'react-native';
-const Platform = ReactNative.Platform;
+import { SCREEN, calculateLevel, LEVEL_CONFIG } from '../utils/constants';
 import { retrievePoints, retrieveCompletedTasks, storeUserProfile, retrieveUserProfile } from '../utils/storage';
 import ProgressBar from '../components/ProgressBar';
 import Icon, { COLORS } from '../components/common/Icon';
-import { SCREEN, calculateLevel, LEVEL_CONFIG } from '../utils/constants';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import CameraScreen from '../components/CameraScreen';
@@ -661,7 +659,7 @@ const ProfileScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.dark} />
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={{paddingBottom: 100}}>
         <Animated.View style={[styles.profileHeader, {opacity: headerFadeAnim}]}>
           <Animated.View style={[
             styles.profileImageContainer, 

@@ -1,15 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STORAGE_KEYS, CHALLENGE_TYPES, generateUniqueId } from './constants';
+import { CHALLENGE_TYPES, generateUniqueId } from './constants';
 import { addTaskToCalendar, removeTaskFromCalendar, updateTaskInCalendar } from '../services/calendarService';
 
-// Correction des clés de stockage
-const TASKS_STORAGE_KEY = STORAGE_KEYS.TASKS;
-const POINTS_STORAGE_KEY = STORAGE_KEYS.POINTS;
-const USER_PROFILE_KEY = STORAGE_KEYS.USER_PROFILE;
-const COMPLETED_TASKS_KEY = '@challengr_completed_tasks';
+// Clés de stockage
+const TASKS_STORAGE_KEY = '@challengr_tasks';
 const DAILY_TASKS_KEY = '@challengr_daily_tasks';
-const LAST_DAILY_REFRESH_KEY = '@challengr_last_daily_refresh';
 const TIMED_TASKS_KEY = '@challengr_timed_tasks';
+const QUIZ_TASKS_KEY = '@challengr_quiz_tasks';
+const POINTS_STORAGE_KEY = '@challengr_points';
+const COMPLETED_TASKS_KEY = '@challengr_completed_tasks';
+const USER_PROFILE_KEY = '@challengr_user_profile';
+const STREAK_KEY = '@challengr_streak';
+const LAST_DAILY_REFRESH_KEY = '@challengr_last_daily_refresh';
+const LAST_QUIZ_REFRESH_KEY = '@challengr_last_quiz_refresh';
+const CURRENT_USER_KEY = '@challengr_current_user'; // Ajout de la clé utilisée dans authService
 
 /**
  * Récupère l'ID de l'utilisateur connecté directement depuis AsyncStorage

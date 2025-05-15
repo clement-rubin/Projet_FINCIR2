@@ -1,14 +1,14 @@
 // Constantes et utilitaires pour l'application ChallengR
-import { Dimensions, StatusBar } from 'react-native';
 import * as ReactNative from 'react-native';
-
-const Platform = ReactNative.Platform;
+const { Dimensions, StatusBar, Platform } = ReactNative;
 
 // Dimensions
 export const SCREEN = {
   width: Dimensions.get('window').width,
   height: Dimensions.get('window').height,
-  statusBarHeight: StatusBar.currentHeight || 25,
+  statusBarHeight: Platform.OS === 'android'
+    ? (StatusBar.currentHeight != null ? StatusBar.currentHeight : 25)
+    : 25,
   navBarHeight: 50,
 };
 

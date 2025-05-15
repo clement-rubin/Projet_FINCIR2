@@ -560,6 +560,8 @@ const FriendsScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Espace blanc en haut pour éviter que la barre de recherche soit coupée */}
+      <View style={{ height: 30 }} />
       <View style={styles.searchContainer}>
         <Icon name="search" size={20} color={COLORS.textSecondary} style={styles.searchIcon} />
         <TextInput
