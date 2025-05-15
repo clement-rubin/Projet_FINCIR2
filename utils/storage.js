@@ -496,7 +496,18 @@ const generateAndSaveDailyTasks = async () => {
       difficulty: "EASY",
       category: "PRODUCTIVITY"
     }
-  ];
+  ].map(task => ({
+    ...task,
+    // Ajout d'un champ categoryLabel en français
+    categoryLabel:
+      task.category === "FITNESS" ? "Sport" :
+      task.category === "MINDFULNESS" ? "Méditation" :
+      task.category === "LEARNING" ? "Lecture / Apprentissage" :
+      task.category === "SOCIAL" ? "Social" :
+      task.category === "PRODUCTIVITY" ? "Productivité" :
+      task.category === "CREATIVITY" ? "Créativité" :
+      "Autre"
+  }));
   
   // Sélectionner aléatoirement 3 défis quotidiens
   const selectedIndices = new Set();
@@ -959,5 +970,198 @@ export const checkQuizAnswer = async (quizId, answer) => {
   } catch (error) {
     console.error('Erreur lors de la vérification de la réponse:', error);
     return { success: false, message: "Une erreur s'est produite" };
+  }
+};
+
+/**
+ * Génère une question de quiz aléatoire
+ * @returns {Promise<Object|null>} La question générée ou null en cas d'erreur
+ */
+export const generateRandomQuizQuestion = async () => {
+  try {
+    // Banque de questions
+    const quizBank = [
+      {
+        title: "Quelle est la capitale de la France ?",
+        description: "Choisissez la bonne réponse parmi les options suivantes.",
+        answers: ["Paris", "Londres", "Berlin", "Madrid"],
+        correctAnswer: "Paris",
+        points: 20,
+        category: "QUIZ",
+        difficulty: "EASY"
+      },
+      {
+        title: "Combien de côtés a un hexagone ?",
+        description: "Un polygone régulier avec combien de côtés ?",
+        answers: ["5", "6", "7", "8"],
+        correctAnswer: "6",
+        points: 15,
+        category: "QUIZ",
+        difficulty: "EASY"
+      },
+      {
+        title: "Quel est l'élément chimique de symbole 'O' ?",
+        description: "Choisissez l'élément correspondant au symbole.",
+        answers: ["Or", "Osmium", "Oxygène", "Oganesson"],
+        correctAnswer: "Oxygène",
+        points: 20,
+        category: "QUIZ",
+        difficulty: "EASY"
+      },
+      {
+        title: "En quelle année a commencé la Première Guerre mondiale ?",
+        description: "Choisissez l'année correcte.",
+        answers: ["1914", "1918", "1939", "1945"],
+        correctAnswer: "1914",
+        points: 25,
+        category: "QUIZ",
+        difficulty: "MEDIUM"
+      },
+      {
+        title: "Qui a peint 'La Joconde' ?",
+        description: "Identifiez l'artiste de ce célèbre tableau.",
+        answers: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Michel-Ange"],
+        correctAnswer: "Leonardo da Vinci",
+        points: 20,
+        category: "QUIZ",
+        difficulty: "EASY"
+      },
+      {
+        title: "Quelle est la planète la plus proche du Soleil ?",
+        description: "Choisissez la planète correcte.",
+        answers: ["Vénus", "Terre", "Mars", "Mercure"],
+        correctAnswer: "Mercure",
+        points: 20,
+        category: "QUIZ",
+        difficulty: "MEDIUM"
+      },
+      {
+        title: "Quelle est la plus grande océan du monde ?",
+        description: "Choisissez l'océan le plus vaste.",
+        answers: ["Atlantique", "Indien", "Arctique", "Pacifique"],
+        correctAnswer: "Pacifique",
+        points: 20,
+        category: "QUIZ",
+        difficulty: "EASY"
+      },
+      {
+        title: "Combien de joueurs composent une équipe de football sur le terrain ?",
+        description: "Nombre de joueurs par équipe.",
+        answers: ["9", "10", "11", "12"],
+        correctAnswer: "11",
+        points: 15,
+        category: "QUIZ",
+        difficulty: "EASY"
+      },
+      {
+        title: "Quel pays a remporté le plus de Coupes du Monde de football ?",
+        description: "Choisissez le pays ayant gagné le plus de fois.",
+        answers: ["Allemagne", "Italie", "Argentine", "Brésil"],
+        correctAnswer: "Brésil",
+        points: 25,
+        category: "QUIZ",
+        difficulty: "MEDIUM"
+      },
+      {
+        title: "Quelle est la monnaie officielle du Japon ?",
+        description: "Choisissez la devise utilisée au Japon.",
+        answers: ["Yuan", "Won", "Yen", "Ringgit"],
+        correctAnswer: "Yen",
+        points: 20,
+        category: "QUIZ",
+        difficulty: "EASY"
+      },
+      {
+        title: "Qui a écrit 'Roméo et Juliette' ?",
+        description: "Identifiez l'auteur de cette célèbre pièce.",
+        answers: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Victor Hugo"],
+        correctAnswer: "William Shakespeare",
+        points: 20,
+        category: "QUIZ",
+        difficulty: "EASY"
+      },
+      {
+        title: "Quelle est la plus haute montagne du monde ?",
+        description: "Choisissez le sommet le plus élevé.",
+        answers: ["K2", "Mont Blanc", "Everest", "Kilimandjaro"],
+        correctAnswer: "Everest",
+        points: 15,
+        category: "QUIZ",
+        difficulty: "EASY"
+      },
+      {
+        title: "Quelle est la langue la plus parlée au monde ?",
+        description: "En nombre total de locuteurs (natifs et non-natifs).",
+        answers: ["Anglais", "Espagnol", "Mandarin", "Hindi"],
+        correctAnswer: "Anglais",
+        points: 25,
+        category: "QUIZ",
+        difficulty: "MEDIUM"
+      },
+      {
+        title: "Quel est le plus grand désert du monde ?",
+        description: "Attention, tous les déserts ne sont pas chauds !",
+        answers: ["Sahara", "Gobi", "Antarctique", "Kalahari"],
+        correctAnswer: "Antarctique",
+        points: 30,
+        category: "QUIZ",
+        difficulty: "HARD"
+      },
+      {
+        title: "En quelle année l'homme a-t-il marché sur la Lune pour la première fois ?",
+        description: "Date du premier alunissage humain.",
+        answers: ["1965", "1969", "1971", "1975"],
+        correctAnswer: "1969",
+        points: 20,
+        category: "QUIZ",
+        difficulty: "MEDIUM"
+      }
+    ];
+    
+    // Récupérer les questions déjà posées pour éviter les doublons
+    const askedQuestions = await AsyncStorage.getItem('@challengr_asked_quiz_questions');
+    const askedIds = askedQuestions ? JSON.parse(askedQuestions) : [];
+    
+    // Filtrer pour ne pas répéter les questions récentes (si on a posé toutes les questions, on recommence)
+    let availableQuestions = quizBank;
+    if (askedIds.length < quizBank.length) {
+      availableQuestions = quizBank.filter((q, index) => !askedIds.includes(index));
+    }
+    
+    // Sélectionner une question aléatoire
+    const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+    const selectedQuestion = availableQuestions[randomIndex];
+    
+    // Trouver l'index original de la question dans quizBank
+    const originalIndex = quizBank.findIndex(q => 
+      q.title === selectedQuestion.title && q.correctAnswer === selectedQuestion.correctAnswer
+    );
+    
+    // Mettre à jour la liste des questions posées
+    let newAskedIds = [...askedIds, originalIndex];
+    if (newAskedIds.length >= quizBank.length) {
+      // Si on a posé toutes les questions, on réinitialise mais on garde les 3 dernières
+      // pour éviter de poser immédiatement les mêmes questions
+      newAskedIds = newAskedIds.slice(-3);
+    }
+    await AsyncStorage.setItem('@challengr_asked_quiz_questions', JSON.stringify(newAskedIds));
+    
+    // Créer l'objet question formaté
+    return {
+      id: generateUniqueId(),
+      title: selectedQuestion.title,
+      description: selectedQuestion.description,
+      answers: selectedQuestion.answers,
+      correctAnswer: selectedQuestion.correctAnswer,
+      points: selectedQuestion.points,
+      category: selectedQuestion.category,
+      difficulty: selectedQuestion.difficulty,
+      type: CHALLENGE_TYPES.QUIZ,
+      completed: false,
+      createdAt: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Erreur lors de la génération d\'une question de quiz:', error);
+    return null;
   }
 };

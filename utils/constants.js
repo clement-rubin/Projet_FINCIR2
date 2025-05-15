@@ -29,7 +29,6 @@ export const CHALLENGE_CATEGORIES = {
   PRODUCTIVITY: { id: 'productivity', name: "Productivité", icon: "timer", color: "#f1c40f" },
   MINDFULNESS: { id: 'mindfulness', name: "Bien-être mental", icon: "leaf", color: "#16a085" },
   CUSTOM: { id: 'custom', name: "Personnalisé", icon: "create", color: "#34495e" },
-  QUIZ: { id: 'quiz', name: "Culture Générale", icon: "help-circle", color: "#8e44ad" },
   SPORT: {
     id: 'sport',
     name: 'Sport',
@@ -69,8 +68,8 @@ export const CHALLENGE_TYPES = {
   TIMED: 'timed',         // Défis à durée limitée
   STREAK: 'streak',       // Défis qui demandent une série de complétion consécutive
   COMMUNITY: 'community', // Défis de la communauté
-  QUIZ: 'quiz',           // Questions de culture générale
-  COMPLETED: 'completed'  // Défis complétés par l'utilisateur
+  COMPLETED: 'completed', // Défis complétés par l'utilisateur
+  COUPLE: 'couple'        // Défis à réaliser en couple
 };
 
 // Clés de stockage pour AsyncStorage
@@ -83,8 +82,10 @@ export const STORAGE_KEYS = {
   USERS: '@challengr_users',
   CONVERSATIONS: '@challengr_conversations',
   MESSAGES: '@challengr_messages',
+  COUPLE_CHALLENGES: '@challengr_couple_challenges', // Nouveaux défis en couple
+  COUPLE_RELATIONS: '@challengr_couple_relations',   // Relations de couple entre utilisateurs
 };
-    
+
 // Configuration des niveaux du jeu
 export const LEVEL_CONFIG = {
   // Pour chaque niveau: titre, points requis, description et avantages
@@ -136,6 +137,14 @@ export const LEVEL_CONFIG = {
     description: "Ton nom restera dans l'histoire", 
     advantages: ["Tous les avantages débloqués", "Bonus de points +25%"]
   }
+};
+
+// Configuration pour les défis en couple
+export const COUPLE_CHALLENGE_CONFIG = {
+  BONUS_MULTIPLIER: 1.5,        // Bonus de points pour les défis en couple
+  SYNC_COMPLETION: true,        // Les deux partenaires doivent compléter pour valider
+  DEFAULT_CATEGORIES: ['PERSONAL', 'SOCIAL', 'CUISINE', 'RELAXATION'], // Catégories recommandées
+  MAX_ACTIVE_CHALLENGES: 5      // Nombre maximum de défis en couple actifs simultanément
 };
 
 // Fonctions utilitaires
@@ -202,4 +211,28 @@ export const getLevelBonusMultiplier = (level) => {
 export const calculatePointsWithBonus = (basePoints, level) => {
   const bonusMultiplier = getLevelBonusMultiplier(level);
   return Math.floor(basePoints * bonusMultiplier);
+};
+
+// Créer un défi en couple
+export const createCoupleChallenge = (title, description, category, difficulty, partnerId) => {
+  const basePoints = DIFFICULTY_LEVELS[difficulty].points;
+  const totalPoints = Math.floor(basePoints * COUPLE_CHALLENGE_CONFIG.BONUS_MULTIPLIER);
+  
+  return {
+    id: generateUniqueId(),
+    title,
+    description,
+    category,
+    difficulty,
+    type: CHALLENGE_TYPES.COUPLE,
+    points: totalPoints,
+    partnerId,
+    createdAt: new Date().toISOString(),
+    status: {
+      creator: 'pending',
+      partner: 'pending'
+    },
+    completionDate: null,
+    isActive: true
+  };
 };

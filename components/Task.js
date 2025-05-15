@@ -129,7 +129,11 @@ const Task = ({
 
   const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState(0);
+
   const handleComplete = () => {
+    // Valider directement le défi
+    onComplete();
+    // Afficher l'option de notation
     setShowRating(true);
   };
 
@@ -137,16 +141,10 @@ const Task = ({
     if (onRate) {
       onRate(rating);
     }
-    if (onComplete) {
-      onComplete();
-    }
     setShowRating(false);
   };
 
   const handleSkipRating = () => {
-    if (onComplete) {
-      onComplete();
-    }
     setShowRating(false);
   };
 
@@ -196,6 +194,23 @@ const Task = ({
     );
   };
   
+  // Dictionnaire pour traduire les catégories en français
+  const CATEGORY_LABELS_FR = {
+    FITNESS: "Sport",
+    MINDFULNESS: "Méditation",
+    LEARNING: "Lecture / Apprentissage",
+    SOCIAL: "Social",
+    PRODUCTIVITY: "Productivité",
+    CREATIVITY: "Créativité",
+    WELLBEING: "Bien-être",
+    NUTRITION: "Nutrition",
+    CULTURE: "Culture",
+    QUIZ: "Question du jour",
+    "QUESTION DU JOUR": "Question du jour",
+    CUSTOM: "Personnalisé",
+    AUTRE: "Autre"
+  };
+
   return (
     <Animated.View style={[styles.container, getTaskTypeStyle(), { transform: [{ scale: scaleAnim }, { translateY: translateYAnim }], opacity: opacityAnim }]}>
       {/* Badges de type et catégorie */}
@@ -224,7 +239,9 @@ const Task = ({
         {categoryInfo && (
           <View style={[styles.categoryBadge, { backgroundColor: categoryInfo.color + '20', borderColor: categoryInfo.color }]}>
             <Icon name={categoryInfo.icon} size={12} color={categoryInfo.color} style={styles.badgeIcon} />
-            <Text style={[styles.categoryBadgeText, { color: categoryInfo.color }]}>{categoryInfo.name}</Text>
+            <Text style={[styles.categoryBadgeText, { color: categoryInfo.color }]}>
+              {CATEGORY_LABELS_FR[categoryInfo.id] || categoryInfo.name}
+            </Text>
           </View>
         )}
       </View>

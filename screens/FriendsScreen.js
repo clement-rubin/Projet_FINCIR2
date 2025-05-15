@@ -12,7 +12,7 @@ import {
   Image,
   Animated,
   Easing,
-  SafeAreaView // Ajouté ici
+  SafeAreaView
 } from 'react-native';
 import Icon, { COLORS } from '../components/common/Icon';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -30,10 +30,8 @@ import { retrieveFriends } from '../utils/friendshipStorage';
 import { FRIENDS_STORAGE_KEY } from '../utils/friendshipStorage';
 import { BlurView } from 'expo-blur';
 import { useFocusEffect } from '@react-navigation/native';
-import { SCREEN } from '../utils/constants';
+import { SCREEN, STORAGE_KEYS } from '../utils/constants';
 import { LinearGradient } from 'expo-linear-gradient';
-
-// Suppression du composant CustomNavBar
 
 const FriendsScreen = ({ navigation }) => {
   // États et refs inchangés
@@ -47,6 +45,10 @@ const FriendsScreen = ({ navigation }) => {
   const [page, setPage] = useState(1);
   const [hasMoreFriends, setHasMoreFriends] = useState(true);
   const [activeTab, setActiveTab] = useState('friends');
+  
+  // Nouvel état pour les relations de couple
+  const [coupleRelations, setCoupleRelations] = useState([]);
+  const [pendingCoupleRequests, setPendingCoupleRequests] = useState([]);
   
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -63,6 +65,7 @@ const FriendsScreen = ({ navigation }) => {
       
       // Charger à nouveau les données
       loadFriendsData(true);
+      loadCoupleRelations();
       
       // Animation d'entrée
       Animated.parallel([
@@ -107,6 +110,7 @@ const FriendsScreen = ({ navigation }) => {
     let position = 0;
     if (activeTab === 'pending') position = SCREEN.width * 0.22;
     else if (activeTab === 'search') position = SCREEN.width * 0.45;
+    else if (activeTab === 'couple') position = SCREEN.width * 0.67;
     
     // Utiliser translateX au lieu de manipuler la largeur
     Animated.spring(tabIndicatorPosition, {
@@ -419,6 +423,158 @@ const FriendsScreen = ({ navigation }) => {
     return Array.from(uniqueFriends.values());
   };
 
+  // Fonctions pour gérer les relations de couple
+  const loadCoupleRelations = async () => {
+    try {
+      // Charger les relations de couple depuis AsyncStorage
+      const coupleRelationsStr = await AsyncStorage.getItem(STORAGE_KEYS.COUPLE_RELATIONS);
+      const coupleRequests = await AsyncStorage.getItem(STORAGE_KEYS.COUPLE_CHALLENGES);
+      
+      if (coupleRelationsStr) {
+        const relations = JSON.parse(coupleRelationsStr);
+        setCoupleRelations(relations);
+      }
+      
+      if (coupleRequests) {
+        const requests = JSON.parse(coupleRequests);
+        const pendingOnly = requests.filter(req => req.status === 'pending');
+        setPendingCoupleRequests(pendingOnly);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des relations de couple:', error);
+    }
+  };
+
+  const handleSendCoupleRequest = async (userId) => {
+    try {
+      setIsLoading(true);
+      
+      // Vérifier si l'utilisateur est déjà en relation de couple
+      if (coupleRelations.length > 0) {
+        Alert.alert('Attention', 'Vous êtes déjà en couple. Vous ne pouvez avoir qu\'une seule relation de couple à la fois.');
+        return;
+      }
+      
+      // Créer une demande de relation de couple
+      const newRequest = {
+        id: Date.now().toString(),
+        senderId: 'currentUserId', // À remplacer par l'ID réel de l'utilisateur
+        receiverId: userId,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      };
+      
+      // Stocker la demande dans AsyncStorage
+      const requestsStr = await AsyncStorage.getItem(STORAGE_KEYS.COUPLE_CHALLENGES);
+      const requests = requestsStr ? JSON.parse(requestsStr) : [];
+      requests.push(newRequest);
+      await AsyncStorage.setItem(STORAGE_KEYS.COUPLE_CHALLENGES, JSON.stringify(requests));
+      
+      // Mettre à jour l'état
+      setPendingCoupleRequests([...pendingCoupleRequests, newRequest]);
+      
+      Alert.alert('Succès', 'Demande de relation de couple envoyée');
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de la demande de couple:', error);
+      Alert.alert('Erreur', 'Impossible d\'envoyer la demande. Veuillez réessayer.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRespondToCoupleRequest = async (requestId, response) => {
+    try {
+      setIsLoading(true);
+      
+      // Récupérer les demandes existantes
+      const requestsStr = await AsyncStorage.getItem(STORAGE_KEYS.COUPLE_CHALLENGES);
+      const requests = requestsStr ? JSON.parse(requestsStr) : [];
+      
+      // Trouver la demande spécifique
+      const requestIndex = requests.findIndex(req => req.id === requestId);
+      if (requestIndex === -1) {
+        throw new Error('Demande non trouvée');
+      }
+      
+      const request = requests[requestIndex];
+      request.status = response;
+      requests[requestIndex] = request;
+      
+      // Mettre à jour AsyncStorage
+      await AsyncStorage.setItem(STORAGE_KEYS.COUPLE_CHALLENGES, JSON.stringify(requests));
+      
+      // Si la demande est acceptée, créer la relation de couple
+      if (response === 'accepted') {
+        const newRelation = {
+          id: Date.now().toString(),
+          user1Id: request.receiverId,
+          user2Id: request.senderId,
+          startDate: new Date().toISOString(),
+          active: true
+        };
+        
+        // Stocker la relation dans AsyncStorage
+        const relationsStr = await AsyncStorage.getItem(STORAGE_KEYS.COUPLE_RELATIONS);
+        const relations = relationsStr ? JSON.parse(relationsStr) : [];
+        relations.push(newRelation);
+        await AsyncStorage.setItem(STORAGE_KEYS.COUPLE_RELATIONS, JSON.stringify(relations));
+        
+        // Mettre à jour l'état
+        setCoupleRelations([...coupleRelations, newRelation]);
+      }
+      
+      // Mettre à jour les demandes en attente
+      const updatedPendingRequests = pendingCoupleRequests.filter(req => req.id !== requestId);
+      setPendingCoupleRequests(updatedPendingRequests);
+      
+      Alert.alert('Succès', response === 'accepted' ? 'Relation de couple établie' : 'Demande refusée');
+    } catch (error) {
+      console.error('Erreur lors de la réponse à la demande de couple:', error);
+      Alert.alert('Erreur', 'Impossible de traiter cette demande. Veuillez réessayer.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEndCoupleRelation = (relationId) => {
+    Alert.alert(
+      'Fin de la relation',
+      'Êtes-vous sûr de vouloir mettre fin à cette relation de couple?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { 
+          text: 'Confirmer', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsLoading(true);
+              
+              // Récupérer les relations existantes
+              const relationsStr = await AsyncStorage.getItem(STORAGE_KEYS.COUPLE_RELATIONS);
+              const relations = relationsStr ? JSON.parse(relationsStr) : [];
+              
+              // Filtrer la relation à supprimer
+              const updatedRelations = relations.filter(rel => rel.id !== relationId);
+              
+              // Mettre à jour AsyncStorage
+              await AsyncStorage.setItem(STORAGE_KEYS.COUPLE_RELATIONS, JSON.stringify(updatedRelations));
+              
+              // Mettre à jour l'état
+              setCoupleRelations(updatedRelations);
+              
+              Alert.alert('Succès', 'Relation de couple terminée');
+            } catch (error) {
+              console.error('Erreur lors de la fin de la relation de couple:', error);
+              Alert.alert('Erreur', 'Impossible de terminer cette relation. Veuillez réessayer.');
+            } finally {
+              setIsLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   // Fonctions de rendu avec composants optimisés
   const renderFriendItem = ({ item, index }) => {
     if (!item || !item.friend || !item.friendshipId) {
@@ -558,6 +714,55 @@ const FriendsScreen = ({ navigation }) => {
     }
   };
 
+  // Rendu pour l'onglet couple
+  const renderCoupleRelationItem = ({ item }) => (
+    <View style={styles.friendItem}>
+      <View style={styles.userInfo}>
+        <View style={[styles.avatar, { backgroundColor: COLORS.accent }]}>
+          <Icon name="heart" size={22} color={COLORS.white} />
+        </View>
+        <View>
+          <Text style={styles.userName}>Relation de couple</Text>
+          <Text style={styles.userHandle}>Depuis {new Date(item.startDate).toLocaleDateString()}</Text>
+        </View>
+      </View>
+      <TouchableOpacity 
+        style={[styles.actionButton, { backgroundColor: COLORS.error }]}
+        onPress={() => handleEndCoupleRelation(item.id)}
+      >
+        <Icon name="close" size={22} color={COLORS.white} />
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderCoupleRequestItem = ({ item }) => (
+    <View style={styles.friendItem}>
+      <View style={styles.userInfo}>
+        <View style={[styles.avatar, { backgroundColor: COLORS.accent }]}>
+          <Icon name="heart-outline" size={22} color={COLORS.white} />
+        </View>
+        <View>
+          <Text style={styles.userName}>Demande de relation</Text>
+          <Text style={styles.userHandle}>Envoyée le {new Date(item.createdAt).toLocaleDateString()}</Text>
+        </View>
+      </View>
+      <View style={styles.requestActions}>
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.acceptButton]}
+          onPress={() => handleRespondToCoupleRequest(item.id, 'accepted')}
+        >
+          <Icon name="checkmark" size={22} color={COLORS.white} />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.actionButton, { marginLeft: 8 }]}
+          onPress={() => handleRespondToCoupleRequest(item.id, 'rejected')}
+        >
+          <Icon name="close" size={22} color={COLORS.primary} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Espace blanc en haut pour éviter que la barre de recherche soit coupée */}
@@ -631,6 +836,29 @@ const FriendsScreen = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
         )}
+        
+        <TouchableOpacity 
+          style={[
+            styles.tab, 
+            activeTab === 'couple' && styles.activeTab,
+            pendingCoupleRequests.length > 0 && styles.tabWithBadge
+          ]}
+          onPress={() => handleTabChange('couple')}
+        >
+          <Text 
+            style={[
+              styles.tabText, 
+              activeTab === 'couple' && styles.activeTabText
+            ]}
+          >
+            Couple
+          </Text>
+          {pendingCoupleRequests.length > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{pendingCoupleRequests.length}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
       <Animated.View 
@@ -747,6 +975,36 @@ const FriendsScreen = ({ navigation }) => {
                 </Text>
               </View>
             )
+          }
+        />
+      )}
+
+      {/* Nouvel onglet Couple */}
+      {activeTab === 'couple' && (
+        <FlatList
+          data={[...coupleRelations, ...pendingCoupleRequests]}
+          renderItem={({ item }) => 
+            item.status === 'pending' 
+              ? renderCoupleRequestItem(item) 
+              : renderCoupleRelationItem(item)
+          }
+          keyExtractor={item => `couple-${item.id}`}
+          contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={loadCoupleRelations}
+              colors={[COLORS.primary]}
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Icon name="heart-outline" size={60} color={COLORS.textLight} />
+              <Text style={styles.emptyText}>Aucune relation de couple</Text>
+              <Text style={styles.emptySubText}>
+                Recherchez des utilisateurs pour envoyer une demande de relation
+              </Text>
+            </View>
           }
         />
       )}
@@ -962,6 +1220,62 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     left: 0, // Ne pas utiliser left pour l'animation, nous utilisons translateX
+  },
+  // Nouveaux styles pour l'onglet couple
+  coupleContainer: {
+    backgroundColor: COLORS.lightAccent,
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 16,
+  },
+  coupleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  coupleTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  coupleBadge: {
+    backgroundColor: COLORS.accent,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  coupleBadgeText: {
+    color: COLORS.white,
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  coupleInfo: {
+    marginBottom: 10,
+  },
+  coupleInfoText: {
+    color: COLORS.textSecondary,
+    marginBottom: 5,
+  },
+  coupleActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  coupleActionButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  coupleActionButtonText: {
+    color: COLORS.white,
+    marginLeft: 6,
+    fontWeight: 'bold',
+  },
+  coupleEndButton: {
+    backgroundColor: COLORS.error,
   },
 });
 
