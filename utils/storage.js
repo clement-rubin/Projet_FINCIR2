@@ -98,6 +98,8 @@ export const createTask = async (task) => {
       type: CHALLENGE_TYPES.REGULAR,
       completed: false,
       createdAt: new Date().toISOString(),
+      dueDate: task.dueDate || null, // Date d'échéance pour les défis personnels
+      completedAt: null, // Date à laquelle le défi a été validé
       calendarEventId: null  // Ajout du champ pour l'ID d'événement calendrier
     };
     
@@ -119,13 +121,16 @@ export const createTask = async (task) => {
  */
 export const completeTask = async (taskId) => {
   try {
+    // Date actuelle pour enregistrer la date de complétion
+    const completionDate = new Date().toISOString();
+    
     // 1. Tâches standards
     let tasks = await retrieveTasks();
     let found = false;
     let updatedTasks = tasks.map(task => {
       if (task.id === taskId) {
         found = true;
-        return { ...task, completed: true };
+        return { ...task, completed: true, completedAt: completionDate };
       }
       return task;
     });
@@ -140,7 +145,7 @@ export const completeTask = async (taskId) => {
     let updatedDailyTasks = dailyTasks.map(task => {
       if (task.id === taskId) {
         found = true;
-        return { ...task, completed: true };
+        return { ...task, completed: true, completedAt: completionDate };
       }
       return task;
     });
@@ -149,14 +154,12 @@ export const completeTask = async (taskId) => {
       await AsyncStorage.setItem(userKey, JSON.stringify(updatedDailyTasks));
       await addCompletedTask(taskId);
       return updatedDailyTasks;
-    }
-
-    // 3. Tâches temporaires
+    }    // 3. Tâches temporaires
     let timedTasks = await retrieveTimedTasks();
     let updatedTimedTasks = timedTasks.map(task => {
       if (task.id === taskId) {
         found = true;
-        return { ...task, completed: true };
+        return { ...task, completed: true, completedAt: completionDate };
       }
       return task;
     });

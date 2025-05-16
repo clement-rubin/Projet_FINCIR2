@@ -14,6 +14,8 @@ const Task = ({
   type = CHALLENGE_TYPES.REGULAR,
   completed, 
   expiresAt,
+  dueDate,
+  completedAt,
   streak,
   onComplete, 
   onDelete,
@@ -60,8 +62,7 @@ const Task = ({
     // Utiliser notre fonction utilitaire pour obtenir un texte convivial
     return getTimeRemaining(expiresAt);
   };
-  
-  // Formater la date d'expiration pour l'affichage
+    // Formater la date d'expiration pour l'affichage
   const getExpirationDateText = () => {
     if (!expiresAt) return null;
     
@@ -72,6 +73,34 @@ const Task = ({
       showWeekday: true, 
       showTime: true, 
       showYear: false 
+    });
+  };
+  
+  // Formater la date d'échéance pour l'affichage
+  const getDueDateText = () => {
+    if (!dueDate) return null;
+    
+    const dueDateObj = new Date(dueDate);
+    
+    // Utiliser notre fonction de formatage avec des options adaptées
+    return formatDate(dueDateObj, { 
+      showWeekday: true, 
+      showTime: false,
+      showYear: true
+    });
+  };
+  
+  // Formater la date de validation pour l'affichage
+  const getCompletedAtText = () => {
+    if (!completedAt) return null;
+    
+    const completedAtDate = new Date(completedAt);
+    
+    // Utiliser notre fonction de formatage avec des options adaptées
+    return formatDate(completedAtDate, { 
+      showWeekday: true, 
+      showTime: true,
+      showYear: false
     });
   };
   
@@ -122,10 +151,11 @@ const Task = ({
     
     return categoryKey ? CHALLENGE_CATEGORIES[categoryKey] : null;
   };
-  
-  const categoryInfo = getCategoryInfo();
+    const categoryInfo = getCategoryInfo();
   const timeRemainingText = getRemainingTimeText();
   const expirationDateText = getExpirationDateText();
+  const dueDateText = getDueDateText();
+  const completedAtText = getCompletedAtText();
 
   const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState(0);
@@ -255,11 +285,24 @@ const Task = ({
             <Icon name="star" size={14} color={difficultyColor} style={styles.pointsIcon} />
             <Text style={[styles.pointsText, { color: difficultyColor }]}>+{points} points</Text>
           </View>
-          
-          {timeRemainingText && (
+            {timeRemainingText && (
             <View style={styles.timeContainer}>
               <Icon name="time" size={14} color="#e74c3c" style={styles.timeIcon} />
               <Text style={styles.timeText}>{timeRemainingText}</Text>
+            </View>
+          )}
+          
+          {dueDateText && !completed && (
+            <View style={styles.dueDateContainer}>
+              <Icon name="calendar" size={14} color="#3498db" style={styles.dueDateIcon} />
+              <Text style={styles.dueDateText}>Échéance: {dueDateText}</Text>
+            </View>
+          )}
+          
+          {completedAt && completed && (
+            <View style={styles.completedAtContainer}>
+              <Icon name="checkmark-circle" size={14} color="#2ecc71" style={styles.completedAtIcon} />
+              <Text style={styles.completedAtText}>Validé le: {completedAtText}</Text>
             </View>
           )}
           
@@ -407,12 +450,47 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     marginBottom: 5,
-  },
-  timeIcon: {
+  },  timeIcon: {
     marginRight: 4,
   },
   timeText: {
     color: '#e74c3c',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  dueDateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8f4fc',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginBottom: 5,
+    marginRight: 6,
+  },
+  dueDateIcon: {
+    marginRight: 4,
+  },
+  dueDateText: {
+    color: '#3498db',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  completedAtContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8f8e8',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginBottom: 5,
+    marginRight: 6,
+  },
+  completedAtIcon: {
+    marginRight: 4,
+  },
+  completedAtText: {
+    color: '#2ecc71',
     fontSize: 12,
     fontWeight: '600',
   },
