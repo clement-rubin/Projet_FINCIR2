@@ -1402,18 +1402,7 @@ const CATEGORY_LABELS_FR = {
                   <Text style={styles.tagline}>Relevez des défis, progressez, excellez !</Text>
                 </View>
                 
-                <View style={styles.levelBadgeContainer}>
-                  <Animated.View style={[
-                    styles.levelBadge,
-                    { transform: [{ scale: pulseAnim }] }
-                  ]}>
-                    <Text style={styles.levelBadgeText}>{level}</Text>
-                  </Animated.View>
-                  <View style={styles.userLevelInfo}>
-                    <Text style={styles.userLevelText}>NIVEAU {level}</Text>
-                    <Text style={styles.userPointsText}>{points} points</Text>
-                  </View>
-                </View>
+                {/* Level badge container removed */}
               </Animated.View>
             </LinearGradient>
           </ImageBackground>
