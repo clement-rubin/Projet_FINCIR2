@@ -28,6 +28,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import CameraScreen from '../components/CameraScreen';
 import { logoutUser } from '../services/authService';
+import { useFocusEffect } from '@react-navigation/native';
 
 // Suppression du composant CustomNavBar
 
@@ -196,6 +197,12 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
       })
     ).start();
   }, []);
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      loadProfileData();
+    }, [])
+  );
   
   const loadProfileData = async () => {
     try {
