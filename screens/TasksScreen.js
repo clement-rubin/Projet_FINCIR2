@@ -1992,7 +1992,8 @@ const TasksScreen = ({ navigation }) => {
           </>
         )}
         
-        <View style={styles.filterContainer}>          <ScrollView 
+        <View style={styles.filterContainer}>
+          <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false} 
             contentContainerStyle={styles.filterButtons}
@@ -2008,7 +2009,10 @@ const TasksScreen = ({ navigation }) => {
           <View style={styles.emptyContainer}>
             <Animated.View style={{opacity: opacityAnim}}>
               <Icon name="list" size={60} color="#d1d8e0" />
-              <Text style={styles.emptyText}>Aucun défi {filter !== 'all' ? 'dans cette catégorie' : ''}</Text>              <Text style={styles.emptySubText}>
+              <Text style={styles.emptyText}>
+                Aucun défi{filter !== 'all' ? ' dans cette catégorie' : ''}
+              </Text>
+              <Text style={styles.emptySubText}>
                 {filter === 'all' 
                   ? 'Créez votre premier défi en appuyant sur "+ Nouveau défi"'
                   : filter === 'custom'
@@ -2018,7 +2022,6 @@ const TasksScreen = ({ navigation }) => {
                       : 'Complétez des défis pour les voir ici'
                 }
               </Text>
-              
               {filter !== 'all' && (
                 <TouchableOpacity 
                   style={styles.emptyActionButton}
