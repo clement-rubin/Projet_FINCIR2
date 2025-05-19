@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CHALLENGE_TYPES, generateUniqueId } from './constants';
-import { addTaskToCalendar, removeTaskFromCalendar, updateTaskInCalendar } from '../services/calendarService';
 
 // Clés de stockage
 const TASKS_STORAGE_KEY = '@challengr_tasks';
@@ -100,12 +99,8 @@ export const createTask = async (task) => {
       completed: false,
       createdAt: new Date().toISOString(),
       dueDate: task.dueDate || null, // Date d'échéance pour les défis personnels
-      completedAt: null, // Date à laquelle le défi a été validé
-      calendarEventId: null  // Ajout du champ pour l'ID d'événement calendrier
+      completedAt: null // Date à laquelle le défi a été validé
     };
-    
-    // Remarque: Nous n'ajoutons plus automatiquement la tâche au calendrier ici
-    // Cette logique est gérée dans TasksScreen.js
     
     const updatedTasks = [...tasks, newTask];
     await saveTasks(updatedTasks);
@@ -251,11 +246,6 @@ export const deleteTask = async (taskId) => {
     const taskToDelete = standardTasks.find(task => task.id === taskId);
     
     if (taskToDelete) {
-      // Supprimer l'événement calendrier associé s'il existe
-      if (taskToDelete.calendarEventId) {
-        await removeTaskFromCalendar(taskToDelete.calendarEventId);
-      }
-      
       // Filtrer la tâche à supprimer des tâches standards
       const updatedTasks = standardTasks.filter(task => task.id !== taskId);
       await saveTasks(updatedTasks);
@@ -267,11 +257,6 @@ export const deleteTask = async (taskId) => {
     const dailyTaskToDelete = dailyTasks.find(task => task.id === taskId);
     
     if (dailyTaskToDelete) {
-      // Supprimer l'événement calendrier associé s'il existe
-      if (dailyTaskToDelete.calendarEventId) {
-        await removeTaskFromCalendar(dailyTaskToDelete.calendarEventId);
-      }
-      
       // Filtrer la tâche à supprimer des tâches quotidiennes
       const updatedDailyTasks = dailyTasks.filter(task => task.id !== taskId);
       const userKey = await getUserSpecificKey(DAILY_TASKS_KEY);
@@ -285,11 +270,6 @@ export const deleteTask = async (taskId) => {
     const timedTaskToDelete = timedTasks.find(task => task.id === taskId);
     
     if (timedTaskToDelete) {
-      // Supprimer l'événement calendrier associé s'il existe
-      if (timedTaskToDelete.calendarEventId) {
-        await removeTaskFromCalendar(timedTaskToDelete.calendarEventId);
-      }
-      
       // Filtrer la tâche à supprimer des tâches à durée limitée
       const updatedTimedTasks = timedTasks.filter(task => task.id !== taskId);
       const userKey = await getUserSpecificKey(TIMED_TASKS_KEY);
@@ -633,20 +613,9 @@ const generateAndSaveDailyTasks = async () => {
       difficulty: task.difficulty,
       category: task.category,
       type: CHALLENGE_TYPES.DAILY,
-      completed: false,
-      calendarEventId: null, // Ajout du champ pour l'ID d'événement calendrier
-      createdAt: new Date().toISOString(),
-      expiresAt: new Date(new Date().setHours(23, 59, 59, 999)).toISOString()
+      completed: false
     };
   });
-  
-  // Ajouter les défis au calendrier
-  for (let i = 0; i < dailyTasks.length; i++) {
-    const eventId = await addTaskToCalendar(dailyTasks[i]);
-    if (eventId) {
-      dailyTasks[i].calendarEventId = eventId;
-    }
-  }
   
   // Sauvegarder les défis quotidiens
   const userKey = await getUserSpecificKey(DAILY_TASKS_KEY);
@@ -700,9 +669,7 @@ export const createTimedTask = async (task) => {
       ...task,
       id: generateUniqueId(),
       type: CHALLENGE_TYPES.TIMED,
-      completed: false,
-      calendarEventId: null, // Ajout du champ pour l'ID d'événement calendrier
-      createdAt: new Date().toISOString()
+      completed: false
     };
     
     // Si expiresAt n'est pas fourni, définir une durée par défaut de 3 jours
@@ -711,9 +678,6 @@ export const createTimedTask = async (task) => {
       expiresAt.setDate(expiresAt.getDate() + 3);
       newTimedTask.expiresAt = expiresAt.toISOString();
     }
-    
-    // Remarque: Nous n'ajoutons plus automatiquement la tâche au calendrier ici
-    // Cette logique est gérée dans TasksScreen.js
     
     const updatedTimedTasks = [...timedTasks, newTimedTask];
     const userKey = await getUserSpecificKey(TIMED_TASKS_KEY);
@@ -1012,10 +976,7 @@ const generateAndSaveQuizTasks = async () => {
     difficulty: quizTask.difficulty,
     category: quizTask.category,
     type: CHALLENGE_TYPES.QUIZ,
-    completed: false,
-    calendarEventId: null,
-    createdAt: new Date().toISOString(),
-    expiresAt: new Date(new Date().setHours(23, 59, 59, 999)).toISOString()
+    completed: false
   };
   
   // Sauvegarder la question de quiz

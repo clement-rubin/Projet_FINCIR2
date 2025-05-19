@@ -126,7 +126,7 @@ const AboutUsScreen = ({ navigation }) => {
           <View style={styles.featureContainer}>
             <View style={styles.feature}>
               <View style={[styles.iconCircle, { backgroundColor: '#e3f2fd' }]}>
-                <Icon name="calendar" size={30} color={COLORS.primary} />
+                <Icon name="today" size={30} color={COLORS.primary} />
               </View>
               <Text style={styles.featureTitle}>Défis Quotidiens</Text>
               <Text style={styles.featureDescription}>

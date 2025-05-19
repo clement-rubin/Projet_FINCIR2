@@ -17,7 +17,7 @@ import {
   TouchableWithoutFeedback,
   Modal,
   Linking,
-  TextInput, // Add this import
+  TextInput,
   ActivityIndicator,
   Switch
 } from 'react-native';
@@ -43,7 +43,6 @@ import {
 import ProgressBar from '../components/ProgressBar';
 import Icon, { COLORS } from '../components/common/Icon';
 import { SCREEN, calculateLevel, generateUniqueId, CHALLENGE_TYPES, CHALLENGE_CATEGORIES } from '../utils/constants';
-import { addTaskToCalendar } from '../services/calendarService';
 
 const { width, height } = SCREEN;
 
@@ -435,46 +434,57 @@ export default function HomeScreen({ navigation }) {
 
   // Charger les données utilisateur
   useEffect(() => {
-    loadUserData();
-    startAnimations();
-    startPulseAnimation();
-
-    // Charger un défi quotidien pour l'afficher en évidence
-    loadDailyChallenge();
-    
-    // Charger la question de quiz quotidienne
-    loadDailyQuiz();
-    
-    // Charger le nombre de défis complétés et le temps du prochain défi
-    loadChallengeCompletion();
+    async function init() {
+      await loadUserData();
+      // Déplacer les animations après le chargement des données
+      startAnimations();
+      startPulseAnimation();
+      // Charger un défi quotidien pour l'afficher en évidence
+      await loadDailyChallenge();
+      // Charger la question de quiz quotidienne
+      await loadDailyQuiz();
+      // Charger le nombre de défis complétés et le temps du prochain défi
+      await loadChallengeCompletion();
+    }
+    init();
   }, []);
 
   // Recharge les points et le défi du jour à chaque focus de l'écran
   useFocusEffect(
     React.useCallback(() => {
-      loadUserData();
-      loadDailyChallenge();
+      async function refreshData() {
+        await loadUserData();
+        await loadDailyChallenge();
+      }
+      refreshData();
+      
+      return () => {
+        // Nettoyage : annuler toutes les requêtes en cours si nécessaire
+      };
     }, [])
   );
 
   // Animation de pulsation continue pour attirer l'attention
   const startPulseAnimation = () => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.05,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true
-        })
-      ])
-    ).start();
+    // Éviter les mises à jour planifiées depuis les effets d'insertion
+    setTimeout(() => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.05,
+            duration: 1000,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 1000,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true
+          })
+        ])
+      ).start();
+    }, 0);
   };
   // Charger les points et calculer le niveau
   const loadUserData = async () => {
@@ -954,63 +964,66 @@ export default function HomeScreen({ navigation }) {
 
   // Lancer les animations
   const startAnimations = () => {
-    Animated.sequence([
-      // Animation d'introduction du titre
-      Animated.parallel([
-        Animated.timing(fadeAnim, { 
-          toValue: 1, 
-          duration: 800, 
-          useNativeDriver: true 
-        }),
-        Animated.timing(slideAnim, { 
-          toValue: 0, 
-          duration: 800, 
-          useNativeDriver: true 
-        }),
-    ]),
-
-      // Animation des cartes de statistiques
-      Animated.stagger(150, [
-        Animated.spring(statCardAnim1, { 
-          toValue: 0, 
-          friction: 8, 
-          useNativeDriver: true 
-        }),
-        Animated.spring(statCardAnim2, { 
-          toValue: 0, 
-          friction: 8, 
-          useNativeDriver: true 
-        }),
+    // Éviter les mises à jour planifiées depuis les effets d'insertion
+    setTimeout(() => {
+      Animated.sequence([
+        // Animation d'introduction du titre
+        Animated.parallel([
+          Animated.timing(fadeAnim, { 
+            toValue: 1, 
+            duration: 800, 
+            useNativeDriver: true 
+          }),
+          Animated.timing(slideAnim, { 
+            toValue: 0, 
+            duration: 800, 
+            useNativeDriver: true 
+          }),
       ]),
 
-      // Animation de la carte de niveau
-      Animated.parallel([
-        Animated.timing(levelCardOpacity, { 
-          toValue: 1, 
-          duration: 400, 
-          useNativeDriver: true 
-        }),
-        Animated.spring(levelCardAnim, { 
-          toValue: 1, 
-          friction: 8, 
-          useNativeDriver: true 
-        }),
-      ]),
+        // Animation des cartes de statistiques
+        Animated.stagger(150, [
+          Animated.spring(statCardAnim1, { 
+            toValue: 0, 
+            friction: 8, 
+            useNativeDriver: true 
+          }),
+          Animated.spring(statCardAnim2, { 
+            toValue: 0, 
+            friction: 8, 
+            useNativeDriver: true 
+          }),
+        ]),
 
-      // Animation des boutons d'action rapides
-      Animated.parallel([
-        Animated.timing(actionButtonsOpacity, { 
-          toValue: 1, 
-          duration: 400, 
-          useNativeDriver: true 
-        }),
-        Animated.spring(actionButtonsAnim, { 
-          toValue: 0, 
-          friction: 8, 
-          useNativeDriver: true 
-        }),
-      ]),
-    ]).start();
+        // Animation de la carte de niveau
+        Animated.parallel([
+          Animated.timing(levelCardOpacity, { 
+            toValue: 1, 
+            duration: 400, 
+            useNativeDriver: true 
+          }),
+          Animated.spring(levelCardAnim, { 
+            toValue: 1, 
+            friction: 8, 
+            useNativeDriver: true 
+          }),
+        ]),
+
+        // Animation des boutons d'action rapides
+        Animated.parallel([
+          Animated.timing(actionButtonsOpacity, { 
+            toValue: 1, 
+            duration: 400, 
+            useNativeDriver: true 
+          }),
+          Animated.spring(actionButtonsAnim, { 
+            toValue: 0, 
+            friction: 8, 
+            useNativeDriver: true 
+          }),
+        ]),
+      ]).start();
+    }, 0);
   };
 
   // Animation de récompense surprise
@@ -1076,7 +1089,8 @@ export default function HomeScreen({ navigation }) {
       
       // Sauvegarder les défis mis à jour
       await AsyncStorage.setItem('@challengr_daily_tasks', JSON.stringify(updatedTasks));
-        // Ajouter les points à l'utilisateur
+      
+      // Ajouter les points à l'utilisateur
       const currentPoints = await retrievePoints() || 0;
       const newPoints = currentPoints + dailyTask.points;
       await storePoints(newPoints); // <-- Utilisez la fonction utilitaire standard
@@ -2028,7 +2042,7 @@ const CATEGORY_LABELS_FR = {
               {locationPermissionStatus !== 'granted' && (
                 <TouchableOpacity
                   style={styles.authLocationButton}
-                  onPress={ requestLocationPermission}
+                                   onPress={ requestLocationPermission}
                 >
                   <Text style={styles.authLocationButtonText}>Autoriser la localisation</Text>
                 </TouchableOpacity>
