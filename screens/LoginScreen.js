@@ -5,6 +5,15 @@ import Icon, { COLORS } from '../components/common/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { loginUser, registerUser } from '../services/authService';
 
+const GAMING_COLORS = {
+  background: '#151736',
+  cardBackground: '#1e2146',
+  secondary: '#4e54c8',
+  accent: '#a3d8f5',
+  darkBlue: '#21254c',
+  headerBg: '#0f1123',
+};
+
 const LoginScreen = ({ onLoginSuccess, onGuestLogin }) => {
   // États du formulaire
   const [isLogin, setIsLogin] = useState(true); // true pour connexion, false pour inscription
@@ -245,6 +254,7 @@ const LoginScreen = ({ onLoginSuccess, onGuestLogin }) => {
                     errors.username && styles.inputError
                   ]}
                   placeholder="Nom d'utilisateur"
+                  placeholderTextColor="#a3aed0"
                   value={username}
                   onChangeText={text => {
                     setUsername(text);
@@ -276,6 +286,7 @@ const LoginScreen = ({ onLoginSuccess, onGuestLogin }) => {
                     errors.password && styles.inputError
                   ]}
                   placeholder="Mot de passe"
+                  placeholderTextColor="#a3aed0"
                   value={password}
                   onChangeText={text => {
                     setPassword(text);
@@ -440,38 +451,42 @@ const LoginScreen = ({ onLoginSuccess, onGuestLogin }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.dark,
+    backgroundColor: GAMING_COLORS.headerBg,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: GAMING_COLORS.background,
   },
   scrollContainer: {
     flexGrow: 1,
     paddingBottom: 30,
   },
   headerContainer: {
-    backgroundColor: COLORS.dark,
+    backgroundColor: GAMING_COLORS.headerBg,
     paddingTop: 40,
     paddingBottom: 50,
     alignItems: 'center',
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
+    borderBottomWidth: 2,
+    borderColor: GAMING_COLORS.secondary,
   },
   logoContainer: {
     width: 100,
     height: 100,
-    backgroundColor: COLORS.white,
+    backgroundColor: GAMING_COLORS.cardBackground,
     borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
-    shadowColor: COLORS.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 8,
+    borderWidth: 2,
+    borderColor: GAMING_COLORS.secondary,
   },
   logo: {
     width: 80,
@@ -481,43 +496,52 @@ const styles = StyleSheet.create({
   appTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.white,
+    color: GAMING_COLORS.accent,
     marginBottom: 8,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
+    letterSpacing: 1.5,
   },
   appSlogan: {
     fontSize: 16,
-    color: COLORS.light,
+    color: '#a3aed0',
     textAlign: 'center',
+    fontStyle: 'italic',
+    marginBottom: 4,
   },
   formContainer: {
-    backgroundColor: COLORS.white,
+    backgroundColor: GAMING_COLORS.cardBackground,
     margin: 20,
     marginTop: -30,
-    borderRadius: 15,
+    borderRadius: 18,
     padding: 24,
-    shadowColor: COLORS.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.18,
     shadowRadius: 10,
-    elevation: 6,
+    elevation: 8,
+    borderWidth: 1.5,
+    borderColor: GAMING_COLORS.secondary,
   },
   formTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: COLORS.dark,
+    color: GAMING_COLORS.accent,
     marginBottom: 24,
     textAlign: 'center',
+    letterSpacing: 1,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
-    borderRadius: 10,
+    backgroundColor: GAMING_COLORS.darkBlue,
+    borderRadius: 12,
     marginBottom: 10,
     paddingHorizontal: 16,
     height: 56,
-    borderWidth: 1,
-    borderColor: '#e6e9ed',
+    borderWidth: 1.5,
+    borderColor: '#292b45',
   },
   inputIcon: {
     marginRight: 12,
@@ -525,8 +549,10 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: COLORS.dark,
+    color: GAMING_COLORS.accent, // Même couleur que "Mot de passe oublié?"
     height: '100%',
+    fontWeight: '500',
+    letterSpacing: 0.5,
   },
   inputError: {
     borderColor: COLORS.error,
@@ -547,7 +573,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   forgotPasswordText: {
-    color: COLORS.secondary,
+    color: GAMING_COLORS.accent,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -556,7 +582,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     overflow: 'hidden',
     marginVertical: 24,
-    shadowColor: COLORS.secondary,
+    shadowColor: GAMING_COLORS.secondary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
@@ -569,9 +595,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitButtonText: {
-    color: COLORS.white,
+    color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+    letterSpacing: 1,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   switchModeContainer: {
     flexDirection: 'row',
@@ -579,14 +609,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   switchModeText: {
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
     fontSize: 15,
   },
   switchModeLink: {
-    color: COLORS.secondary,
+    color: GAMING_COLORS.accent,
     fontSize: 15,
     fontWeight: 'bold',
     marginLeft: 5,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   guestButton: {
     position: 'absolute',
@@ -594,21 +627,24 @@ const styles = StyleSheet.create({
     bottom: 24,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
+    backgroundColor: GAMING_COLORS.cardBackground,
     borderRadius: 22,
     paddingVertical: 8,
     paddingHorizontal: 16,
-    shadowColor: COLORS.primary,
+    shadowColor: GAMING_COLORS.secondary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
     shadowRadius: 4,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: GAMING_COLORS.secondary,
   },
   guestButtonText: {
-    color: COLORS.primary,
+    color: GAMING_COLORS.accent,
     fontWeight: 'bold',
     fontSize: 15,
     marginLeft: 8,
+    letterSpacing: 0.5,
   },
 });
 
