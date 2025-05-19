@@ -17,7 +17,7 @@ import {
   TouchableWithoutFeedback,
   Modal,
   Linking,
-  TextInput, // Add this import
+  TextInput,
   ActivityIndicator,
   Switch
 } from 'react-native';
@@ -43,7 +43,6 @@ import {
 import ProgressBar from '../components/ProgressBar';
 import Icon, { COLORS } from '../components/common/Icon';
 import { SCREEN, calculateLevel, generateUniqueId, CHALLENGE_TYPES, CHALLENGE_CATEGORIES } from '../utils/constants';
-import { addTaskToCalendar } from '../services/calendarService';
 
 const { width, height } = SCREEN;
 
@@ -1067,7 +1066,8 @@ export default function HomeScreen({ navigation }) {
       
       // Sauvegarder les défis mis à jour
       await AsyncStorage.setItem('@challengr_daily_tasks', JSON.stringify(updatedTasks));
-        // Ajouter les points à l'utilisateur
+      
+      // Ajouter les points à l'utilisateur
       const currentPoints = await retrievePoints() || 0;
       const newPoints = currentPoints + dailyTask.points;
       await storePoints(newPoints); // <-- Utilisez la fonction utilitaire standard
@@ -2011,7 +2011,7 @@ const CATEGORY_LABELS_FR = {
               {locationPermissionStatus !== 'granted' && (
                 <TouchableOpacity
                   style={styles.authLocationButton}
-                  onPress={ requestLocationPermission}
+                                   onPress={ requestLocationPermission}
                 >
                   <Text style={styles.authLocationButtonText}>Autoriser la localisation</Text>
                 </TouchableOpacity>

@@ -716,19 +716,18 @@ const TasksScreen = ({ navigation }) => {
   const [timedTasks, setTimedTasks] = useState([]);
   const [streak, setStreak] = useState({ count: 0, lastCompletionDate: null });
   const [points, setPoints] = useState(0);
-  const [level, setLevel] = useState(1);  const [filteredTasks, setFilteredTasks] = useState([]);
+  const [level, setLevel] = useState(1);  
+  const [filteredTasks, setFilteredTasks] = useState([]);
   const [filter, setFilter] = useState('all');
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [difficulty, setDifficulty] = useState('MEDIUM');
-  const [selectedCategory, setSelectedCategory] = useState('');  const [showAddTask, setShowAddTask] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('');  
+  const [showAddTask, setShowAddTask] = useState(false);
   const [showLevelInfo, setShowLevelInfo] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [addToCalendar, setAddToCalendar] = useState(true);
   const [calendarPermissionRequested, setCalendarPermissionRequested] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [addDueDate, setAddDueDate] = useState(false);
   const [dueDate, setDueDate] = useState(new Date(new Date().setDate(new Date().getDate() + 7))); // Par défaut dans 7 jours
   const [showDueDatePicker, setShowDueDatePicker] = useState(false);
@@ -1226,7 +1225,7 @@ const TasksScreen = ({ navigation }) => {
     }
     
     const difficultyInfo = DIFFICULTY_LEVELS[difficulty];
-      const newTask = {
+    const newTask = {
       title: newTaskTitle.trim(),
       description: newTaskDescription.trim() || 'Aucune description',
       points: difficultyInfo.points,
@@ -1244,32 +1243,6 @@ const TasksScreen = ({ navigation }) => {
         throw new Error("Échec de la création du défi");
       }
 
-      // Ajouter au calendrier uniquement si l'option est activée
-      if (addToCalendar) {
-        // Demander la permission ici, juste avant d'ajouter au calendrier
-        const hasPermission = await requestCalendarPermissions();
-        if (hasPermission) {
-          const eventId = await addTaskToCalendar(createdTask, selectedDate);
-          if (eventId) {
-            // Mettre à jour le défi avec l'ID de l'événement calendrier
-            const updatedTasks = tasks.map(task => 
-              task.id === createdTask.id 
-                ? { ...task, calendarEventId: eventId } 
-                : task
-            );
-            setTasks(updatedTasks);
-            
-            // Sauvegarder la mise à jour dans AsyncStorage
-            await saveTasks(updatedTasks);
-          }
-        } else {
-          Alert.alert(
-            "Permission requise",
-            "Vous devez autoriser l'accès au calendrier pour ajouter ce défi à votre agenda."
-          );
-        }
-      }
-      
       // Mettre à jour l'état local
       const updatedTasks = [...tasks, createdTask];
       setTasks(updatedTasks);
@@ -1289,17 +1262,9 @@ const TasksScreen = ({ navigation }) => {
       
       // Fermer le formulaire
       toggleAddTaskForm();
-        // Confirmation
-      let messageConfirmation = "Votre nouveau défi a été ajouté avec succès";
       
-      // Ajouter l'info du calendrier si activée
-      if (addToCalendar) {
-        messageConfirmation += ` et planifié dans votre calendrier pour le ${selectedDate.toLocaleDateString('fr-FR', {
-          weekday: 'long', 
-          day: 'numeric', 
-          month: 'long'
-        })}`;
-      }
+      // Confirmation
+      let messageConfirmation = "Votre nouveau défi a été ajouté avec succès";
       
       // Ajouter l'info de la date d'échéance si activée
       if (addDueDate) {
@@ -1710,172 +1675,6 @@ const TasksScreen = ({ navigation }) => {
                   
                   {renderCategorySelector()}
                   {renderDifficultySelector()}
-                  
-                  {/* Option d'ajout au calendrier avec sélection de date */}
-                  <View style={styles.calendarOptionContainer}>
-                    <Text style={styles.difficultyLabel}>Calendrier:</Text>
-                    <View style={styles.calendarOptionRow}>
-                      <Text style={styles.calendarOptionText}>
-                        Planifier dans mon calendrier
-                      </Text>
-                      <Switch
-                        value={addToCalendar}
-                        onValueChange={setAddToCalendar}
-                        trackColor={{ false: "#d1d8e0", true: `${COLORS.secondary}80` }}
-                        thumbColor={addToCalendar ? COLORS.secondary : "#f4f3f4"}
-                      />
-                    </View>
-                    
-                    {/* Date picker visible seulement si addToCalendar est activé */}
-                    {addToCalendar && (
-                      <View style={styles.datePickerContainer}>
-                        <Text style={styles.datePickerLabel}>Quand souhaitez-vous réaliser ce défi ?</Text>
-                        <TouchableOpacity 
-                          style={styles.datePickerButton}
-                          onPress={() => setShowDatePicker(true)}
-                        >
-                          <Icon name="calendar" size={20} color={COLORS.secondary} style={styles.datePickerIcon} />
-                          <Text style={styles.datePickerText}>
-                            {selectedDate.toLocaleDateString('fr-FR', {
-                              weekday: 'long',
-                              day: 'numeric',
-                              month: 'long'
-                            })}
-                          </Text>
-                          <Icon name="chevron-down" size={18} color={COLORS.textSecondary} />
-                        </TouchableOpacity>
-                        
-                        {/* Date Picker modal pour une meilleure expérience utilisateur */}
-                        {showDatePicker && (
-                          <View style={styles.datePickerModalContainer}>
-                            <View style={styles.datePickerHeader}>
-                              <Text style={styles.datePickerTitle}>Choisir une date</Text>
-                              <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                                <Icon name="close" size={24} color={COLORS.textSecondary} />
-                              </TouchableOpacity>
-                            </View>
-                            
-                            {/* Calendrier natif */}
-                            <View style={styles.datePickerContent}>
-                              {Platform.OS === 'android' ? (
-                                // Utiliser le sélecteur de date natif sur Android
-                                <DateTimePicker
-                                  testID="dateTimePicker"
-                                  value={selectedDate}
-                                  mode="date"
-                                  is24Hour={true}
-                                  display="calendar"
-                                  onChange={(event, date) => {
-                                    setShowDatePicker(false);
-                                    if (date) setSelectedDate(date);
-                                  }}
-                                  minimumDate={new Date()}
-                                />
-                              ) : (
-                                // Alternative simple pour iOS ou si DateTimePicker n'est pas disponible
-                                <View style={styles.simpleDatePicker}>
-                                  {/* Options de date rapides */}
-                                  <View style={styles.quickDateOptions}>
-                                    <TouchableOpacity
-                                      style={styles.quickDateButton}
-                                      onPress={() => {
-                                        setSelectedDate(new Date());
-                                        setShowDatePicker(false);
-                                      }}
-                                    >
-                                      <Text style={styles.quickDateButtonText}>Aujourd'hui</Text>
-                                    </TouchableOpacity>
-                                    
-                                    <TouchableOpacity
-                                      style={styles.quickDateButton}
-                                      onPress={() => {
-                                        const tomorrow = new Date();
-                                        tomorrow.setDate(tomorrow.getDate() + 1);
-                                        setSelectedDate(tomorrow);
-                                        setShowDatePicker(false);
-                                      }}
-                                    >
-                                      <Text style={styles.quickDateButtonText}>Demain</Text>
-                                    </TouchableOpacity>
-                                    
-                                    <TouchableOpacity
-                                      style={styles.quickDateButton}
-                                      onPress={() => {
-                                        const nextWeek = new Date();
-                                        nextWeek.setDate(nextWeek.getDate() + 7);
-                                        setSelectedDate(nextWeek);
-                                        setShowDatePicker(false);
-                                      }}
-                                    >
-                                      <Text style={styles.quickDateButtonText}>Semaine prochaine</Text>
-                                    </TouchableOpacity>
-                                  </View>
-                                  
-                                  {/* Sélecteur manuel (simple) */}
-                                  <View style={styles.manualDatePicker}>
-                                    <View style={styles.dateInputRow}>
-                                      <Text style={styles.dateInputLabel}>Jour:</Text>
-                                      <TextInput
-                                        style={styles.dateInput}
-                                        value={selectedDate.getDate().toString()}
-                                        keyboardType="number-pad"
-                                        maxLength={2}
-                                        onChangeText={(text) => {
-                                          const day = parseInt(text) || 1;
-                                          const newDate = new Date(selectedDate);
-                                          newDate.setDate(day);
-                                          setSelectedDate(newDate);
-                                        }}
-                                      />
-                                    </View>
-                                    
-                                    <View style={styles.dateInputRow}>
-                                      <Text style={styles.dateInputLabel}>Mois:</Text>
-                                      <TextInput
-                                        style={styles.dateInput}
-                                        value={(selectedDate.getMonth() + 1).toString()}
-                                        keyboardType="number-pad"
-                                        maxLength={2}
-                                        onChangeText={(text) => {
-                                          const month = parseInt(text) || 1;
-                                          const newDate = new Date(selectedDate);
-                                          newDate.setMonth(month - 1);
-                                          setSelectedDate(newDate);
-                                        }}
-                                      />
-                                    </View>
-                                    
-                                    <View style={styles.dateInputRow}>
-                                      <Text style={styles.dateInputLabel}>Année:</Text>
-                                      <TextInput
-                                        style={styles.dateInput}
-                                        value={selectedDate.getFullYear().toString()}
-                                        keyboardType="number-pad"
-                                        maxLength={4}
-                                        onChangeText={(text) => {
-                                          const year = parseInt(text) || 2023;
-                                          const newDate = new Date(selectedDate);
-                                          newDate.setFullYear(year);
-                                          setSelectedDate(newDate);
-                                        }}
-                                      />
-                                    </View>
-                                  </View>
-                                  
-                                  <TouchableOpacity
-                                    style={styles.confirmDateButton}
-                                    onPress={() => setShowDatePicker(false)}
-                                  >
-                                    <Text style={styles.confirmDateButtonText}>Confirmer</Text>
-                                  </TouchableOpacity>
-                                </View>
-                              )}
-                            </View>
-                          </View>
-                        )}
-                      </View>
-                    )}
-                  </View>
                   
                   {/* Option d'ajout d'une date d'échéance maximale */}
                   <View style={styles.calendarOptionContainer}>

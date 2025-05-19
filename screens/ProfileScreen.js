@@ -59,7 +59,7 @@ const BADGES = {
   CONSISTENT: {
     name: "Guerrier Fidèle",
     description: "Accomplissez 3 quêtes en moins de 7 jours",
-    icon: "calendar-check",
+    icon: "checkmark-circle", // Remplacer calendar-check par checkmark-circle
     color: COLORS.error,
     locked: true // Toujours verrouillé pour la démo
   }

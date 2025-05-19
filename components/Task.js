@@ -101,7 +101,7 @@ const Task = ({
       {/* Badges spéciaux et indicateurs */}
       {type === 'DAILY' && (
         <View style={styles.typeIndicator}>
-          <Icon name="calendar" size={12} color="#fff" />
+          <Icon name="today" size={12} color="#fff" />
           <Text style={styles.typeText}>Quotidien</Text>
         </View>
       )}
