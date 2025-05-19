@@ -81,13 +81,13 @@ export default function App() {
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 1.1,
-          duration: 1000,
+          duration: 500, // Réduit de 1000 à 500
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 1000, 
+          duration: 500, // Réduit de 1000 à 500
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         })
@@ -121,20 +121,20 @@ export default function App() {
       Animated.parallel([
         Animated.timing(backgroundOpacity, {
           toValue: 1,
-          duration: 600,
+          duration: 300, // Réduit de 600 à 300
           useNativeDriver: true,
         }),
         Animated.timing(logoRotate, {
           toValue: 1,
-          duration: 800,
+          duration: 400, // Réduit de 800 à 400
           easing: Easing.elastic(1.2),
           useNativeDriver: true,
         }),
         // Activer les particules avec délai
         Animated.timing(sparkleAnim, {
           toValue: 1,
-          duration: 800,
-          delay: 300,
+          duration: 400, // Réduit de 800 à 400
+          delay: 150, // Réduit de 300 à 150
           useNativeDriver: true
         })
       ]),
@@ -143,23 +143,23 @@ export default function App() {
       Animated.parallel([
         Animated.timing(logoOpacity, {
           toValue: 1,
-          duration: 800,
+          duration: 400, // Réduit de 800 à 400
           useNativeDriver: true,
         }),
         Animated.spring(logoScale, {
           toValue: 1,
-          friction: 4, // Moins de friction pour un rebond plus gaming
+          friction: 4,
           tension: 40,
           useNativeDriver: true,
         }),
       ]),
       
       // Animation du titre et du slogan avec effet de glissement vers le haut
-      Animated.stagger(150, [
+      Animated.stagger(75, [ // Réduit de 150 à 75
         Animated.parallel([
           Animated.timing(titleOpacity, {
             toValue: 1,
-            duration: 500,
+            duration: 250, // Réduit de 500 à 250
             useNativeDriver: true,
           }),
           Animated.spring(titleTranslateY, {
@@ -172,7 +172,7 @@ export default function App() {
         Animated.parallel([
           Animated.timing(progressBarOpacity, {
             toValue: 1,
-            duration: 400,
+            duration: 200, // Réduit de 400 à 200
             useNativeDriver: true,
           }),
           Animated.spring(sloganTranslateY, {
@@ -184,18 +184,18 @@ export default function App() {
         ]),
       ]),
       
-      // Animation de la barre de chargement avec compteur XP
+      // Animation finale - lancer juste après le compteur XP
       Animated.parallel([
         Animated.timing(loadingBarWidth, {
           toValue: screenWidth - 80,
-          duration: 3000, // Plus long pour un effet plus dramatique
+          duration: 1500, // Réduit de 3000 à 1500
           easing: Easing.out(Easing.quad),
           useNativeDriver: false
         }),
         // Compteur XP qui monte
         Animated.timing(xpCounterValue, {
           toValue: 1000,
-          duration: 3000,
+          duration: 1500, // Réduit de 3000 à 1500
           easing: Easing.out(Easing.quad),
           useNativeDriver: false
         })
@@ -205,20 +205,20 @@ export default function App() {
       Animated.parallel([
         Animated.timing(explosionScale, {
           toValue: 2,
-          duration: 500,
+          duration: 250, // Réduit de 500 à 250
           easing: Easing.out(Easing.back),
           useNativeDriver: true
         }),
         Animated.sequence([
           Animated.timing(explosionOpacity, {
             toValue: 1,
-            duration: 200,
+            duration: 100, // Réduit de 200 à 100
             useNativeDriver: true
           }),
           Animated.timing(explosionOpacity, {
             toValue: 0,
-            duration: 300,
-            delay: 200,
+            duration: 150, // Réduit de 300 à 150
+            delay: 100, // Réduit de 200 à 100
             useNativeDriver: true
           })
         ])
@@ -247,13 +247,6 @@ export default function App() {
           useNativeDriver: true,
         }),
       ]),
-      
-      // Afficher "Press Start" typique des jeux
-      Animated.timing(pressStartOpacity, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true
-      })
     ]).start(() => {
       // Animation terminée, marquer le chargement comme complet
       setLoadingComplete(true);
@@ -357,28 +350,62 @@ export default function App() {
     };
   }, []);
 
-  // Fonction pour continuer après le chargement
+  // Fonction pour continuer après le chargement - VERSION CORRIGÉE
   const handlePressStart = () => {
-    // Vibration feedback
+    console.log("Bouton START pressé!");
+    
+    // Vibration feedback immédiate
     try {
-      haptics.impactAsync('medium');
+      haptics.impactAsync('heavy');
     } catch (err) {
       console.warn('Haptics error:', err);
     }
     
-    // Animation de fondu en sortie
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 600,
-      useNativeDriver: true,
-    }).start(() => {
-      // Cacher le splash screen
+    // TRANSITION FORCÉE - aucune condition qui pourrait bloquer
+    // Utiliser requestAnimationFrame pour garantir que la transition se produit
+    requestAnimationFrame(() => {
+      // Passer immédiatement à l'écran principal
       setSplashFinished(true);
+      setIsLoading(false);
+      // Ces instructions garantissent que l'écran change
+      console.log("Transition initiée");
     });
   };
 
-  // Afficher le splash screen animé avec améliorations gaming
-  if (!splashFinished || isLoading) {
+  // Ajouter un useEffect pour détecter quand le chargement est terminé
+  // et lancer l'application automatiquement
+  useEffect(() => {
+    if (loadingComplete) {
+      console.log("Chargement terminé, lancement automatique...");
+      
+      // Feedback haptique pour indiquer la fin du chargement
+      try {
+        haptics.impactAsync('heavy');
+        setTimeout(() => haptics.notificationAsync('success'), 200);
+      } catch (err) {
+        console.warn('Haptics error:', err);
+      }
+      
+      // Attendre un court délai pour avoir une transition fluide
+      const timer = setTimeout(() => {
+        // Transition avec animation de fondu
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }).start(() => {
+          // Passer à l'application une fois l'animation terminée
+          setSplashFinished(true);
+          setIsLoading(false);
+        });
+      }, 800); // Délai court pour apprécier l'animation finale
+
+      return () => clearTimeout(timer);
+    }
+  }, [loadingComplete]);
+
+  // Afficher le splash screen animé
+  if (!splashFinished) {
     return (
       <Animated.View style={[styles.splashContainer, { opacity: fadeAnim }]}>
         <StatusBar style="light" />
@@ -531,31 +558,13 @@ export default function App() {
           </View>
         </Animated.View>
         
-        {/* Bouton "Press Start" typique des jeux */}
-        {loadingComplete && (
-          <Animated.View style={[
-            styles.pressStartContainer,
-            { opacity: pressStartOpacity }
-          ]}>
-            <TouchableOpacity 
-              style={styles.pressStartButton}
-              onPress={handlePressStart}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.pressStartText}>PRESS START</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
-        
-        {/* Mention "Loading" typique des jeux */}
-        {!loadingComplete && (
-          <Animated.Text style={[
-            styles.loadingText,
-            { opacity: Animated.multiply(progressBarOpacity, pulseAnim) }
-          ]}>
-            LOADING...
-          </Animated.Text>
-        )}
+        {/* Message "Loading" ou "Complete" selon l'état */}
+        <Animated.Text style={[
+          styles.loadingText,
+          { opacity: progressBarOpacity }
+        ]}>
+          {loadingComplete ? "CHARGEMENT TERMINÉ" : "LOADING..."}
+        </Animated.Text>
       </Animated.View>
     );
   }
@@ -752,6 +761,7 @@ const styles = StyleSheet.create({
   },
   pressStartContainer: {
     marginTop: 40,
+    alignItems: 'center',
   },
   pressStartButton: {
     paddingVertical: 12,
@@ -768,5 +778,15 @@ const styles = StyleSheet.create({
     textShadowColor: GAMING_COLORS.neon,
     textShadowRadius: 10,
     letterSpacing: 2,
+  },
+  // Nouveau style pour le texte d'instruction
+  tapInstructionText: {
+    color: GAMING_COLORS.accent,
+    fontSize: 14,
+    marginTop: 5,
+    opacity: 0.9,
+    textShadowColor: GAMING_COLORS.darkBlue,
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
 });
