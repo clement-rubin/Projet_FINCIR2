@@ -2636,16 +2636,23 @@ const styles = StyleSheet.create({
     borderColor: '#384066',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
     elevation: 2,
+  },
+  selectedAnswerButton: {
+    backgroundColor: 'rgba(78, 84, 200, 0.2)',
+    borderColor: '#4e54c8',
+    borderWidth: 2,
+    shadowColor: '#4e54c8',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    elevation: 4,
   },
   answerText: {
     fontSize: 15,
     color: '#dedede',
-    fontWeight: '500',
-  },
-  selectedAnswerButton: {
-    backgroundColor: 'rgba(78, 84, 200, 0.2)',
   },
   selectedAnswerText: {
     color: '#a3d8f5',
@@ -2725,43 +2732,36 @@ const styles = StyleSheet.create({
     color: '#32cd32',
     fontWeight: 'bold',
     marginBottom: 15,
-    textAlign: 'center',
     textShadowColor: 'rgba(50, 205, 50, 0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
-  pointsEarnedText: {
+  pointsEarnedText: { { width: 0, height: 1 },
     fontSize: 18,
     fontWeight: 'bold',
     color: '#ffd700',
-    marginTop: 10,
+    marginTop: 10,r: 'rgba(46, 204, 113, 0.2)',
     textShadowColor: 'rgba(255, 215, 0, 0.6)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
-  },
+  }, 113, 0.4)',
   correctAnimation: {
     backgroundColor: 'rgba(46, 204, 113, 0.2)',
-    borderRadius: 12,
+    borderRadius: 12,'rgba(231, 76, 60, 0.2)',
     transform: [{scale: 1.02}],
-    borderWidth: 1,
+    borderWidth: 1,.02}],
     borderColor: 'rgba(46, 204, 113, 0.4)',
-  },
+  },borderColor: 'rgba(231, 76, 60, 0.4)',
   incorrectAnimation: {
     backgroundColor: 'rgba(231, 76, 60, 0.2)',
-    borderRadius: 12,
+    borderRadius: 12,olumn',
     transform: [{scale: 1.02}],
     borderWidth: 1,
     borderColor: 'rgba(231, 76, 60, 0.4)',
   },
-  quizCooldownContainer: {
-    flexDirection: 'column',
+  quizCooldownContainer: {(231, 76, 60, 0.1)',
     alignItems: 'center',
-    paddingVertical: 20,
-    marginTop: 10,
-    borderRadius: 12,
-    backgroundColor: 'rgba(231, 76, 60, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(231, 76, 60, 0.3)',
+    paddingVertical: 20,31, 76, 60, 0.3)',
   },
   cooldownIcon: {
     marginBottom: 20,
@@ -2793,27 +2793,35 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(231, 76, 60, 0.3)',
+    borderColor: 'rgba(231, 76, 60, 0.3)', 76, 60, 0.3)',
   },
   cooldownTimer: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#e74c3c',
-    marginTop: 5,
+    color: '#e74c3c',color: '#e74c3c',
     fontVariant: ['tabular-nums'],
-    letterSpacing: 2,
-  },
+    letterSpacing: 2,bular-nums'],
+  },: 2,
   cooldownHintButton: {
     borderWidth: 1,
     borderColor: '#4e54c8',
     borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(78, 84, 200, 0.1)',
-  },
-  cooldownHintText: {
-    color: '#4e54c8',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-});
+    paddingHorizontal: 15,    borderRadius: 20,
+    paddingVertical: 8,    paddingHorizontal: 15,
+    backgroundColor: 'rgba(78, 84, 200, 0.1)',    paddingVertical: 8,
+  },    backgroundColor: 'rgba(78, 84, 200, 0.1)',
+  cooldownHintText: {  },
+    color: '#4e54c8',  cooldownHintText: {
+    fontSize: 14,    color: '#4e54c8',
+    fontWeight: '500',    fontSize: 14,
+  },    fontWeight: '500',
+  rewardOverlay: {  },
+    position: 'absolute',});
+    top: 0,    left: 0,    right: 0,    bottom: 0,    justifyContent: 'center',    alignItems: 'center',    zIndex: 10,  },  blurContainer: {    flex: 1,    width: '100%',    justifyContent: 'center',    alignItems: 'center',    backgroundColor: 'rgba(15, 17, 35, 0.7)',  },  rewardContainer: {    backgroundColor: '#1e2146',    borderRadius: 25,    padding: 25,    alignItems: 'center',    width: '80%',    shadowColor: '#000',    shadowOffset: { width: 0, height: 10 },    shadowOpacity: 0.5,    shadowRadius: 15,    elevation: 15,    borderWidth: 2,    borderColor: '#4e54c8',  },  starBurst: {    backgroundColor: 'rgba(255, 215, 0, 0.15)',    width: 85,    height: 85,    borderRadius: 42.5,    justifyContent: 'center',    alignItems: 'center',    marginBottom: 15,    borderWidth: 3,    borderColor: 'rgba(255, 215, 0, 0.5)',    shadowColor: '#ffd700',    shadowOffset: { width: 0, height: 0 },    shadowOpacity: 0.8,    shadowRadius: 12,    elevation: 8,  },  rewardTitle: {    fontSize: 26,    fontWeight: 'bold',    color: '#fff',    marginBottom: 10,    textShadowColor: 'rgba(255, 215, 0, 0.6)',    textShadowOffset: { width: 0, height: 2 },    textShadowRadius: 4,    textTransform: 'uppercase',    letterSpacing: 1,  },  rewardText: {    fontSize: 16,    color: '#a3d8f5',    textAlign: 'center',    marginBottom: 20,    lineHeight: 22,  },  pointsAwarded: {    flexDirection: 'row',    alignItems: 'center',    backgroundColor: 'rgba(255, 215, 0, 0.1)',    paddingHorizontal: 20,    paddingVertical: 12,    borderRadius: 20,    marginBottom: 25,    borderWidth: 1,    borderColor: 'rgba(255, 215, 0, 0.3)',  },  pointsAwardedText: {    marginLeft: 10,    fontSize: 20,    fontWeight: 'bold',    color: '#ffd700',    textShadowColor: 'rgba(255, 215, 0, 0.6)',    textShadowOffset: { width: 0, height: 1 },    textShadowRadius: 4,  },  rewardButton: {    backgroundColor: '#4e54c8',    paddingHorizontal: 30,    paddingVertical: 14,    borderRadius: 30,    shadowColor: '#4e54c8',    shadowOffset: { width: 0, height: 3 },    shadowOpacity: 0.6,    shadowRadius: 8,    elevation: 5,    borderWidth: 1,    borderColor: 'rgba(255,255,255,0.3)',  },  rewardButtonText: {    color: '#fff',    fontSize: 16,    fontWeight: 'bold',    textShadowColor: 'rgba(0, 0, 0, 0.5)',    textShadowOffset: { width: 0, height: 1 },    textShadowRadius: 2,  },});
+const getCategoryStyle = (category) => {
+  // ...existing code...
+};
+
+const getCategoryIcon = (category) => {
+  // ...existing code...
+};
