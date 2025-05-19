@@ -1867,14 +1867,50 @@ const CATEGORY_LABELS_FR = {
             )}
             
             {/* Section d'inspiration quotidienne */}
-            <View style={styles.inspirationSection}>
-              <View style={styles.quoteContainer}>
-                <Icon name="flame" size={18} color="#ff7f50" style={styles.quoteIcon} />
-                <Text style={styles.quoteText}>
+            <View style={{ marginTop: 28, alignItems: 'center' }}>
+              <LinearGradient
+                colors={['#23265a', '#3a3e7c']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  borderRadius: 14,
+                  paddingVertical: 14,
+                  paddingHorizontal: 12,
+                  width: '100%',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.13,
+                  shadowRadius: 5,
+                  elevation: 3,
+                  borderWidth: 1,
+                  borderColor: 'rgba(78,84,200,0.13)',
+                  alignItems: 'center',
+                }}
+              >
+                <Icon name="flame" size={22} color="#ff7f50" style={{ marginBottom: 6 }} />
+                <Text style={{
+                  color: '#fff',
+                  fontSize: 15,
+                  fontStyle: 'italic',
+                  textAlign: 'center',
+                  marginBottom: 6,
+                  lineHeight: 20,
+                  textShadowColor: 'rgba(0,0,0,0.13)',
+                  textShadowOffset: { width: 0, height: 1 },
+                  textShadowRadius: 2,
+                }}>
                   "Un héros est quelqu'un qui a réussi à surmonter ses limites."
                 </Text>
-              </View>
-              <Text style={styles.quoteAuthor}>- Confrérie des Gamers</Text>
+                <Text style={{
+                  color: '#a3aed0',
+                  fontSize: 12,
+                  textAlign: 'center',
+                  fontWeight: 'bold',
+                  letterSpacing: 0.5,
+                }}>
+                  - Confrérie des Gamers
+                </Text>
+              </LinearGradient>
             </View>
           </View>
         </View>
