@@ -269,7 +269,7 @@ export default function HomeScreen({ navigation }) {
         
         // Animation de félicitation
         setQuizAnimation('correct');
-          // Mettre à jour les points
+        // Mettre à jour les points
         const newPoints = points + dailyQuiz.points;
         await storePoints(newPoints); // <-- Utilisez la fonction utilitaire standard
         setPoints(newPoints);
@@ -1413,7 +1413,7 @@ const CATEGORY_LABELS_FR = {
             imageStyle={styles.imageOverlay}
           >
             <LinearGradient
-              colors={['rgba(52, 152, 219, 0.95)', 'rgba(155, 89, 182, 0.95)']}
+              colors={['rgba(36, 59, 85, 0.95)', 'rgba(91, 36, 122, 0.95)']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.gradient}
@@ -1427,14 +1427,12 @@ const CATEGORY_LABELS_FR = {
               ]}>
                 <View style={styles.greetingContainer}>
                   <Text style={styles.welcomeText}>Bienvenue sur</Text>
-                  <Text style={styles.appTitle}>ChallengR</Text>
+                  <Text style={styles.appTitle}>GamingR</Text>
                 </View>
                 
                 <View style={styles.taglineContainer}>
-                  <Text style={styles.tagline}>Relevez des défis, progressez, excellez !</Text>
+                  <Text style={styles.tagline}>Relevez des quêtes, montez de rang, devenez légendaire !</Text>
                 </View>
-                
-                {/* Level badge container removed */}
               </Animated.View>
             </LinearGradient>
           </ImageBackground>
@@ -1453,7 +1451,7 @@ const CATEGORY_LABELS_FR = {
                   <Icon name="star" size={28} color={COLORS.white} style={styles.statIcon} />
                 </View>
                 <Text style={styles.statValue}>{points}</Text>
-                <Text style={styles.statLabel}>Points</Text>
+                <Text style={styles.statLabel}>XP</Text>
               </Animated.View>
 
               <Animated.View style={[
@@ -1464,7 +1462,7 @@ const CATEGORY_LABELS_FR = {
                   <Icon name="trophy" size={28} color={COLORS.white} style={styles.statIcon} />
                 </View>
                 <Text style={styles.statValue}>{level}</Text>
-                <Text style={styles.statLabel}>Niveau</Text>
+                <Text style={styles.statLabel}>Rang</Text>
               </Animated.View>
             </View>
 
@@ -1477,8 +1475,8 @@ const CATEGORY_LABELS_FR = {
               }
             ]}>
               <View style={styles.levelHeader}>
-                <Text style={styles.levelTitle}>Niveau {level}</Text>
-                <Text style={styles.levelProgress}>Prochain niveau : {level + 1}</Text>
+                <Text style={styles.levelTitle}>Rang {level}</Text>
+                <Text style={styles.levelProgress}>Prochain rang : {level + 1}</Text>
               </View>
               {/* Rendre la barre de progression cliquable */}
               <TouchableOpacity activeOpacity={0.8} onPress={openProgressDetail}>
@@ -1486,9 +1484,10 @@ const CATEGORY_LABELS_FR = {
                   progress={Math.round(progress * 10) / 10} 
                   total={100} 
                   height={12}
-                  barColor={COLORS.secondary}
-                  backgroundColor="#eef2fd"
-                />              </TouchableOpacity>
+                  barColor="#4e54c8"
+                  backgroundColor="#292b45"
+                />              
+              </TouchableOpacity>
             </Animated.View>
 
             {/* Barres d'XP par catégorie */}
@@ -1500,11 +1499,11 @@ const CATEGORY_LABELS_FR = {
               }
             ]}>
               <View style={styles.categoryProgressHeader}>
-                <Text style={styles.categoryProgressTitle}>Progression par catégorie</Text>
+                <Text style={styles.categoryProgressTitle}>Progression par compétence</Text>
               </View>
               
               {Object.keys(categoryPoints).length === 0 ? (
-                <Text style={styles.noCategoriesText}>Complétez des défis pour voir votre progression par catégorie</Text>
+                <Text style={styles.noCategoriesText}>Accomplissez des quêtes pour développer vos compétences</Text>
               ) : (
                 <>
                   {Object.entries(categoryPoints)
@@ -1515,7 +1514,7 @@ const CATEGORY_LABELS_FR = {
                       const categoryInfo = Object.values(CHALLENGE_CATEGORIES).find(
                         c => c.id.toUpperCase() === category || c.name.toUpperCase() === category
                       );
-                      const barColor = categoryInfo ? categoryInfo.color : COLORS.primary;
+                      const barColor = categoryInfo ? categoryInfo.color : "#4e54c8";
                       // Déterminer le niveau max pour cette catégorie (100 points par défaut)
                       const categoryMaxPoints = Math.max(100, points * 1.5);
                       
@@ -1529,7 +1528,7 @@ const CATEGORY_LABELS_FR = {
                             total={categoryMaxPoints} 
                             height={8}
                             barColor={barColor}
-                            backgroundColor="#eef2fd"
+                            backgroundColor="#292b45"
                           />
                         </View>
                       );
@@ -1539,8 +1538,8 @@ const CATEGORY_LABELS_FR = {
                     style={styles.viewAllCategoriesButton} 
                     onPress={openProgressDetail}
                   >
-                    <Text style={styles.viewAllCategoriesText}>Voir toutes les catégories</Text>
-                    <Icon name="arrow-forward" size={16} color={COLORS.primary} />
+                    <Text style={styles.viewAllCategoriesText}>Voir toutes les compétences</Text>
+                    <Icon name="arrow-forward" size={16} color="#4e54c8" />
                   </TouchableOpacity>
                 </>
               )}
@@ -1553,14 +1552,14 @@ const CATEGORY_LABELS_FR = {
                   // Affichage réduit si deux défis sont complétés
                   <View style={styles.dailyChallengeSmallContainer}>
                     <View style={styles.dailyChallengeHeaderSmall}>
-                      <Icon name="calendar" size={22} color={COLORS.primary} />
-                      <Text style={styles.dailyChallengeTitleSmall}>Défi du jour</Text>
+                      <Icon name="calendar" size={22} color="#4e54c8" />
+                      <Text style={styles.dailyChallengeTitleSmall}>Quête journalière</Text>
                     </View>
                     <View style={styles.comebackTomorrowContainer}>
-                      <Icon name="moon" size={26} color={COLORS.secondary} style={{ marginBottom: 6 }} />
+                      <Icon name="moon" size={26} color="#4e54c8" style={{ marginBottom: 6 }} />
                       <Text style={styles.comebackText}>Revenez demain</Text>
                       <Text style={styles.comebackSubText}>
-                        Prochains défis dans&nbsp;
+                        Prochaines quêtes dans&nbsp;
                         <Text style={styles.comebackTimer}>
                           {`${String(midnightTimer.hours).padStart(2, '0')}:${String(midnightTimer.minutes).padStart(2, '0')}:${String(midnightTimer.seconds).padStart(2, '0')}`}
                         </Text>
@@ -1572,8 +1571,8 @@ const CATEGORY_LABELS_FR = {
                   <View style={styles.dailyChallengeContainer}>
                     <View style={styles.dailyChallengeHeader}>
                       <View style={styles.headerLeft}>
-                        <Icon name="calendar" size={22} color={COLORS.primary} />
-                        <Text style={styles.dailyChallengeTitle}>Défi du jour</Text>
+                        <Icon name="calendar" size={22} color="#4e54c8" />
+                        <Text style={styles.dailyChallengeTitle}>Quête journalière</Text>
                       </View>
                       <TouchableOpacity 
                         style={styles.refreshButton}
@@ -1585,10 +1584,10 @@ const CATEGORY_LABELS_FR = {
                             inputRange: [1, 1.2],
                             outputRange: ['0deg', '360deg']
                           }) }] }}>
-                            <Icon name="refresh" size={18} color={COLORS.tertiary} />
+                            <Icon name="refresh" size={18} color="#ff7f50" />
                           </Animated.View>
                         ) : (
-                          <Icon name="refresh" size={18} color={COLORS.secondary} />
+                          <Icon name="refresh" size={18} color="#4e54c8" />
                         )}
                       </TouchableOpacity>
                     </View>
@@ -1596,9 +1595,9 @@ const CATEGORY_LABELS_FR = {
                     {/* Compteur de défis complétés et délai */}
                     <View style={styles.challengeStatusContainer}>
                       <View style={styles.challengeCountContainer}>
-                        <Icon name="checkmark-circle" size={16} color={COLORS.success} />
+                        <Icon name="checkmark-circle" size={16} color="#32cd32" />
                         <Text style={styles.challengeCountText}>
-                          {dailyChallengesCompleted}/2 défis complétés aujourd'hui
+                          {dailyChallengesCompleted}/2 quêtes accomplies aujourd'hui
                         </Text>
                       </View>
                     </View>
@@ -1619,8 +1618,8 @@ const CATEGORY_LABELS_FR = {
                         </Text>
                         <View style={styles.challengeInfo}>
                           <View style={styles.pointsContainer}>
-                            <Icon name="star" size={14} color={COLORS.warning} />
-                            <Text style={styles.pointsText}>{dailyTask.points} points</Text>
+                            <Icon name="star" size={14} color="#ffd700" />
+                            <Text style={styles.pointsText}>{dailyTask.points} XP</Text>
                           </View>
                           <View style={[styles.difficultyContainer, {
                             backgroundColor: dailyTask.difficulty === 'EASY' 
@@ -1637,10 +1636,10 @@ const CATEGORY_LABELS_FR = {
                                   : '#c0392b'
                             }]}>
                               {dailyTask.difficulty === 'EASY' 
-                                ? 'Facile' 
+                                ? 'Novice' 
                                 : dailyTask.difficulty === 'MEDIUM'
-                                  ? 'Moyen'
-                                  : 'Difficile'
+                                  ? 'Aventurier'
+                                  : 'Héroïque'
                               }
                             </Text>
                           </View>
@@ -1664,7 +1663,7 @@ const CATEGORY_LABELS_FR = {
                             <Text style={styles.waitingText}>En attente</Text>
                           </View>
                         ) : (
-                          <Text style={styles.completeButtonText}>Compléter</Text>
+                          <Text style={styles.completeButtonText}>Accomplir</Text>
                         )}
                       </TouchableOpacity>
                     </View>
@@ -1673,164 +1672,178 @@ const CATEGORY_LABELS_FR = {
               </>
             )}
 
-            {/* Question de culture générale quotidienne */}
+            {/* Quiz quotidien */}
             {dailyQuiz && (
               <View style={styles.dailyQuizContainer}>
-                <View style={styles.dailyQuizHeader}>
-                  <View style={styles.headerLeft}>
-                    <Icon name="help-circle" size={22} color={COLORS.quiz.color || "#8e44ad"} />
-                    <Text style={styles.dailyQuizTitle}>Question du jour</Text>
-                  </View>
-                  {/* Afficher la série de bonnes réponses si > 0 */}
-                  {quizStreak > 0 && (
-                    <View style={styles.quizStreakContainer}>
-                      <Icon name="flame" size={18} color="#f39c12" />
-                      <Text style={styles.quizStreakText}>{quizStreak}</Text>
+                <LinearGradient
+                  colors={['#21254c', '#2b2e59']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{ borderRadius: 20, padding: 20 }}
+                >
+                  <View style={styles.dailyQuizHeader}>
+                    <View style={styles.headerLeft}>
+                      <Icon name="game-controller" size={22} color="#8e44ad" />
+                      <Text style={styles.dailyQuizTitle}>Défi d'Intelligence</Text>
                     </View>
-                  )}
-                </View>
-                
-                {/* Barre de progression du quiz */}
-                <View style={styles.quizProgressContainer}>
-                  <View style={styles.quizProgressBackground}>
-                    <View 
-                      style={[
-                        styles.quizProgressFill, 
-                        { width: `${(quizProgress / quizProgressTotal) * 100}%` }
-                      ]} 
-                    />
-                  </View>
-                  <Text style={styles.quizProgressText}>
-                    {quizProgress}/{quizProgressTotal}
-                  </Text>
-                </View>
-                
-                {/* Contenu du quiz */}
-                <View style={styles.quizContent}>
-                  {/* Si en cooldown, afficher le message d'attente */}
-                  {quizCooldown ? (
-                    <View style={styles.quizCooldownContainer}>
-                      <Icon name="time" size={40} color="#e74c3c" style={styles.cooldownIcon} />
-                      <Text style={styles.cooldownTitle}>Oups ! Mauvaise réponse.</Text>
-                      <Text style={styles.cooldownDescription}>
-                        Nouvelle question disponible dans :
-                      </Text>
-                      <View style={styles.cooldownTimerContainer}>
-                        <Text style={styles.cooldownTimer}>
-                          {formatCooldownTime(quizCooldown.remainingTime)}
-                        </Text>
+                    {/* Afficher la série de bonnes réponses si > 0 */}
+                    {quizStreak > 0 && (
+                      <View style={styles.quizStreakContainer}>
+                        <Icon name="flame" size={18} color="#f39c12" />
+                        <Text style={styles.quizStreakText}>{quizStreak} <Text style={{fontSize: 12}}>combo</Text></Text>
                       </View>
-                      <TouchableOpacity 
-                        style={styles.cooldownHintButton}
-                        onPress={() => Alert.alert("Astuce", "Lisez bien la question et prenez votre temps pour répondre. Vous pouvez aussi chercher des indices dans l'application !")}
-                      >
-                        <Text style={styles.cooldownHintText}>Besoin d'une astuce ?</Text>
-                      </TouchableOpacity>
+                    )}
+                  </View>
+                  
+                  {/* Barre de progression du quiz */}
+                  <View style={styles.quizProgressContainer}>
+                    <View style={styles.quizProgressBackground}>
+                      <View 
+                        style={[
+                          styles.quizProgressFill, 
+                          { width: `${(quizProgress / quizProgressTotal) * 100}%` }
+                        ]} 
+                      />
                     </View>
-                  ) : (
-                    <>
-                      {/* Question normale */}
-                      <Text style={styles.quizQuestion}>{dailyQuiz.title}</Text>
-                      <Text style={styles.quizDescription}>{dailyQuiz.description}</Text>
-                      
-                      {/* Formulaire de réponse si non complété et pas de résultat affiché */}
-                      {!dailyQuiz.completed && !quizResult && (
-                        <View style={styles.quizAnswers}>
-                          {dailyQuiz.answers.map((answer, index) => (
-                            <TouchableOpacity 
-                              key={index}
-                              style={[
-                                styles.answerButton,
-                                selectedAnswer === answer && styles.selectedAnswerButton
-                              ]}
-                              onPress={() => setSelectedAnswer(answer)}
-                            >
-                              <Text 
+                    <Text style={styles.quizProgressText}>
+                      {quizProgress}/{quizProgressTotal} <Text style={{color: '#8e44ad'}}>niveaux</Text>
+                    </Text>
+                  </View>
+                  
+                  {/* Contenu du quiz */}
+                  <View style={styles.quizContent}>
+                    {/* Si en cooldown, afficher le message d'attente */}
+                    {quizCooldown ? (
+                      <View style={styles.quizCooldownContainer}>
+                        <Icon name="hourglass" size={40} color="#e74c3c" style={styles.cooldownIcon} />
+                        <Text style={styles.cooldownTitle}>Challenge échoué!</Text>
+                        <Text style={styles.cooldownDescription}>
+                          Prochain défi disponible dans :
+                        </Text>
+                        <View style={styles.cooldownTimerContainer}>
+                          <Text style={styles.cooldownTimer}>
+                            {formatCooldownTime(quizCooldown.remainingTime)}
+                          </Text>
+                        </View>
+                        <TouchableOpacity 
+                          style={styles.cooldownHintButton}
+                          onPress={() => Alert.alert("Astuce du maître de jeu", "Pour gagner le prochain défi, prenez votre temps et réfléchissez bien. La sagesse vient à ceux qui observent les détails.")}
+                        >
+                          <Text style={styles.cooldownHintText}>Consulter le sage</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <>
+                        {/* Question normale */}
+                        <Text style={styles.quizQuestion}>{dailyQuiz.title}</Text>
+                        <Text style={styles.quizDescription}>{dailyQuiz.description}</Text>
+                        
+                        {/* Formulaire de réponse si non complété et pas de résultat affiché */}
+                        {!dailyQuiz.completed && !quizResult && (
+                          <View style={styles.quizAnswers}>
+                            {dailyQuiz.answers.map((answer, index) => (
+                              <TouchableOpacity 
+                                key={index}
                                 style={[
-                                  styles.answerText,
-                                  selectedAnswer === answer && styles.selectedAnswerText
+                                  styles.answerButton,
+                                  selectedAnswer === answer && styles.selectedAnswerButton
                                 ]}
+                                onPress={() => {
+                                  setSelectedAnswer(answer);
+                                  haptics.impactAsync(haptics.ImpactFeedbackStyle.Light);
+                                }}
                               >
-                                {answer}
+                                <Text 
+                                  style={[
+                                    styles.answerText,
+                                    selectedAnswer === answer && styles.selectedAnswerText
+                                  ]}
+                                >
+                                  {answer}
+                                </Text>
+                              </TouchableOpacity>
+                            ))}
+                            
+                            <TouchableOpacity 
+                              style={[
+                                styles.submitAnswerButton,
+                                !selectedAnswer && styles.disabledButton
+                              ]}
+                              disabled={!selectedAnswer}
+                              onPress={handleQuizSubmit}
+                            >
+                              <Text style={styles.submitAnswerText}>
+                                Lancer le sort
                               </Text>
                             </TouchableOpacity>
-                          ))}
-                          
-                          <TouchableOpacity 
-                            style={[
-                              styles.submitAnswerButton,
-                              !selectedAnswer && styles.disabledButton
-                            ]}
-                            disabled={!selectedAnswer}
-                            onPress={handleQuizSubmit}
-                          >
-                            <Text style={styles.submitAnswerText}>
-                              Valider ma réponse
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      )}
-                      
-                      {/* Affichage du résultat */}
-                      {quizResult && (
-                        <View style={[
-                          styles.quizResultContainer,
-                          quizAnimation === 'correct' && styles.correctAnimation,
-                          quizAnimation === 'incorrect' && styles.incorrectAnimation
-                        ]}>
+                          </View>
+                        )}
+                        
+                        {/* Affichage du résultat */}
+                        {quizResult && (
                           <View style={[
-                            styles.resultIcon,
-                            quizResult.isCorrect ? styles.correctResultIcon : styles.incorrectResultIcon
+                            styles.quizResultContainer,
+                            quizAnimation === 'correct' && styles.correctAnimation,
+                            quizAnimation === 'incorrect' && styles.incorrectAnimation
                           ]}>
-                            <Icon 
-                              name={quizResult.isCorrect ? "checkmark" : "close"} 
-                              size={30} 
-                              color={COLORS.white} 
-                            />
-                          </View>
-                          <Text style={styles.resultMessage}>{quizResult.message}</Text>
-                          {!quizResult.isCorrect && (
-                            <Text style={styles.correctAnswerText}>
-                              La bonne réponse était: {quizResult.correctAnswer}
+                            <View style={[
+                              styles.resultIcon,
+                              quizResult.isCorrect ? styles.correctResultIcon : styles.incorrectResultIcon
+                            ]}>
+                              <Icon 
+                                name={quizResult.isCorrect ? "trophy" : "close-circle"} 
+                                size={30} 
+                                color={COLORS.white} 
+                              />
+                            </View>
+                            <Text style={styles.resultMessage}>
+                              {quizResult.isCorrect ? 
+                                "Victoire! Votre sagesse vous honore." : 
+                                "Défaite! Votre réponse est erronée."}
                             </Text>
-                          )}
-                          {quizResult.isCorrect && (
-                            <Text style={styles.pointsEarnedText}>
-                              +{dailyQuiz.points} points
-                            </Text>
-                          )}
-                        </View>
-                      )}
-                      
-                      {/* Si le défi est déjà complété */}
-                      {dailyQuiz.completed && !quizResult && (
-                        <View style={styles.quizResultContainer}>
-                          <View style={styles.correctResultIcon}>
-                            <Icon name="checkmark" size={30} color={COLORS.white} />
+                            {!quizResult.isCorrect && (
+                              <Text style={styles.correctAnswerText}>
+                                La réponse correcte était: {quizResult.correctAnswer}
+                              </Text>
+                            )}
+                            {quizResult.isCorrect && (
+                              <Text style={styles.pointsEarnedText}>
+                                +{dailyQuiz.points} XP
+                              </Text>
+                            )}
                           </View>
-                          <Text style={styles.resultMessage}>
-                            Vous avez déjà répondu à la question du jour !
-                          </Text>
-                          <Text style={styles.completedQuizPoints}>
-                            +{dailyQuiz.points} points
-                          </Text>
-                        </View>
-                      )}
-                    </>
-                  )}
-                </View>
+                        )}
+                        
+                        {/* Si le défi est déjà complété */}
+                        {dailyQuiz.completed && !quizResult && (
+                          <View style={styles.quizResultContainer}>
+                            <View style={styles.correctResultIcon}>
+                              <Icon name="trophy" size={30} color={COLORS.white} />
+                            </View>
+                            <Text style={styles.resultMessage}>
+                              Défi déjà relevé avec succès!
+                            </Text>
+                            <Text style={styles.completedQuizPoints}>
+                              +{dailyQuiz.points} XP
+                            </Text>
+                          </View>
+                        )}
+                      </>
+                    )}
+                  </View>
+                </LinearGradient>
               </View>
             )}
-
+            
             {/* Section d'inspiration quotidienne */}
             <View style={styles.inspirationSection}>
               <View style={styles.quoteContainer}>
-                <Icon name="flame" size={18} color={COLORS.warning} style={styles.quoteIcon} />
+                <Icon name="flame" size={18} color="#ff7f50" style={styles.quoteIcon} />
                 <Text style={styles.quoteText}>
-                  "Le succès n'est pas définitif, l'échec n'est pas fatal : c'est le courage de continuer qui compte."
+                  "Un héros est quelqu'un qui a réussi à surmonter ses limites."
                 </Text>
               </View>
-              <Text style={styles.quoteAuthor}>- Winston Churchill</Text>
+              <Text style={styles.quoteAuthor}>- Confrérie des Gamers</Text>
             </View>
           </View>
         </View>
@@ -1840,7 +1853,7 @@ const CATEGORY_LABELS_FR = {
       {showReward && (
         <TouchableWithoutFeedback onPress={hideReward}>
           <View style={styles.rewardOverlay}>
-            <BlurView intensity={60} style={styles.blurContainer}>
+            <BlurView intensity={80} style={styles.blurContainer}>
               <Animated.View style={[
                 styles.rewardContainer,
                 {
@@ -1848,22 +1861,33 @@ const CATEGORY_LABELS_FR = {
                   transform: [{ scale: rewardScaleAnim }]
                 }
               ]}>
+                <LinearGradient
+                  colors={['#1e2146', '#272b52']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    position: 'absolute',
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: 25,
+                  }}
+                />
                 <View style={styles.starBurst}>
-                  <Icon name="star" size={40} color="#f1c40f" />
+                  <Icon name="trophy" size={40} color="#ffd700" />
                 </View>
-                <Text style={styles.rewardTitle}>Félicitations!</Text>
+                <Text style={styles.rewardTitle}>Quête Accomplie!</Text>
                 <Text style={styles.rewardText}>
-                  Vous avez complété un défi!
+                  Vous avez triomphé d'un nouveau défi!
                 </Text>
                 <View style={styles.pointsAwarded}>
-                  <Icon name="trophy" size={24} color="#f39c12" />
-                  <Text style={styles.pointsAwardedText}>+{dailyTask?.points || 20} points</Text>
+                  <Icon name="flash" size={24} color="#f39c12" />
+                  <Text style={styles.pointsAwardedText}>+{dailyTask?.points || 20} XP</Text>
                 </View>
                 <TouchableOpacity 
                   style={styles.rewardButton}
                   onPress={hideReward}
                 >
-                  <Text style={styles.rewardButtonText}>Super!</Text>
+                  <Text style={styles.rewardButtonText}>Continuer l'aventure</Text>
                 </TouchableOpacity>
               </Animated.View>
             </BlurView>
@@ -2023,7 +2047,7 @@ const CATEGORY_LABELS_FR = {
               }
               multiline
             />
-            <View style={styles.pointModalActions}>
+                       <View style={styles.pointModalActions}>
               <TouchableOpacity
                 style={styles.saveButton}
                 onPress={handleSavePoint}
@@ -2050,56 +2074,60 @@ const CATEGORY_LABELS_FR = {
       >
         <View style={{
           flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.4)',
+          backgroundColor: 'rgba(0,0,0,0.7)',
           justifyContent: 'center',
           alignItems: 'center'
         }}>
           <View style={{
-            backgroundColor: COLORS.white,
+            backgroundColor: '#1e2146',
             borderRadius: 20,
             padding: 24,
             width: '85%',
-            maxHeight: '70%'
+            maxHeight: '70%',
+            borderWidth: 1,
+            borderColor: '#4e54c8'
           }}>
-            <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16, color: COLORS.primary, textAlign: 'center' }}>
-              Détail de la progression
+            <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16, color: '#fff', textAlign: 'center' }}>
+              Progression des Compétences
             </Text>
-            <Text style={{ fontSize: 15, color: COLORS.textSecondary, marginBottom: 12, textAlign: 'center' }}>
-              Points gagnés par catégorie
+            <Text style={{ fontSize: 15, color: '#a3aed0', marginBottom: 12, textAlign: 'center' }}>
+              XP par domaine de compétence
             </Text>
             <ScrollView style={{ maxHeight: 250 }}>
               {Object.keys(categoryPoints).length === 0 && (
-                <Text style={{ color: COLORS.textLight, textAlign: 'center', marginVertical: 20 }}>
-                  Aucun défi complété pour le moment.
+                <Text style={{ color: '#6d7192', textAlign: 'center', marginVertical: 20 }}>
+                  Aucune quête accomplie pour le moment.
                 </Text>
               )}
               {Object.entries(categoryPoints).map(([cat, pts]) => (
-                <View key={cat} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <Text style={{ fontSize: 16, color: COLORS.textPrimary }}>
+                <View key={cat} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#292b45' }}>
+                  <Text style={{ fontSize: 16, color: '#fff' }}>
                     {CATEGORY_LABELS_FR[cat] || cat}
                   </Text>
-                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: COLORS.secondary }}>
-                    {pts} pts
+                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#4e54c8' }}>
+                    {pts} XP
                   </Text>
                 </View>
               ))}
             </ScrollView>
-            <View style={{ borderTopWidth: 1, borderTopColor: '#eee', marginTop: 16, paddingTop: 12 }}>
-              <Text style={{ fontWeight: 'bold', fontSize: 16, color: COLORS.primary, textAlign: 'right' }}>
-                Total : {categoryTotal} pts
+            <View style={{ borderTopWidth: 1, borderTopColor: '#292b45', marginTop: 16, paddingTop: 12 }}>
+              <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#a3d8f5', textAlign: 'right' }}>
+                Total : {categoryTotal} XP
               </Text>
             </View>
             <TouchableOpacity
               style={{
                 marginTop: 18,
-                backgroundColor: COLORS.secondary,
+                backgroundColor: '#4e54c8',
                 borderRadius: 10,
                 paddingVertical: 12,
-                alignItems: 'center'
+                alignItems: 'center',
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.3)'
               }}
               onPress={() => setShowProgressDetail(false)}
             >
-              <Text style={{ color: COLORS.white, fontWeight: 'bold', fontSize: 16 }}>Fermer</Text>
+              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>Fermer</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -2114,15 +2142,15 @@ const CATEGORY_LABELS_FR = {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#0f1123',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   container: {
     flex: 1,
-    backgroundColor: '#f5f6fa',
+    backgroundColor: '#151736',
   },
   headerContainer: {
-    height: 220, // Hauteur réduite pour éviter le débordement
+    height: 220,
     width: '100%',
     overflow: 'hidden',
   },
@@ -2136,7 +2164,7 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? 60 : 40, // Plus d'espace en haut
+    paddingTop: Platform.OS === 'android' ? 60 : 40,
     paddingHorizontal: 20,
     justifyContent: 'center',
   },
@@ -2154,10 +2182,10 @@ const styles = StyleSheet.create({
   appTitle: {
     fontSize: 50,
     fontWeight: 'bold',
-    color: COLORS.white,
+    color: '#fff',
     letterSpacing: 2,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 1, height: 1 },
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 5,
   },
   taglineContainer: {
@@ -2166,70 +2194,30 @@ const styles = StyleSheet.create({
   },
   tagline: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: '#a3d8f5',
     textAlign: 'center',
     letterSpacing: 0.5,
   },
-  levelBadgeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 20,
-    paddingRight: 15,
-  },
-  levelBadge: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: COLORS.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  levelBadgeText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  userLevelInfo: {
-    marginLeft: 10,
-  },
-  userLevelText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: COLORS.white,
-    letterSpacing: 1,
-  },
-  userPointsText: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.9)',
-  },
   contentContainer: {
     flex: 1,
-    marginTop: -40, // Fait chevaucher la carte blanche sur la partie bleue
+    marginTop: -40,
     paddingHorizontal: 15,
     paddingBottom: 30,
   },
   contentCard: {
-    backgroundColor: COLORS.white,
-    borderTopLeftRadius: 30, // Arrondi plus marqué pour l'effet carte
+    backgroundColor: '#1e2146',
+    borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
     padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 10,
     elevation: 5,
-    // Ajoute une bordure pour bien séparer la carte du fond bleu
     borderWidth: 1,
-    borderColor: '#e6e9ed',
+    borderColor: '#292b45',
   },
   statsContainer: {
     flexDirection: 'row',
@@ -2239,76 +2227,95 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#21254c',
     borderRadius: 20,
     paddingVertical: 20,
     alignItems: 'center',
-    shadowColor: COLORS.black,
-    shadowOpacity: 0.05,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 8,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#f5f6fa',
+    borderColor: '#4e54c8',
   },
   statIconContainer: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: COLORS.warning,
+    backgroundColor: '#ffd700',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: COLORS.warning,
+    shadowColor: '#ffd700',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.4,
     shadowRadius: 4,
     elevation: 5,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   trophyIconContainer: {
-    backgroundColor: COLORS.success,
-    shadowColor: COLORS.success,
+    backgroundColor: '#ff6b6b',
+    shadowColor: '#ff6b6b',
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   statIcon: {
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 1,
+    textShadowRadius: 2,
   },
   statValue: {
     fontSize: 30,
     fontWeight: 'bold',
-    color: COLORS.dark,
+    color: '#fff',
   },
   statLabel: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
     marginTop: 4,
     fontWeight: '500',
-  },  levelCard: {
+  },
+  levelCard: {
     marginBottom: 25,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#21254c',
     padding: 20,
     borderRadius: 20,
-    shadowColor: COLORS.black,
-    shadowOpacity: 0.05,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 8,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#f0f3f8',
+    borderColor: '#4e54c8',
+  },
+  levelHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  levelTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  levelProgress: {
+    fontSize: 14,
+    color: '#a3d8f5',
   },
   categoryProgressContainer: {
     marginBottom: 25,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#21254c',
     padding: 20,
     borderRadius: 20,
-    shadowColor: COLORS.black,
-    shadowOpacity: 0.05,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 8,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#f0f3f8',
+    borderColor: '#4e54c8',
   },
   categoryProgressHeader: {
     flexDirection: 'row',
@@ -2319,7 +2326,7 @@ const styles = StyleSheet.create({
   categoryProgressTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.textDark,
+    color: '#fff',
   },
   categoryProgressItem: {
     marginBottom: 15,
@@ -2327,12 +2334,12 @@ const styles = StyleSheet.create({
   categoryLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.textDark,
+    color: '#dedede',
     marginBottom: 5,
   },
   noCategoriesText: {
     fontSize: 14,
-    color: COLORS.textLight,
+    color: '#6d7192',
     textAlign: 'center',
     marginVertical: 10,
   },
@@ -2345,25 +2352,25 @@ const styles = StyleSheet.create({
   },
   viewAllCategoriesText: {
     fontSize: 14,
-    color: COLORS.primary,
+    color: '#4e54c8',
     marginRight: 5,
     fontWeight: '500',
   },
   dailyChallengeContainer: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#21254c',
     borderRadius: 20,
     marginBottom: 25,
     padding: 20,
-    shadowColor: COLORS.black,
-    shadowOpacity: 0.05,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 8,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#f0f3f8',
+    borderColor: '#4e54c8',
   },
   dailyChallengeSmallContainer: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#272b52',
     borderRadius: 16,
     padding: 20,
     marginBottom: 18,
@@ -2372,14 +2379,20 @@ const styles = StyleSheet.create({
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: '#4e54c8',
   },
   dailyChallengeHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 15,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   dailyChallengeHeaderSmall: {
     flexDirection: 'row',
@@ -2389,13 +2402,13 @@ const styles = StyleSheet.create({
   dailyChallengeTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.dark,
+    color: '#fff',
     marginLeft: 8,
   },
   dailyChallengeTitleSmall: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: '#4e54c8',
     marginLeft: 8,
   },
   refreshButton: {
@@ -2409,24 +2422,24 @@ const styles = StyleSheet.create({
   comebackText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.secondary,
+    color: '#4e54c8',
     marginBottom: 4,
   },
   comebackSubText: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
     marginBottom: 2,
   },
   comebackTimer: {
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: '#a3d8f5',
     fontVariant: ['tabular-nums'],
   },
   challengeStatusContainer: {
     flexDirection: 'column',
     marginBottom: 15,
     borderRadius: 12,
-    backgroundColor: '#f0f3f8',
+    backgroundColor: '#292b45',
     padding: 10,
   },
   challengeCountContainer: {
@@ -2436,12 +2449,12 @@ const styles = StyleSheet.create({
   },
   challengeCountText: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
     marginLeft: 5,
     fontWeight: '500',
   },
   dailyChallengeContent: {
-    backgroundColor: '#f9fafc',
+    backgroundColor: '#272b52',
     borderRadius: 15,
     padding: 15,
   },
@@ -2451,25 +2464,23 @@ const styles = StyleSheet.create({
   challengeTitle: {
     fontSize: 17,
     fontWeight: 'bold',
-    color: COLORS.dark,
+    color: '#fff',
     marginBottom: 5,
   },
   completedChallengeTitle: {
     textDecorationLine: 'line-through',
-    color: COLORS.textSecondary,
-    color: COLORS.success,
+    color: '#32cd32',
     fontWeight: 'bold',
   },
   challengeDescription: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
     marginBottom: 10,
     lineHeight: 20,
   },
   completedChallengeDescription: {
     textDecorationLine: 'line-through',
-    color: COLORS.textSecondary,
-    color: COLORS.success,
+    color: '#32cd32',
   },
   challengeInfo: {
     flexDirection: 'row',
@@ -2482,7 +2493,7 @@ const styles = StyleSheet.create({
   },
   pointsText: {
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: '#dedede',
     fontWeight: '600',
     marginLeft: 4,
   },
@@ -2496,472 +2507,42 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   completeButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#4e54c8',
     borderRadius: 12,
     paddingVertical: 10,
     alignItems: 'center',
-    shadowColor: COLORS.primary,
+    shadowColor: '#4e54c8',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.4,
     shadowRadius: 5,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   completedButton: {
-    backgroundColor: COLORS.success,
+    backgroundColor: '#32cd32',
   },
   disabledButton: {
-    backgroundColor: '#a0a0a0',
+    backgroundColor: '#5d6080',
     opacity: 0.7,
   },
   completeButtonText: {
-    color: COLORS.white,
+    color: '#fff',
     fontWeight: 'bold',
     fontSize: 15,
   },
-  waitingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  waitingText: {
-    color: COLORS.white,
-    fontWeight: 'bold',
-    fontSize: 14,
-    marginLeft: 5,
-  },
-  sectionTitle: {
-    marginBottom: 15,
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.dark,
-  },
-  inspirationSection: {
-    backgroundColor: '#f9fafc',
-    borderRadius: 20,
-    padding: 20,
-    marginTop: 20, // Augmenter la marge supérieure puisque les actions rapides sont supprimées
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#f0f3f8',
-  },
-  quoteContainer: {
-    flexDirection: 'row',
-    marginBottom: 10,
-    alignItems: 'flex-start',
-  },
-  quoteIcon: {
-    marginRight: 10,
-    marginTop: 2,
-  },
-  quoteText: {
-    fontSize: 15,
-    color: COLORS.textPrimary,
-    lineHeight: 22,
-    flex: 1,
-    fontStyle: 'italic',
-  },
-  quoteAuthor: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    textAlign: 'right',
-    fontWeight: '500',
-  },
-  rewardOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  blurContainer: {
-    flex: 1,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  rewardContainer: {
-    backgroundColor: COLORS.white,
-    borderRadius: 25,
-    padding: 25,
-    alignItems: 'center',
-    width: '80%',
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
-    elevation: 10,
-  },
-  starBurst: {
-    backgroundColor: '#fff9e5',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-    borderWidth: 5,
-    borderColor: '#fff5d1',
-    shadowColor: '#f1c40f',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  rewardTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.dark,
-    marginBottom: 10,
-  },
-  rewardText: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  pointsAwarded: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff9e5',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginBottom: 20,
-  },
-  pointsAwardedText: {
-    marginLeft: 8,
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#f39c12',
-  },
-  rewardButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 30,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  rewardButtonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  navBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  translucentNavBar: {
-    backgroundColor: 'transparent',
-  },
-  solidNavBar: {
-    backgroundColor: COLORS.primary,
-  },
-  navBarGradient: {
-    flex: 1,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  navBarContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    paddingHorizontal: 15,
-  },
-  backButton: {
-    padding: 5,
-  },
-  navBarIcon: {
-    position: 'relative',
-  },
-  notificationBadge: {
-    position: 'absolute',
-    top: -5,
-    right: -5,
-    backgroundColor: COLORS.warning,
-    borderRadius: 10,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-  },
-  notificationBadgeText: {
-    color: COLORS.white,
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  navBarTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.white,
-  },
-  navBarRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  mapModalContainer: {
-    flex: 1,
-    backgroundColor: COLORS.white,
-    padding: 20,
-    paddingTop: 40,
-  },
-  mapModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  mapModalTitle: {
-    fontSize: 20,
-   
-    fontWeight: 'bold',
-    color: COLORS.dark,
-  },
-  closeButton: {
-    padding: 5,
-  },
-  locationLoadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  locationIcon: {
-    marginBottom: 20,
-  },
-  locationText: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  authLocationButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  authLocationButtonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  mapContentContainer: {
-    flex: 1,
-  },
-  map: {
-    flex: 1,
-    borderRadius: 20,
-    marginBottom: 20,
-  },
-  challengeMarker: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  callout: {
-    width: 150,
-    padding: 10,
-    backgroundColor: COLORS.white,
-    borderRadius: 10,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  calloutTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: COLORS.dark,
-       marginBottom: 5,
-  },
-   calloutDescription: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginBottom: 5,
-  },
-  calloutFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  calloutPoints: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  calloutPointsText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginLeft: 4,
-  },
-  calloutDistance: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  calloutDistanceText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginLeft: 4,
-  },
-  routeInfoContainer: {
-    backgroundColor: COLORS.white,
-    borderRadius: 20,
-    padding: 15,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius:  5,
-  },
-  routeInfoHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  routeInfoTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.dark,
-  },
-  closeRouteButton: {
-    padding: 5,
-    backgroundColor: COLORS.primary,
-    borderRadius: 15,
-  },
-  routeInfoDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  routeInfoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  routeInfoText: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginLeft: 5,
-  },
-  directionsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  directionsButtonText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginRight: 5,
-  },
-  newActivityDetails: {
-    padding: 10,
-    backgroundColor: COLORS.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  input: {
-    backgroundColor: '#f0f0f0',
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 10,
-    fontSize: 16,
-  },
-  textArea: {
-    height: 60,
-    textAlignVertical: 'top',
-  },
-  addActivityButton: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  addActivityButtonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  pointModalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 20,
-  },
-  pointModalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.white,
-    marginBottom: 20,
-  },
-  pointModalActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-  },
-  saveButton: {
-    backgroundColor: COLORS.primary,
-    padding: 10,
-    borderRadius: 10,
-    marginRight: 10,
-  },
-  saveButtonText: {
-    color: COLORS.white,
-    fontWeight: 'bold',
-  },
-  navigateButton: {
-    backgroundColor: COLORS.secondary,
-    padding: 10,
-    borderRadius: 10,
-  },
-  navigateButtonText: {
-    color: COLORS.white,
-    fontWeight: 'bold',
-  },
-  // Styles pour le quiz quotidien
   dailyQuizContainer: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#21254c',
     borderRadius: 20,
     marginBottom: 25,
     padding: 20,
-    shadowColor: COLORS.black,
-    shadowOpacity: 0.05,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 8,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#f0f3f8',
+    borderColor: '#4e54c8',
   },
   dailyQuizHeader: {
     flexDirection: 'row',
@@ -2972,132 +2553,48 @@ const styles = StyleSheet.create({
   dailyQuizTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.dark,
+    color: '#fff',
     marginLeft: 8,
   },
   quizContent: {
-    backgroundColor: '#f9fafc',
+    backgroundColor: '#272b52',
     borderRadius: 15,
     padding: 15,
   },
   quizQuestion: {
     fontSize: 17,
     fontWeight: 'bold',
-    color: COLORS.dark,
+    color: '#fff',
     marginBottom: 8,
+    textShadowColor: 'rgba(142, 68, 173, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   quizDescription: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: '#bdc8f0',
     marginBottom: 15,
     lineHeight: 20,
-  },
-  quizAnswers: {
-    marginBottom: 10,
-  },
-  answerButton: {
-    backgroundColor: '#f0f3f8',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#e1e8f0',
-  },
-  selectedAnswerButton: {
-    backgroundColor: COLORS.primary + '20',
-    borderColor: COLORS.primary,
-  },
-  answerText: {
-    fontSize: 15,
-    color: COLORS.textPrimary,
-  },
-  selectedAnswerText: {
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  submitAnswerButton: {
-    backgroundColor: COLORS.quiz.color || '#8e44ad',
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: 10,
-    shadowColor: COLORS.quiz.color || '#8e44ad',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  submitAnswerText: {
-    color: COLORS.white,
-    fontWeight: 'bold',
-    fontSize: 15,
-  },
-  quizResultContainer: {
-    alignItems: 'center',
-    padding: 15,
-  },
-  resultIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  correctResultIcon: {
-    backgroundColor: COLORS.success,
-  },
-  incorrectResultIcon: {
-    backgroundColor: COLORS.error,
-  },
-  resultMessage: {
-    fontSize: 16,
-    color: COLORS.textPrimary,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  correctAnswerText: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  completedQuizPoints: {
-    fontSize: 16,
-    color: COLORS.success,
-    fontWeight: 'bold',
-    marginBottom: 15,
-  },
-  nextQuizButton: {
-    backgroundColor: COLORS.quiz.color || '#8e44ad',
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 30,
-    shadowColor: COLORS.quiz.color || '#8e44ad',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  nextQuizButtonText: {
-    color: COLORS.white,
-    fontSize: 15,
-    fontWeight: 'bold',
+    fontStyle: 'italic',
   },
   quizStreakContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(243, 156, 18, 0.1)',
+    backgroundColor: 'rgba(243, 156, 18, 0.2)',
     borderRadius: 15,
     paddingHorizontal: 10,
     paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(243, 156, 18, 0.4)',
   },
   quizStreakText: {
     color: '#f39c12',
     fontWeight: 'bold',
     fontSize: 14,
     marginLeft: 5,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   quizProgressContainer: {
     flexDirection: 'row',
@@ -3108,53 +2605,184 @@ const styles = StyleSheet.create({
   quizProgressBackground: {
     flex: 1,
     height: 8,
-    backgroundColor: '#eee',
+    backgroundColor: '#292b45',
     borderRadius: 4,
     marginRight: 10,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(142, 68, 173, 0.3)',
   },
   quizProgressFill: {
     height: '100%',
-    backgroundColor: COLORS.quiz.color || '#8e44ad',
+    backgroundColor: '#8e44ad',
     borderRadius: 4,
+    shadowColor: '#8e44ad',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
+    elevation: 2,
   },
   quizProgressText: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
     fontWeight: '500',
+  },
+  answerButton: {
+    backgroundColor: '#292b45',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#384066',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  answerText: {
+    fontSize: 15,
+    color: '#dedede',
+    fontWeight: '500',
+  },
+  selectedAnswerButton: {
+    backgroundColor: 'rgba(78, 84, 200, 0.2)',
+  },
+  selectedAnswerText: {
+    color: '#a3d8f5',
+    fontWeight: '600',
+  },
+  submitAnswerButton: {
+    backgroundColor: '#8e44ad',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 10,
+    shadowColor: '#8e44ad',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  submitAnswerText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  quizResultContainer: {
+    alignItems: 'center',
+    padding: 15,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  resultIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  correctResultIcon: {
+    backgroundColor: '#32cd32',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  incorrectResultIcon: {
+    backgroundColor: '#e74c3c',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  resultMessage: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 10,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  correctAnswerText: {
+    fontSize: 14,
+    color: '#a3aed0',
+    marginBottom: 15,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  completedQuizPoints: {
+    fontSize: 16,
+    color: '#32cd32',
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+    textShadowColor: 'rgba(50, 205, 50, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  pointsEarnedText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffd700',
+    marginTop: 10,
+    textShadowColor: 'rgba(255, 215, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   correctAnimation: {
     backgroundColor: 'rgba(46, 204, 113, 0.2)',
     borderRadius: 12,
     transform: [{scale: 1.02}],
+    borderWidth: 1,
+    borderColor: 'rgba(46, 204, 113, 0.4)',
   },
   incorrectAnimation: {
     backgroundColor: 'rgba(231, 76, 60, 0.2)',
     borderRadius: 12,
     transform: [{scale: 1.02}],
-  },
-  pointsEarnedText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.success,
-    marginTop: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(231, 76, 60, 0.4)',
   },
   quizCooldownContainer: {
+    flexDirection: 'column',
     alignItems: 'center',
     paddingVertical: 20,
+    marginTop: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(231, 76, 60, 0.3)',
   },
   cooldownIcon: {
     marginBottom: 20,
+    opacity: 0.8,
+    shadowColor: '#e74c3c',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
   },
   cooldownTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#e74c3c',
     marginBottom: 10,
+    textShadowColor: 'rgba(231, 76, 60, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   cooldownDescription: {
     fontSize: 16,
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
     marginBottom: 15,
     textAlign: 'center',
   },
@@ -3164,57 +2792,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(231, 76, 60, 0.3)',
   },
   cooldownTimer: {
     fontSize: 22,
     fontWeight: 'bold',
     color: '#e74c3c',
+    marginTop: 5,
+    fontVariant: ['tabular-nums'],
+    letterSpacing: 2,
   },
   cooldownHintButton: {
     borderWidth: 1,
-    borderColor: COLORS.secondary,
+    borderColor: '#4e54c8',
     borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: 8,
+    backgroundColor: 'rgba(78, 84, 200, 0.1)',
   },
   cooldownHintText: {
-    color: COLORS.secondary,
+    color: '#4e54c8',
     fontSize: 14,
     fontWeight: '500',
   },
 });
-
-const getCategoryStyle = (category) => {
-  switch (category) {
-    case 'FITNESS':
-      return { backgroundColor: '#3498db' };
-    case 'CULTURE':
-      return { backgroundColor: '#9b59b6' };
-    case 'WELLBEING':
-      return { backgroundColor: '#2ecc71' };
-    case 'NUTRITION':
-      return { backgroundColor: '#e74c3c' };
-    case 'CREATIVITY':
-      return { backgroundColor: '#f39c12' };
-    default:
-      return { backgroundColor: '#bdc3c7' };
-  }
-};
-
-const getCategoryIcon = (category) => {
-  switch (category) {
-    case 'FITNESS':
-      return 'fitness';
-    case 'CULTURE':
-      return 'book';
-    case 'WELLBEING':
-      return 'leaf';
-    case 'NUTRITION':
-      return 'nutrition';
-    case 'CREATIVITY':
-      return 'color-palette';
-    default:
-      return 'help';
-  }
-
-};
