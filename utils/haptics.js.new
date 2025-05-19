@@ -1,0 +1,132 @@
+import { Platform, Vibration } from 'react-native';
+import * as webFallback from './webHapticsFallback';
+
+// Toujours définir les constantes, même si expo-haptics n'est pas chargé
+export const ImpactFeedbackStyle = {
+  Light: 'light',
+  Medium: 'medium',
+  Heavy: 'heavy'
+};
+
+export const NotificationFeedbackType = {
+  Success: 'success',
+  Warning: 'warning',
+  Error: 'error'
+};
+
+// Fonction sécurisée qui évite les erreurs quand expo-haptics n'est pas disponible
+const safeRequire = (moduleName) => {
+  try {
+    return require(moduleName);
+  } catch (error) {
+    console.warn(`Module ${moduleName} non disponible:`, error.message);
+    return null;
+  }
+};
+
+const haptics = {
+  impactAsync: async (style = ImpactFeedbackStyle.Medium) => {
+    if (Platform.OS === 'web') {
+      return webFallback.impactAsync(style);
+    }
+    
+    try {
+      const Haptics = safeRequire('expo-haptics');
+      
+      if (Haptics && typeof Haptics.impactAsync === 'function') {
+        // Vérifier si les styles sont disponibles, sinon utiliser des valeurs par défaut
+        if (Haptics.ImpactFeedbackStyle) {
+          let nativeStyle = Haptics.ImpactFeedbackStyle.Medium;
+          
+          if (style === ImpactFeedbackStyle.Light && Haptics.ImpactFeedbackStyle.Light) {
+            nativeStyle = Haptics.ImpactFeedbackStyle.Light;
+          } else if (style === ImpactFeedbackStyle.Heavy && Haptics.ImpactFeedbackStyle.Heavy) {
+            nativeStyle = Haptics.ImpactFeedbackStyle.Heavy;
+          }
+          
+          return await Haptics.impactAsync(nativeStyle);
+        } else {
+          // Styles non disponibles, utiliser des valeurs numériques de secours
+          // Light = 0, Medium = 1, Heavy = 2
+          const fallbackStyleValues = { light: 0, medium: 1, heavy: 2 };
+          const fallbackStyle = typeof style === 'string' ? fallbackStyleValues[style.toLowerCase()] || 1 : 1;
+          return await Haptics.impactAsync(fallbackStyle);
+        }
+      }
+    } catch (e) {
+      // En cas d'erreur, fallback sur vibration simple
+      if (Platform.OS === 'android') {
+        Vibration.vibrate(30);
+      }
+    }
+    
+    return Promise.resolve();
+  },
+  
+  notificationAsync: async (type = NotificationFeedbackType.Success) => {
+    if (Platform.OS === 'web') {
+      return webFallback.notificationAsync(type);
+    }
+    
+    try {
+      const Haptics = safeRequire('expo-haptics');
+      
+      if (Haptics && typeof Haptics.notificationAsync === 'function') {
+        // Vérifier si les types sont disponibles, sinon utiliser des valeurs par défaut
+        if (Haptics.NotificationFeedbackType) {
+          let nativeType = Haptics.NotificationFeedbackType.Success;
+          
+          if (type === NotificationFeedbackType.Warning && Haptics.NotificationFeedbackType.Warning) {
+            nativeType = Haptics.NotificationFeedbackType.Warning;
+          } else if (type === NotificationFeedbackType.Error && Haptics.NotificationFeedbackType.Error) {
+            nativeType = Haptics.NotificationFeedbackType.Error;
+          }
+          
+          return await Haptics.notificationAsync(nativeType);
+        } else {
+          // Types non disponibles, utiliser des valeurs numériques de secours
+          // Success = 0, Warning = 1, Error = 2
+          const fallbackTypeValues = { success: 0, warning: 1, error: 2 };
+          const fallbackType = typeof type === 'string' ? fallbackTypeValues[type.toLowerCase()] || 0 : 0;
+          return await Haptics.notificationAsync(fallbackType);
+        }
+      }
+    } catch (e) {
+      // En cas d'erreur, fallback sur vibration avec pattern
+      if (Platform.OS === 'android') {
+        if (type === NotificationFeedbackType.Error) {
+          Vibration.vibrate([0, 50, 50, 50]); // Pattern d'erreur
+        } else if (type === NotificationFeedbackType.Warning) {
+          Vibration.vibrate([0, 30, 30, 30]); // Pattern d'avertissement
+        } else {
+          Vibration.vibrate([0, 20, 20, 20]); // Pattern de succès
+        }
+      }
+    }
+    
+    return Promise.resolve();
+  },
+  
+  selectionAsync: async () => {
+    if (Platform.OS === 'web') {
+      return webFallback.selectionAsync();
+    }
+    
+    try {
+      const Haptics = safeRequire('expo-haptics');
+      
+      if (Haptics && typeof Haptics.selectionAsync === 'function') {
+        return await Haptics.selectionAsync();
+      }
+    } catch (e) {
+      // En cas d'erreur, fallback sur vibration courte
+      if (Platform.OS === 'android') {
+        Vibration.vibrate(10);
+      }
+    }
+    
+    return Promise.resolve();
+  }
+};
+
+export default haptics;

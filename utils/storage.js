@@ -401,11 +401,20 @@ export const retrieveCategoryPoints = async () => {
  */
 export const addCategoryPoints = async (category, pointsToAdd) => {
   try {
-    const categoryPoints = await retrieveCategoryPoints();
-    const currentPoints = categoryPoints[category] || 0;
-    const newPoints = currentPoints + pointsToAdd;
+    // Si la catégorie n'est pas définie, utiliser une catégorie par défaut
+    const categoryName = category || 'AUTRE';
     
-    await storeCategoryPoints(category, newPoints);
+    // S'assurer que pointsToAdd est un nombre
+    const points = Number(pointsToAdd) || 0;
+    if (points <= 0) {
+      return 0; // Ne rien faire si pas de points à ajouter
+    }
+    
+    const categoryPoints = await retrieveCategoryPoints();
+    const currentPoints = categoryPoints[categoryName] || 0;
+    const newPoints = currentPoints + points;
+    
+    await storeCategoryPoints(categoryName, newPoints);
     return newPoints;
   } catch (e) {
     console.error("Erreur lors de l'ajout des points par catégorie:", e);
@@ -1042,13 +1051,17 @@ export const checkQuizAnswer = async (quizId, answer) => {
       // Sauvegarder la mise à jour
       const userKey = await getUserSpecificKey(QUIZ_TASKS_KEY);
       await AsyncStorage.setItem(userKey, JSON.stringify(updatedQuizTasks));
-      
-      // Ajouter aux tâches complétées
+        // Ajouter aux tâches complétées
       await addCompletedTask(quizId);
       
       // Ajouter les points
       const pointsToAdd = quiz.points;
-      await addPoints(pointsToAdd);
+      try {
+        await addPoints(pointsToAdd);
+      } catch (error) {
+        console.error('Erreur lors de l\'ajout des points:', error);
+        // Continuer malgré l'erreur d'ajout de points
+      }
       
       return { 
         success: true, 
