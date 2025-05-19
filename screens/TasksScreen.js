@@ -36,7 +36,8 @@ import {
   updateStreak,
   retrieveStreak,
   createTimedTask,
-  createTask
+  createTask,
+  addCategoryPoints
 } from '../utils/storage';
 import { 
   CHALLENGE_TYPES, 
@@ -1058,9 +1059,7 @@ const TasksScreen = ({ navigation }) => {
         setDailyTasks(updateTaskLocally(dailyTasks, id));
       } else if (taskType === 'timed') {
         setTimedTasks(updateTaskLocally(timedTasks, id));
-      }
-
-      // Calculer les points avec le bonus
+      }      // Calculer les points avec le bonus
       const levelInfo = calculateLevel(points);
       const bonusMultiplier = levelInfo.bonusMultiplier;
       const basePoints = task.points;
@@ -1071,6 +1070,11 @@ const TasksScreen = ({ navigation }) => {
         addPoints(pointsToAdd),
         completeTask(id)
       ]);
+      
+      // Ajouter les points à la catégorie si la tâche a une catégorie
+      if (task.category) {
+        await addCategoryPoints(task.category, pointsToAdd);
+      }
 
       // Mettre à jour la série si c'est un défi quotidien
       if (taskType === 'daily') {
