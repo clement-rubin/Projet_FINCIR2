@@ -46,7 +46,9 @@ function CustomTabBar({ state, descriptors, navigation }) {
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <BlurView intensity={90} tint="dark" style={styles.blurContainer}>
         <LinearGradient
-          colors={['rgba(0, 0, 0, 0.7)', 'rgba(0, 0, 0, 0.5)']}
+          colors={['#1a2151', '#2d3a8c']} // Couleurs plus cohérentes avec le thème gaming
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={styles.gradientOverlay}
         >
           <View style={styles.tabBar}>
@@ -62,19 +64,19 @@ function CustomTabBar({ state, descriptors, navigation }) {
               if (route.name === 'Home') {
                 iconName = isFocused ? 'home' : 'home-outline';
                 title = 'Accueil';
-                iconColor = isFocused ? COLORS.primary : '#fff';
+                iconColor = isFocused ? '#a3d8f5' : '#fff'; // Couleur bleu clair pour actif
               } else if (route.name === 'Tasks') {
                 iconName = isFocused ? 'list' : 'list-outline';
-                title = 'Défis';
-                iconColor = isFocused ? COLORS.primary : '#fff';
+                title = 'Quêtes';
+                iconColor = isFocused ? '#a3d8f5' : '#fff';
               } else if (route.name === 'Profile') {
                 iconName = isFocused ? 'person' : 'person-outline';
                 title = 'Profil';
-                iconColor = isFocused ? COLORS.primary : '#fff';
+                iconColor = isFocused ? '#a3d8f5' : '#fff';
               } else if (route.name === 'Friends') {
                 iconName = isFocused ? 'people' : 'people-outline';
                 title = 'Amis';
-                iconColor = isFocused ? COLORS.primary : '#fff';
+                iconColor = isFocused ? '#a3d8f5' : '#fff';
               }
               
               const onPress = () => {
@@ -85,16 +87,17 @@ function CustomTabBar({ state, descriptors, navigation }) {
                 });
                 
                 if (!isFocused && !event.defaultPrevented) {
-                  // Animation du tap feedback
+                  // Animation du tap feedback améliorée
                   Animated.sequence([
                     Animated.timing(animatedValues[index], {
-                      toValue: 0.8,
-                      duration: 100,
+                      toValue: 0.7,
+                      duration: 50,
                       useNativeDriver: true
                     }),
-                    Animated.timing(animatedValues[index], {
+                    Animated.spring(animatedValues[index], {
                       toValue: 1,
-                      duration: 100,
+                      friction: 3,
+                      tension: 40,
                       useNativeDriver: true
                     })
                   ]).start();
@@ -106,13 +109,19 @@ function CustomTabBar({ state, descriptors, navigation }) {
               // Interpolations pour les animations
               const tabScale = animatedValues[index].interpolate({
                 inputRange: [0, 1],
-                outputRange: [0.9, 1.1]
+                outputRange: [0.9, 1.15]
               });
               
               // Utiliser scaleX au lieu de width pour l'animation de l'indicateur
               const indicatorScale = animatedValues[index].interpolate({
                 inputRange: [0, 1],
                 outputRange: [0.2, 1]
+              });
+              
+              // Animation de luminosité pour l'effet "glow"
+              const glowOpacity = animatedValues[index].interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 0.7]
               });
               
               return (
@@ -126,13 +135,25 @@ function CustomTabBar({ state, descriptors, navigation }) {
                   activeOpacity={0.7}
                 >
                   {isFocused && (
-                    <Animated.View style={[
-                      styles.activeTabIndicator,
-                      { 
-                        transform: [{ scaleX: indicatorScale }]
-                      }
-                    ]} />
+                    <>
+                      {/* Indicateur d'onglet actif amélioré */}
+                      <Animated.View style={[
+                        styles.activeTabIndicator,
+                        { 
+                          transform: [{ scaleX: indicatorScale }]
+                        }
+                      ]} />
+                      
+                      {/* Effet de glow sous l'icône active */}
+                      <Animated.View 
+                        style={[
+                          styles.iconGlow,
+                          { opacity: glowOpacity }
+                        ]} 
+                      />
+                    </>
                   )}
+                  
                   <Animated.View style={{ 
                     transform: [{ scale: isFocused ? tabScale : 1 }]
                   }}>
@@ -141,16 +162,23 @@ function CustomTabBar({ state, descriptors, navigation }) {
                       size={24} 
                       color={iconColor} 
                       style={{ 
-                        opacity: isFocused ? 1 : 0.7 
+                        opacity: isFocused ? 1 : 0.7,
+                        textShadowColor: isFocused ? 'rgba(163, 216, 245, 0.8)' : 'transparent',
+                        textShadowOffset: { width: 0, height: 0 },
+                        textShadowRadius: isFocused ? 8 : 0,
                       }}
                     />
                   </Animated.View>
+                  
                   <Animated.Text style={[
                     styles.tabTitle,
                     { 
                       color: iconColor,
                       opacity: isFocused ? 1 : 0.7,
-                      transform: [{ scale: isFocused ? tabScale : 1 }]
+                      transform: [{ scale: isFocused ? tabScale : 1 }],
+                      textShadowColor: isFocused ? 'rgba(163, 216, 245, 0.5)' : 'transparent',
+                      textShadowOffset: { width: 0, height: 0 },
+                      textShadowRadius: isFocused ? 3 : 0,
                     }
                   ]}>
                     {title}
@@ -339,17 +367,25 @@ const styles = StyleSheet.create({
     right: 0,
     height: NAV_HEIGHT,
     zIndex: 999,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 10,
   },
   blurContainer: {
     flex: 1,
     overflow: 'hidden',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
   },
   gradientOverlay: {
     flex: 1,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(78, 84, 200, 0.3)',
+    borderBottomWidth: 0,
   },
   tabBar: {
     flexDirection: 'row',
@@ -376,8 +412,22 @@ const styles = StyleSheet.create({
     left: '25%',
     right: '25%',
     height: 3,
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#4e54c8',
     borderRadius: 3,
+    shadowColor: '#4e54c8',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  iconGlow: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(78, 84, 200, 0.2)',
+    top: 15,
+    alignSelf: 'center',
   },
   tabTitle: {
     fontSize: 12,
