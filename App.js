@@ -56,18 +56,18 @@ export default function App() {
 
   // Fonction d'animation du splash screen
   const animateSplashScreen = () => {
-    // Séquence d'effets haptiques
+    // Séquence d'effets haptiques - ACCÉLÉRÉE
     const triggerHapticSequence = () => {
       try {
-        // Séquence de démarrage type "power on"
+        // Séquence de démarrage type "power on" - temps réduits
+        setTimeout(() => haptics.impactAsync('light'), 50);
         setTimeout(() => haptics.impactAsync('light'), 100);
-        setTimeout(() => haptics.impactAsync('light'), 200);
-        setTimeout(() => haptics.impactAsync('medium'), 400);
-        setTimeout(() => haptics.impactAsync('heavy'), 800);
-        // Séquence de "système prêt"
-        setTimeout(() => haptics.impactAsync('medium'), 1500);
-        setTimeout(() => haptics.impactAsync('heavy'), 1700);
-        setTimeout(() => haptics.notificationAsync('success'), 2000);
+        setTimeout(() => haptics.impactAsync('medium'), 200);
+        setTimeout(() => haptics.impactAsync('heavy'), 400);
+        // Séquence de "système prêt" - temps réduits
+        setTimeout(() => haptics.impactAsync('medium'), 800);
+        setTimeout(() => haptics.impactAsync('heavy'), 900);
+        setTimeout(() => haptics.notificationAsync('success'), 1000);
       } catch (err) {
         console.warn('Haptics error:', err);
       }
@@ -76,36 +76,36 @@ export default function App() {
     // Déclencher la séquence haptique
     triggerHapticSequence();
 
-    // Animation de pulsation continue pour le logo (effet gaming)
+    // Animation de pulsation continue pour le logo (effet gaming) - VITESSE RÉDUITE
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.1,
-          duration: 500, // Réduit de 1000 à 500
+          toValue: 1.05, // Amplitude réduite
+          duration: 800, // Plus lent pour les confettis
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 500, // Réduit de 1000 à 500
+          duration: 800, // Plus lent pour les confettis
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         })
       ])
     ).start();
 
-    // Effet de glitch aléatoire
+    // Effet de glitch aléatoire - MOINS FRÉQUENT
     const startGlitchEffect = () => {
-      const randomTiming = 1500 + Math.random() * 2000;
+      const randomTiming = 1000 + Math.random() * 1500; // Réduit pour cycle plus rapide
       Animated.sequence([
         Animated.timing(glitchAnim, {
           toValue: 1,
-          duration: 100,
+          duration: 80, // Plus rapide
           useNativeDriver: true
         }),
         Animated.timing(glitchAnim, {
           toValue: 0,
-          duration: 100,
+          duration: 80, // Plus rapide
           useNativeDriver: true
         })
       ]).start(() => {
@@ -113,136 +113,136 @@ export default function App() {
       });
     };
 
-    setTimeout(startGlitchEffect, 1000);
+    setTimeout(startGlitchEffect, 500); // Commence plus tôt
 
-    // Animation du logo
+    // Animation du logo - DURÉE TOTALE RÉDUITE À ~4 SECONDES
     Animated.sequence([
-      // Apparition fondue du fond avec légère rotation du logo pour un effet dynamique
+      // Phase 1: Apparition du fond (~0.5s)
       Animated.parallel([
         Animated.timing(backgroundOpacity, {
           toValue: 1,
-          duration: 300, // Réduit de 600 à 300
+          duration: 150, // Réduit de 300 à 150
           useNativeDriver: true,
         }),
         Animated.timing(logoRotate, {
           toValue: 1,
-          duration: 400, // Réduit de 800 à 400
+          duration: 200, // Réduit de 400 à 200
           easing: Easing.elastic(1.2),
           useNativeDriver: true,
         }),
         // Activer les particules avec délai
         Animated.timing(sparkleAnim, {
           toValue: 1,
-          duration: 400, // Réduit de 800 à 400
-          delay: 150, // Réduit de 300 à 150
+          duration: 200, // Réduit de 400 à 200
+          delay: 50, // Réduit de 150 à 50
           useNativeDriver: true
         })
       ]),
       
-      // Animation du logo améliorée
+      // Phase 2: Animation du logo (~0.5s)
       Animated.parallel([
         Animated.timing(logoOpacity, {
           toValue: 1,
-          duration: 400, // Réduit de 800 à 400
+          duration: 200, // Réduit de 400 à 200
           useNativeDriver: true,
         }),
         Animated.spring(logoScale, {
           toValue: 1,
-          friction: 4,
-          tension: 40,
+          friction: 5, // Augmenté pour mouvement plus rapide
+          tension: 60, // Augmenté pour mouvement plus rapide
           useNativeDriver: true,
         }),
       ]),
       
-      // Animation du titre et du slogan avec effet de glissement vers le haut
-      Animated.stagger(75, [ // Réduit de 150 à 75
+      // Phase 3: Animation du titre (~0.5s)
+      Animated.stagger(40, [ // Réduit de 75 à 40
         Animated.parallel([
           Animated.timing(titleOpacity, {
             toValue: 1,
-            duration: 250, // Réduit de 500 à 250
+            duration: 150, // Réduit de 250 à 150
             useNativeDriver: true,
           }),
           Animated.spring(titleTranslateY, {
             toValue: 0,
-            friction: 7,
-            tension: 40,
+            friction: 5, // Plus rapide
+            tension: 60, // Plus rapide
             useNativeDriver: true,
           }),
         ]),
         Animated.parallel([
           Animated.timing(progressBarOpacity, {
             toValue: 1,
-            duration: 200, // Réduit de 400 à 200
+            duration: 100, // Réduit de 200 à 100
             useNativeDriver: true,
           }),
           Animated.spring(sloganTranslateY, {
             toValue: 0,
-            friction: 7,
-            tension: 30,
+            friction: 5, // Plus rapide
+            tension: 60, // Plus rapide
             useNativeDriver: true,
           }),
         ]),
       ]),
       
-      // Animation finale - lancer juste après le compteur XP
+      // Phase 4: Barre de chargement (~1.5s - la plus longue)
       Animated.parallel([
         Animated.timing(loadingBarWidth, {
           toValue: screenWidth - 80,
-          duration: 1500, // Réduit de 3000 à 1500
+          duration: 1300, // Réduit de 1500 à 1300
           easing: Easing.out(Easing.quad),
           useNativeDriver: false
         }),
         // Compteur XP qui monte
         Animated.timing(xpCounterValue, {
           toValue: 1000,
-          duration: 1500, // Réduit de 3000 à 1500
+          duration: 1300, // Réduit de 1500 à 1300
           easing: Easing.out(Easing.quad),
           useNativeDriver: false
         })
       ]),
       
-      // Effet d'explosion à la fin du chargement
+      // Phase 5: Effet d'explosion (~0.5s)
       Animated.parallel([
         Animated.timing(explosionScale, {
           toValue: 2,
-          duration: 250, // Réduit de 500 à 250
+          duration: 180, // Réduit de 250 à 180
           easing: Easing.out(Easing.back),
           useNativeDriver: true
         }),
         Animated.sequence([
           Animated.timing(explosionOpacity, {
             toValue: 1,
-            duration: 100, // Réduit de 200 à 100
+            duration: 70, // Réduit de 100 à 70
             useNativeDriver: true
           }),
           Animated.timing(explosionOpacity, {
             toValue: 0,
-            duration: 150, // Réduit de 300 à 150
-            delay: 100, // Réduit de 200 à 100
+            duration: 100, // Réduit de 150 à 100
+            delay: 50, // Réduit de 100 à 50
             useNativeDriver: true
           })
         ])
       ]),
       
-      // Effet de rebond final plus prononcé pour effet gaming
+      // Phase 6: Animation finale du logo (~0.5s)
       Animated.spring(logoScale, {
         toValue: 1.3,
-        friction: 3, // Très peu de friction pour effet dramatique
-        tension: 50,
+        friction: 5, // Plus rapide
+        tension: 70, // Plus rapide
         useNativeDriver: true,
       }),
       
-      // Retour à la taille normale avec légère rotation inverse
+      // Phase 7: Retour à la normale (~0.5s)
       Animated.parallel([
         Animated.spring(logoScale, {
           toValue: 1,
-          friction: 4,
-          tension: 40,
+          friction: 5, // Plus rapide
+          tension: 60, // Plus rapide
           useNativeDriver: true,
         }),
         Animated.timing(logoRotate, {
           toValue: 0,
-          duration: 600,
+          duration: 300, // Réduit de 600 à 300
           easing: Easing.elastic(1),
           useNativeDriver: true,
         }),
@@ -373,7 +373,7 @@ export default function App() {
   };
 
   // Ajouter un useEffect pour détecter quand le chargement est terminé
-  // et lancer l'application automatiquement
+  // avec un délai plus court
   useEffect(() => {
     if (loadingComplete) {
       console.log("Chargement terminé, lancement automatique...");
@@ -381,24 +381,24 @@ export default function App() {
       // Feedback haptique pour indiquer la fin du chargement
       try {
         haptics.impactAsync('heavy');
-        setTimeout(() => haptics.notificationAsync('success'), 200);
+        setTimeout(() => haptics.notificationAsync('success'), 100); // Réduit de 200 à 100
       } catch (err) {
         console.warn('Haptics error:', err);
       }
       
-      // Attendre un court délai pour avoir une transition fluide
+      // Délai réduit avant transition
       const timer = setTimeout(() => {
-        // Transition avec animation de fondu
+        // Transition avec animation de fondu plus rapide
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 500,
+          duration: 300, // Réduit de 500 à 300
           useNativeDriver: true,
         }).start(() => {
           // Passer à l'application une fois l'animation terminée
           setSplashFinished(true);
           setIsLoading(false);
         });
-      }, 800); // Délai court pour apprécier l'animation finale
+      }, 400); // Réduit de 800 à 400
 
       return () => clearTimeout(timer);
     }
