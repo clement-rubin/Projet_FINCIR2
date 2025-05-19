@@ -260,11 +260,13 @@ export default function HomeScreen({ navigation }) {
       
       // Vérifier la réponse
       const result = await checkQuizAnswer(dailyQuiz.id, selectedAnswer);
-      setQuizResult(result);
-      
-      if (result.isCorrect) {        // Réponse correcte!
+      setQuizResult(result);      if (result.isCorrect) {        // Réponse correcte!
         // Vibration de succès
-        haptics.notificationAsync(haptics.NotificationFeedbackType.Success);
+        try {
+          haptics.notificationAsync('success');
+        } catch (err) {
+          console.warn('Haptics error:', err);
+        }
         
         // Animation de félicitation
         setQuizAnimation('correct');
@@ -272,11 +274,15 @@ export default function HomeScreen({ navigation }) {
         const newPoints = points + dailyQuiz.points;
         await storePoints(newPoints); // <-- Utilisez la fonction utilitaire standard
         setPoints(newPoints);
-        
-        // Ajouter les points à la catégorie "QUESTION DU JOUR"
-        await addCategoryPoints('QUESTION DU JOUR', dailyQuiz.points);
-        // Recalculer les points par catégorie pour mettre à jour l'affichage
-        await calculateCategoryPoints();
+          // Ajouter les points à la catégorie "QUESTION DU JOUR"
+        try {
+          await addCategoryPoints('QUESTION DU JOUR', dailyQuiz.points);
+          // Recalculer les points par catégorie pour mettre à jour l'affichage
+          await calculateCategoryPoints();
+        } catch (error) {
+          console.error("Erreur lors de l'ajout des points à la catégorie:", error);
+          // Continuer malgré l'erreur pour ne pas bloquer le processus
+        }
         
         // Recalculer le niveau
         const levelInfo = calculateLevel(newPoints);
@@ -309,10 +315,13 @@ export default function HomeScreen({ navigation }) {
           setSelectedAnswer(null);
           setQuizResult(null);
           loadNextQuizQuestion();
-        }, 1500);
-      } else {        // Réponse incorrecte
+        }, 1500);      } else {        // Réponse incorrecte
         // Vibration d'erreur
-        haptics.notificationAsync(haptics.NotificationFeedbackType.Error);
+        try {
+          haptics.notificationAsync('error');
+        } catch (err) {
+          console.warn('Haptics error:', err);
+        }
         
         // Animation d'échec
         setQuizAnimation('incorrect');
@@ -1072,12 +1081,16 @@ export default function HomeScreen({ navigation }) {
       const newPoints = currentPoints + dailyTask.points;
       await storePoints(newPoints); // <-- Utilisez la fonction utilitaire standard
       setPoints(newPoints);
-      
-      // Ajouter les points à la catégorie
+        // Ajouter les points à la catégorie
       if (dailyTask.category) {
-        await addCategoryPoints(dailyTask.category, dailyTask.points);
-        // Recalculer les points par catégorie pour mettre à jour l'affichage
-        await calculateCategoryPoints();
+        try {
+          await addCategoryPoints(dailyTask.category, dailyTask.points);
+          // Recalculer les points par catégorie pour mettre à jour l'affichage
+          await calculateCategoryPoints();
+        } catch (error) {
+          console.error("Erreur lors de l'ajout des points à la catégorie:", error);
+          // Continuer malgré l'erreur pour ne pas bloquer le processus de validation
+        }
       }
       
       // Recalculer le niveau
@@ -1750,7 +1763,11 @@ const CATEGORY_LABELS_FR = {
                                 ]}
                                 onPress={() => {
                                   setSelectedAnswer(answer);
-                                  haptics.impactAsync(haptics.ImpactFeedbackStyle.Light);
+                                  try {
+                                    haptics.impactAsync('light');
+                                  } catch (err) {
+                                    console.warn('Haptics error:', err);
+                                  }
                                 }}
                               >
                                 <Text 
