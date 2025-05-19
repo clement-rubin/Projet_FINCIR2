@@ -2736,32 +2736,32 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
-  pointsEarnedText: { { width: 0, height: 1 },
+  pointsEarnedText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#ffd700',
-    marginTop: 10,r: 'rgba(46, 204, 113, 0.2)',
+    marginTop: 10,
     textShadowColor: 'rgba(255, 215, 0, 0.6)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
-  }, 113, 0.4)',
+  },
   correctAnimation: {
     backgroundColor: 'rgba(46, 204, 113, 0.2)',
-    borderRadius: 12,'rgba(231, 76, 60, 0.2)',
+    borderRadius: 12,
     transform: [{scale: 1.02}],
-    borderWidth: 1,.02}],
+    borderWidth: 1,
     borderColor: 'rgba(46, 204, 113, 0.4)',
-  },borderColor: 'rgba(231, 76, 60, 0.4)',
+  },
   incorrectAnimation: {
     backgroundColor: 'rgba(231, 76, 60, 0.2)',
-    borderRadius: 12,olumn',
+    borderRadius: 12,
     transform: [{scale: 1.02}],
     borderWidth: 1,
     borderColor: 'rgba(231, 76, 60, 0.4)',
   },
-  quizCooldownContainer: {(231, 76, 60, 0.1)',
+  quizCooldownContainer: {
     alignItems: 'center',
-    paddingVertical: 20,31, 76, 60, 0.3)',
+    paddingVertical: 20,
   },
   cooldownIcon: {
     marginBottom: 20,
@@ -2793,35 +2793,333 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(231, 76, 60, 0.3)', 76, 60, 0.3)',
+    borderColor: 'rgba(231, 76, 60, 0.3)',
   },
   cooldownTimer: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#e74c3c',color: '#e74c3c',
+    color: '#e74c3c',
     fontVariant: ['tabular-nums'],
-    letterSpacing: 2,bular-nums'],
-  },: 2,
+    letterSpacing: 2,
+  },
   cooldownHintButton: {
     borderWidth: 1,
     borderColor: '#4e54c8',
     borderRadius: 20,
-    paddingHorizontal: 15,    borderRadius: 20,
-    paddingVertical: 8,    paddingHorizontal: 15,
-    backgroundColor: 'rgba(78, 84, 200, 0.1)',    paddingVertical: 8,
-  },    backgroundColor: 'rgba(78, 84, 200, 0.1)',
-  cooldownHintText: {  },
-    color: '#4e54c8',  cooldownHintText: {
-    fontSize: 14,    color: '#4e54c8',
-    fontWeight: '500',    fontSize: 14,
-  },    fontWeight: '500',
-  rewardOverlay: {  },
-    position: 'absolute',});
-    top: 0,    left: 0,    right: 0,    bottom: 0,    justifyContent: 'center',    alignItems: 'center',    zIndex: 10,  },  blurContainer: {    flex: 1,    width: '100%',    justifyContent: 'center',    alignItems: 'center',    backgroundColor: 'rgba(15, 17, 35, 0.7)',  },  rewardContainer: {    backgroundColor: '#1e2146',    borderRadius: 25,    padding: 25,    alignItems: 'center',    width: '80%',    shadowColor: '#000',    shadowOffset: { width: 0, height: 10 },    shadowOpacity: 0.5,    shadowRadius: 15,    elevation: 15,    borderWidth: 2,    borderColor: '#4e54c8',  },  starBurst: {    backgroundColor: 'rgba(255, 215, 0, 0.15)',    width: 85,    height: 85,    borderRadius: 42.5,    justifyContent: 'center',    alignItems: 'center',    marginBottom: 15,    borderWidth: 3,    borderColor: 'rgba(255, 215, 0, 0.5)',    shadowColor: '#ffd700',    shadowOffset: { width: 0, height: 0 },    shadowOpacity: 0.8,    shadowRadius: 12,    elevation: 8,  },  rewardTitle: {    fontSize: 26,    fontWeight: 'bold',    color: '#fff',    marginBottom: 10,    textShadowColor: 'rgba(255, 215, 0, 0.6)',    textShadowOffset: { width: 0, height: 2 },    textShadowRadius: 4,    textTransform: 'uppercase',    letterSpacing: 1,  },  rewardText: {    fontSize: 16,    color: '#a3d8f5',    textAlign: 'center',    marginBottom: 20,    lineHeight: 22,  },  pointsAwarded: {    flexDirection: 'row',    alignItems: 'center',    backgroundColor: 'rgba(255, 215, 0, 0.1)',    paddingHorizontal: 20,    paddingVertical: 12,    borderRadius: 20,    marginBottom: 25,    borderWidth: 1,    borderColor: 'rgba(255, 215, 0, 0.3)',  },  pointsAwardedText: {    marginLeft: 10,    fontSize: 20,    fontWeight: 'bold',    color: '#ffd700',    textShadowColor: 'rgba(255, 215, 0, 0.6)',    textShadowOffset: { width: 0, height: 1 },    textShadowRadius: 4,  },  rewardButton: {    backgroundColor: '#4e54c8',    paddingHorizontal: 30,    paddingVertical: 14,    borderRadius: 30,    shadowColor: '#4e54c8',    shadowOffset: { width: 0, height: 3 },    shadowOpacity: 0.6,    shadowRadius: 8,    elevation: 5,    borderWidth: 1,    borderColor: 'rgba(255,255,255,0.3)',  },  rewardButtonText: {    color: '#fff',    fontSize: 16,    fontWeight: 'bold',    textShadowColor: 'rgba(0, 0, 0, 0.5)',    textShadowOffset: { width: 0, height: 1 },    textShadowRadius: 2,  },});
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(78, 84, 200, 0.1)',
+  },
+  cooldownHintText: {
+    color: '#4e54c8',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  rewardOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  blurContainer: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(15, 17, 35, 0.7)',
+  },
+  rewardContainer: {
+    backgroundColor: '#1e2146',
+    borderRadius: 25,
+    padding: 25,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
+    elevation: 15,
+    borderWidth: 2,
+    borderColor: '#4e54c8',
+  },
+  starBurst: {
+    backgroundColor: 'rgba(255, 215, 0, 0.15)',
+    width: 85,
+    height: 85,
+    borderRadius: 42.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+    borderWidth: 3,
+    borderColor: 'rgba(255, 215, 0, 0.5)',
+    shadowColor: '#ffd700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  rewardTitle: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 10,
+    textShadowColor: 'rgba(255, 215, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  rewardText: {
+    fontSize: 16,
+    color: '#a3d8f5',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  pointsAwarded: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
+    marginBottom: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.3)',
+  },
+  pointsAwardedText: {
+    marginLeft: 10,
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ffd700',
+    textShadowColor: 'rgba(255, 215, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  rewardButton: {
+    backgroundColor: '#4e54c8',
+    paddingHorizontal: 30,
+    paddingVertical: 14,
+    borderRadius: 30,
+    shadowColor: '#4e54c8',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  rewardButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  // Add any missing styles for map modal and input components
+  mapModalContainer: {
+    flex: 1,
+    backgroundColor: '#151736',
+  },
+  mapModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#21254c',
+    borderBottomWidth: 1,
+    borderBottomColor: '#292b45',
+  },
+  mapModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  closeButton: {
+    padding: 5,
+  },
+  mapContentContainer: {
+    flex: 1,
+  },
+  newActivityDetails: {
+    padding: 15,
+    backgroundColor: '#21254c',
+    borderBottomWidth: 1,
+    borderBottomColor: '#292b45',
+  },
+  input: {
+    backgroundColor: '#272b52',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: '#4e54c8',
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
+  },
+  addActivityButton: {
+    backgroundColor: '#4e54c8',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    shadowColor: '#4e54c8',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  addActivityButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  map: {
+    flex: 1,
+  },
+  locationLoadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  locationIcon: {
+    marginBottom: 15,
+  },
+  locationText: {
+    fontSize: 16,
+    color: '#a3aed0',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  authLocationButton: {
+    backgroundColor: '#4e54c8',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#4e54c8',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  authLocationButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  pointModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 20,
+  },
+  pointModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 15,
+  },
+  pointModalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    width: '100%',
+  },
+  saveButton: {
+    backgroundColor: '#4e54c8',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    flex: 1,
+    marginRight: 5,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  navigateButton: {
+    backgroundColor: '#8e44ad',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    flex: 1,
+    marginLeft: 5,
+    alignItems: 'center',
+  },
+  navigateButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  challengeMarker: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#4e54c8',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  waitingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  waitingText: {
+    color: COLORS.white,
+    marginLeft: 5,
+    fontWeight: 'bold',
+  },
+});
+
 const getCategoryStyle = (category) => {
-  // ...existing code...
+  switch (category) {
+    case "FITNESS":
+      return { backgroundColor: "#e74c3c" };
+    case "CULTURE":
+      return { backgroundColor: "#9b59b6" };
+    case "WELLBEING":
+      return { backgroundColor: "#3498db" };
+    case "NUTRITION":
+      return { backgroundColor: "#2ecc71" };
+    case "CREATIVITY":
+      return { backgroundColor: "#f39c12" };
+    case "CUSTOM":
+      return { backgroundColor: "#1abc9c" };
+    default:
+      return { backgroundColor: "#4e54c8" };
+  }
 };
 
 const getCategoryIcon = (category) => {
-  // ...existing code...
+  switch (category) {
+    case "FITNESS":
+      return "fitness";
+    case "CULTURE":
+      return "book";
+    case "WELLBEING":
+      return "heart";
+    case "NUTRITION":
+      return "restaurant";
+    case "CREATIVITY":
+      return "brush";
+    case "CUSTOM":
+      return "star";
+    default:
+      return "flag";
+  }
 };
