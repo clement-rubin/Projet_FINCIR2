@@ -25,18 +25,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import * as Location from 'expo-location';
-import * as Haptics from 'expo-haptics';
+import haptics from '../utils/haptics';
 // Fix the MapView import to work with react-native-maps v1.18.0
 import MapView from 'react-native-maps';
 import { Marker } from 'react-native-maps';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { retrievePoints, retrieveDailyTasks, retrieveCompletedTasks, retrieveQuizTasks, checkQuizAnswer, retrieveTasks } from '../utils/storage';
+import { retrievePoints, retrieveDailyTasks, retrieveQuizTasks, checkQuizAnswer, retrieveTasks, storePoints } from '../utils/storage';
 import ProgressBar from '../components/ProgressBar';
 import Icon, { COLORS } from '../components/common/Icon';
 import { SCREEN, calculateLevel, generateUniqueId, CHALLENGE_TYPES } from '../utils/constants';
 import { addTaskToCalendar } from '../services/calendarService';
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = SCREEN;
 
 // Ajoutez cette fonction utilitaire pour obtenir le temps restant jusqu'à minuit
 const getTimeUntilMidnight = () => {
@@ -200,12 +200,15 @@ export default function HomeScreen({ navigation }) {
       }
       
       // Récupérer la question du jour
-      const quizTasks = await retrieveQuizTasks() || [];
+      const quizTasks = await (typeof retrieveQuizTasks === 'function' ? retrieveQuizTasks() : Promise.resolve([])) || [];
       if (quizTasks.length > 0) {
         setDailyQuiz(quizTasks[0]);
+      } else {
+        setDailyQuiz(null);
       }
     } catch (error) {
       console.error('Erreur lors du chargement du quiz quotidien:', error);
+      setDailyQuiz(null);
     }
   };
   
@@ -261,7 +264,7 @@ export default function HomeScreen({ navigation }) {
         
         // Mettre à jour les points
         const newPoints = points + dailyQuiz.points;
-        await AsyncStorage.setItem('@challengr_points_storage_key', newPoints.toString());
+        await storePoints(newPoints); // <-- Utilisez la fonction utilitaire standard
         setPoints(newPoints);
         
         // Recalculer le niveau
@@ -457,9 +460,10 @@ export default function HomeScreen({ navigation }) {
   // Charger les points et calculer le niveau
   const loadUserData = async () => {
     try {
+      // Correction : Ne jamais remettre à zéro les points ici !
       const userPoints = await retrievePoints() || 0;
       setPoints(userPoints);
-      
+
       // Utiliser la fonction de calcul de niveau centralisée
       const levelInfo = calculateLevel(userPoints);
       setLevel(levelInfo.level);
@@ -473,7 +477,13 @@ export default function HomeScreen({ navigation }) {
   // Charger un défi quotidien
   const loadDailyChallenge = async () => {
     try {
-      const dailyTasks = await retrieveDailyTasks() || [];
+      let dailyTasks = await retrieveDailyTasks() || [];
+      // Si aucun défi n'est trouvé, attendre la génération puis recharger
+      if (!dailyTasks || dailyTasks.length === 0) {
+        // Attendre un court instant pour laisser le temps à la génération asynchrone
+        await new Promise(res => setTimeout(res, 300));
+        dailyTasks = await retrieveDailyTasks() || [];
+      }
       if (dailyTasks.length > 0) {
         // Prendre le premier défi non complété, ou le premier défi s'ils sont tous complétés
         const task = dailyTasks.find(task => !task.completed) || dailyTasks[0];
@@ -1048,9 +1058,7 @@ export default function HomeScreen({ navigation }) {
       // Ajouter les points à l'utilisateur
       const currentPoints = await retrievePoints() || 0;
       const newPoints = currentPoints + dailyTask.points;
-      await AsyncStorage.setItem('@challengr_points_storage_key', newPoints.toString());
-      
-      // Mettre à jour les points dans l'interface utilisateur
+      await storePoints(newPoints); // <-- Utilisez la fonction utilitaire standard
       setPoints(newPoints);
       
       // Recalculer le niveau
@@ -1394,18 +1402,7 @@ const CATEGORY_LABELS_FR = {
                   <Text style={styles.tagline}>Relevez des défis, progressez, excellez !</Text>
                 </View>
                 
-                <View style={styles.levelBadgeContainer}>
-                  <Animated.View style={[
-                    styles.levelBadge,
-                    { transform: [{ scale: pulseAnim }] }
-                  ]}>
-                    <Text style={styles.levelBadgeText}>{level}</Text>
-                  </Animated.View>
-                  <View style={styles.userLevelInfo}>
-                    <Text style={styles.userLevelText}>NIVEAU {level}</Text>
-                    <Text style={styles.userPointsText}>{points} points</Text>
-                  </View>
-                </View>
+                {/* Level badge container removed */}
               </Animated.View>
             </LinearGradient>
           </ImageBackground>
@@ -1739,112 +1736,6 @@ const CATEGORY_LABELS_FR = {
               </View>
             )}
 
-            {/* Actions rapides */}
-            <Text style={styles.sectionTitle}>Actions rapides</Text>
-            <Animated.View style={[
-              styles.buttonsContainer, 
-              { 
-                opacity: actionButtonsOpacity, 
-                transform: [{ translateY: actionButtonsAnim }] 
-              }
-            ]}>
-              {/* Bouton Mes Défis */}
-              <TouchableOpacity 
-                style={styles.actionButton} 
-                onPress={() => navigation.navigate('Tasks')}
-                activeOpacity={0.9}
-              >
-                <LinearGradient
-                  colors={['#3498db', '#2980b9']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
-                >
-                  <View style={styles.actionContent}>
-                    <View style={styles.actionIconContainer}>
-                      <Icon name="list" size={22} color={COLORS.white} style={styles.buttonIcon} />
-                    </View>
-                    <Text style={styles.buttonText}>Mes Défis</Text>
-                  </View>
-                  <View style={styles.arrowContainer}>
-                    <Icon name="chevron-forward" size={22} color={COLORS.white} />
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-
-              {/* Bouton Mon Profil */}
-              <TouchableOpacity 
-                style={styles.actionButton} 
-                onPress={() => navigation.navigate('Profile')}
-                activeOpacity={0.9}
-              >
-                <LinearGradient
-                  colors={['#9b59b6', '#8e44ad']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
-                >
-                  <View style={styles.actionContent}>
-                    <View style={styles.actionIconContainer}>
-                      <Icon name="person" size={22} color={COLORS.white} style={styles.buttonIcon} />
-                    </View>
-                    <Text style={styles.buttonText}>Mon Profil</Text>
-                  </View>
-                  <View style={styles.arrowContainer}>
-                    <Icon name="chevron-forward" size={22} color={COLORS.white} />
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-              
-              {/* Bouton Mes Amis */}
-              <TouchableOpacity 
-                style={styles.actionButton} 
-                onPress={() => navigation.navigate('Friends')}
-                activeOpacity={0.9}
-              >
-                <LinearGradient
-                  colors={['#2ecc71', '#27ae60']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
-                >
-                  <View style={styles.actionContent}>
-                    <View style={styles.actionIconContainer}>
-                      <Icon name="people" size={22} color={COLORS.white} style={styles.buttonIcon} />
-                    </View>
-                    <Text style={styles.buttonText}>Mes Amis</Text>
-                  </View>
-                  <View style={styles.arrowContainer}>
-                    <Icon name="chevron-forward" size={22} color={COLORS.white} />
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-              
-              {/* Bouton Défis Autour de Moi */}
-              <TouchableOpacity 
-                style={styles.actionButton} 
-                onPress={handleOpenMapModal}
-                activeOpacity={0.9}
-              >
-                <LinearGradient
-                  colors={['#e74c3c', '#c0392b']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
-                >
-                  <View style={styles.actionContent}>
-                    <View style={styles.actionIconContainer}>
-                      <Icon name="map" size={22} color={COLORS.white} style={styles.buttonIcon} />
-                    </View>
-                    <Text style={styles.buttonText}>Défis Autour de Moi</Text>
-                  </View>
-                  <View style={styles.arrowContainer}>
-                    <Icon name="chevron-forward" size={22} color={COLORS.white} />
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-            </Animated.View>
-
             {/* Section d'inspiration quotidienne */}
             <View style={styles.inspirationSection}>
               <View style={styles.quoteContainer}>
@@ -2010,7 +1901,7 @@ const CATEGORY_LABELS_FR = {
               {locationPermissionStatus !== 'granted' && (
                 <TouchableOpacity
                   style={styles.authLocationButton}
-                  onPress={requestLocationPermission}
+                  onPress={ requestLocationPermission}
                 >
                   <Text style={styles.authLocationButtonText}>Autoriser la localisation</Text>
                 </TouchableOpacity>
@@ -2026,7 +1917,6 @@ const CATEGORY_LABELS_FR = {
           visible={!!selectedPoint}
           animationType="slide"
           transparent={true}
-          onRequestClose={() => setSelectedPoint(null)}
         >
           <View style={styles.pointModalContainer}>
             <Text style={styles.pointModalTitle}>Modifier le point</Text>
@@ -2128,6 +2018,9 @@ const CATEGORY_LABELS_FR = {
           </View>
         </View>
       </Modal>
+
+      {/* Ajustons l'espace blanc en bas pour éviter que le contenu ne soit masqué par la nouvelle barre de navigation */}
+      <View style={{ height: 90 }} />
     </SafeAreaView>
   );
 }
@@ -2135,7 +2028,7 @@ const CATEGORY_LABELS_FR = {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.primary, // Utilisation de la couleur primaire pour correspondre au dégradé de l'en-tête
+    backgroundColor: COLORS.primary,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   container: {
@@ -2143,7 +2036,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f6fa',
   },
   headerContainer: {
-    height: 280,
+    height: 220, // Hauteur réduite pour éviter le débordement
     width: '100%',
     overflow: 'hidden',
   },
@@ -2157,7 +2050,7 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? 40 : 20,
+    paddingTop: Platform.OS === 'android' ? 60 : 40, // Plus d'espace en haut
     paddingHorizontal: 20,
     justifyContent: 'center',
   },
@@ -2232,19 +2125,25 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    marginTop: -30,
+    marginTop: -40, // Fait chevaucher la carte blanche sur la partie bleue
     paddingHorizontal: 15,
     paddingBottom: 30,
   },
   contentCard: {
     backgroundColor: COLORS.white,
-    borderRadius: 25,
+    borderTopLeftRadius: 30, // Arrondi plus marqué pour l'effet carte
+    borderTopRightRadius: 30,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
     padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
+    // Ajoute une bordure pour bien séparer la carte du fond bleu
+    borderWidth: 1,
+    borderColor: '#e6e9ed',
   },
   statsContainer: {
     flexDirection: 'row',
@@ -2514,58 +2413,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.dark,
   },
-  buttonsContainer: {
-    marginBottom: 25,
-    gap: 12,
-  },
-  actionButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: COLORS.black,
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  buttonGradient: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  actionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  actionIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
-  },
-  arrowContainer: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontSize: 17,
-    color: COLORS.white,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
   inspirationSection: {
     backgroundColor: '#f9fafc',
     borderRadius: 20,
     padding: 20,
+    marginTop: 20, // Augmenter la marge supérieure puisque les actions rapides sont supprimées
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#f0f3f8',
   },
   quoteContainer: {
     flexDirection: 'row',

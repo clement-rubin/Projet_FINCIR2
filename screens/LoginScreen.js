@@ -1,29 +1,11 @@
 import React, { useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
-  KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Animated,
-  ActivityIndicator,
-  Alert,
-  Image,
-  ScrollView,
-  Platform
-} from 'react-native';
-import * as ReactNative from 'react-native';
+import { StyleSheet, Platform, StatusBar, SafeAreaView, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Animated, ActivityIndicator, Alert, Image, ScrollView, Text, View, TextInput, TouchableOpacity } from 'react-native';
+import { SCREEN } from '../utils/constants';
 import Icon, { COLORS } from '../components/common/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { loginUser, registerUser } from '../services/authService';
-import { SCREEN } from '../utils/constants';
 
-const LoginScreen = ({ onLoginSuccess }) => {
+const LoginScreen = ({ onLoginSuccess, onGuestLogin }) => {
   // États du formulaire
   const [isLogin, setIsLogin] = useState(true); // true pour connexion, false pour inscription
   const [username, setUsername] = useState('');
@@ -439,6 +421,17 @@ const LoginScreen = ({ onLoginSuccess }) => {
             </Animated.View>
           </ScrollView>
         </TouchableWithoutFeedback>
+        {/* Bouton mode invité en bas à droite */}
+        {onGuestLogin && (
+          <TouchableOpacity
+            style={styles.guestButton}
+            onPress={onGuestLogin}
+            activeOpacity={0.8}
+          >
+            <Icon name="person-circle-outline" size={28} color={COLORS.primary} />
+            <Text style={styles.guestButtonText}>Mode invité</Text>
+          </TouchableOpacity>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -594,6 +587,28 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
     marginLeft: 5,
+  },
+  guestButton: {
+    position: 'absolute',
+    right: 24,
+    bottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderRadius: 22,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  guestButtonText: {
+    color: COLORS.primary,
+    fontWeight: 'bold',
+    fontSize: 15,
+    marginLeft: 8,
   },
 });
 

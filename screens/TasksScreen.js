@@ -20,7 +20,6 @@ import {
   Switch,
   Platform
 } from 'react-native';
-import * as ReactNative from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Task from '../components/Task';
 import Icon, { COLORS } from '../components/common/Icon';
@@ -44,7 +43,8 @@ import {
   CHALLENGE_CATEGORIES,
   calculateLevel,
   DIFFICULTY_LEVELS,
-  generateUniqueId 
+  generateUniqueId,
+  SCREEN 
 } from '../utils/constants';
 import { 
   requestCalendarPermissions, 
@@ -657,14 +657,12 @@ const TasksScreen = ({ navigation }) => {
   const [timedTasks, setTimedTasks] = useState([]);
   const [streak, setStreak] = useState({ count: 0, lastCompletionDate: null });
   const [points, setPoints] = useState(0);
-  const [level, setLevel] = useState(1);
-  const [filteredTasks, setFilteredTasks] = useState([]);
+  const [level, setLevel] = useState(1);  const [filteredTasks, setFilteredTasks] = useState([]);
   const [filter, setFilter] = useState('all');
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [difficulty, setDifficulty] = useState('MEDIUM');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [showAddTask, setShowAddTask] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('');  const [showAddTask, setShowAddTask] = useState(false);
   const [showLevelInfo, setShowLevelInfo] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -672,6 +670,9 @@ const TasksScreen = ({ navigation }) => {
   const [calendarPermissionRequested, setCalendarPermissionRequested] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [addDueDate, setAddDueDate] = useState(false);
+  const [dueDate, setDueDate] = useState(new Date(new Date().setDate(new Date().getDate() + 7))); // Par défaut dans 7 jours
+  const [showDueDatePicker, setShowDueDatePicker] = useState(false);
   
   // État pour organiser les défis en sections
   const [taskSections, setTaskSections] = useState([]);
@@ -689,10 +690,10 @@ const TasksScreen = ({ navigation }) => {
   const slideAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
-
   const [filterAnims] = useState({
     all: new Animated.Value(filter === 'all' ? 1 : 0.7),
-    active: new Animated.Value(filter === 'active' ? 1 : 0.7),
+    daily: new Animated.Value(filter === 'daily' ? 1 : 0.7),
+    custom: new Animated.Value(filter === 'custom' ? 1 : 0.7),
     completed: new Animated.Value(filter === 'completed' ? 1 : 0.7)
   });
 
@@ -711,30 +712,40 @@ const TasksScreen = ({ navigation }) => {
     }
   };
 
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
     // Demander les permissions de calendrier au démarrage
     if (!calendarPermissionRequested) {
       requestCalendarPermissions();
       setCalendarPermissionRequested(true);
     }
-    
     // Charger les données
     loadUserData();
     loadTaskRatings();
-    
+
     // Configurer l'écouteur de focus pour recharger les données quand on revient sur cet écran
     const unsubscribe = navigation.addListener('focus', () => {
-      // Recharger les données à chaque fois que l'écran retrouve le focus
       loadUserData();
       loadTaskRatings();
+      // Réappliquer le filtre actuel à chaque focus
+      applyFilter(filter);
     });
-    
-    // Nettoyer les écouteurs quand le composant est démonté
+
     return () => {
       unsubscribe();
     };
   }, [navigation]);
-  
+
+  // Appliquer le filtre "all" après le premier chargement des données
+  useEffect(() => {
+    if (isFirstRender.current && !isLoading) {
+      applyFilter('all');
+      isFirstRender.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading]);
+
   // Effet séparé pour les animations afin d'éviter les mises à jour pendant le rendu initial
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -798,7 +809,6 @@ const TasksScreen = ({ navigation }) => {
       setIsLoading(false);
     }
   };
-  
   // Organiser les défis en sections pour l'affichage
   const organizeTasks = (regularTasks, dailyTasks, timedTasks) => {
     const sections = [];
@@ -814,22 +824,23 @@ const TasksScreen = ({ navigation }) => {
     
     // Fonction pour filtrer les défis selon le filtre actif
     const filterTask = (task) => {
+      if (filter === 'all') return true;
+      if (filter === 'daily') return task.type === CHALLENGE_TYPES.DAILY;
+      if (filter === 'custom') return task.type !== CHALLENGE_TYPES.DAILY && !task.completed;
       if (filter === 'completed') return task.completed;
-      if (filter === 'active') return !task.completed;
-      return true; // 'all' montre tous les défis
+      return true;
     };
-    
-    // Section pour les défis quotidiens
+      // Section pour les défis quotidiens
     const filteredDailyTasks = dailyTasks.filter(filterTask);
     if (filteredDailyTasks.length > 0) {
       sections.push({
-        title: "📅 Défis quotidiens",
+        title: "📅 Quotidien",
         data: filteredDailyTasks,
-        info: "Ces défis se renouvellent chaque jour. Complétez-les pour maintenir votre série!"
+        info: "Ces défis sont générés automatiquement chaque jour. Complétez-les pour maintenir votre série!"
       });
     }
     
-    // Section pour les défis temporaires
+    // Section pour les défis temporaires - seulement affichés dans "Tous" ou dans "En cours" s'ils ne sont pas complétés
     const filteredTimedTasks = timedTasks.filter(filterTask);
     if (filteredTimedTasks.length > 0) {
       sections.push({
@@ -839,7 +850,7 @@ const TasksScreen = ({ navigation }) => {
       });
     }
     
-    // Section pour les défis standards
+    // Section pour les défis standards créés par l'utilisateur
     const filteredRegularTasks = regularTasks.filter(filterTask);
     if (filteredRegularTasks.length > 0) {
       // Si on est dans le filtre "completed", on montre tous les défis complétés dans une seule section
@@ -849,13 +860,14 @@ const TasksScreen = ({ navigation }) => {
           data: filteredRegularTasks,
           info: "Historique de tous vos défis complétés"
         });
-      } else {
-        // Sinon, on sépare les défis actifs et complétés
+      } else if (filter === 'custom' || filter === 'all') {
+        // Sinon, on sépare les défis actifs 
         const activeRegularTasks = filteredRegularTasks.filter(task => !task.completed);
         if (activeRegularTasks.length > 0) {
           sections.push({
-            title: "📝 Mes défis en cours",
-            data: activeRegularTasks
+            title: "📝 En cours",
+            data: activeRegularTasks,
+            info: "Défis que vous avez créés vous-même. Ajoutez-en d'autres avec le bouton '+'"
           });
         }
       }
@@ -863,20 +875,25 @@ const TasksScreen = ({ navigation }) => {
     
     setTaskSections(sections);
   };
-  
-  const applyFilter = (filterType, tasksList = tasks) => {
+    const applyFilter = (filterType, tasksList = tasks) => {
     setFilter(filterType);
     
     // Récupérer toutes les tâches
     const allTasksArray = [...dailyTasks, ...timedTasks, ...tasks];
     
-    // Mettre à jour les tâches filtrées pour l'affichage
+    // Mettre à jour les tâches filtrées pour l'affichage selon le nouveau système de filtrage
     let filtered;
     if (filterType === 'all') {
+      // "Tous" montre tous les défis
       filtered = allTasksArray;
-    } else if (filterType === 'active') {
-      filtered = allTasksArray.filter(task => !task.completed);
+    } else if (filterType === 'daily') {
+      // "Quotidien" montre uniquement les défis quotidiens
+      filtered = dailyTasks;
+    } else if (filterType === 'custom') {
+      // "En cours" montre uniquement les défis créés par l'utilisateur non complétés
+      filtered = tasks.filter(task => !task.completed);
     } else if (filterType === 'completed') {
+      // "Complétés" montre tous les défis complétés
       filtered = allTasksArray.filter(task => task.completed);
     }
     
@@ -884,8 +901,7 @@ const TasksScreen = ({ navigation }) => {
     
     // Mettre à jour les sections avec le nouveau filtre
     const sections = [];
-    
-    // Section pour les séries si l'utilisateur a une série en cours
+      // Section pour les séries si l'utilisateur a une série en cours
     if (streak.count > 0) {
       sections.push({
         title: `🔥 Série de ${streak.count} jour${streak.count > 1 ? 's' : ''}`,
@@ -893,47 +909,49 @@ const TasksScreen = ({ navigation }) => {
         info: `Maintenez votre série en complétant au moins un défi chaque jour. Votre dernière activité: ${new Date(streak.lastCompletionDate).toLocaleDateString()}`
       });
     }
-
+    
     // Filtrer les défis selon le type et le filtre actuel
     const filterByType = (tasks, type) => {
       if (filterType === 'all') return tasks;
-      return tasks.filter(task => filterType === 'completed' ? task.completed : !task.completed);
+      if (filterType === 'daily') return type === 'daily' ? tasks : [];
+      if (filterType === 'custom') return type === 'custom' ? tasks.filter(task => !task.completed) : [];
+      if (filterType === 'completed') return tasks.filter(task => task.completed);
+      return [];
     };
 
     // Section pour les défis quotidiens
-    const filteredDailyTasks = filterByType(dailyTasks);
+    const filteredDailyTasks = filterByType(dailyTasks, 'daily');
     if (filteredDailyTasks.length > 0) {
       sections.push({
-        title: "📅 Défis quotidiens",
+        title: "📅 Quotidien",
         data: filteredDailyTasks,
-        info: "Ces défis se renouvellent chaque jour. Complétez-les pour maintenir votre série!"
+        info: "Ces défis sont générés automatiquement chaque jour. Complétez-les pour maintenir votre série!"
       });
     }
 
     // Section pour les défis temporaires
-    const filteredTimedTasks = filterByType(timedTasks);
+    const filteredTimedTasks = filterByType(timedTasks, 'timed');
     if (filteredTimedTasks.length > 0) {
       sections.push({
         title: "⏱️ Défis à durée limitée",
         data: filteredTimedTasks,
         info: "Attention! Ces défis expirent bientôt. Relevez-les avant qu'il ne soit trop tard."
       });
-    }
-
-    // Section pour les défis standards
-    const filteredRegularTasks = filterByType(tasks);
+    }    // Section pour les défis standards
+    const filteredRegularTasks = filterByType(tasks, 'custom');
     if (filteredRegularTasks.length > 0) {
       const activeRegularTasks = filteredRegularTasks.filter(task => !task.completed);
       const completedRegularTasks = filteredRegularTasks.filter(task => task.completed);
-
-      if (filterType !== 'completed' && activeRegularTasks.length > 0) {
+      
+      if ((filterType === 'all' || filterType === 'custom') && activeRegularTasks.length > 0) {
         sections.push({
-          title: "📝 Mes défis en cours",
-          data: activeRegularTasks
+          title: "📝 En cours",
+          data: activeRegularTasks,
+          info: "Défis que vous avez créés vous-même. Ajoutez-en d'autres avec le bouton '+'"
         });
       }
 
-      if (filterType !== 'active' && completedRegularTasks.length > 0) {
+      if ((filterType === 'all' || filterType === 'completed') && completedRegularTasks.length > 0) {
         sections.push({
           title: "✅ Défis complétés",
           data: completedRegularTasks
@@ -1146,38 +1164,47 @@ const TasksScreen = ({ navigation }) => {
     }
     
     const difficultyInfo = DIFFICULTY_LEVELS[difficulty];
-    
-    const newTask = {
+      const newTask = {
       title: newTaskTitle.trim(),
       description: newTaskDescription.trim() || 'Aucune description',
       points: difficultyInfo.points,
       difficulty: difficulty,
       difficultyLabel: difficultyInfo.name,
       category: selectedCategory,
+      dueDate: addDueDate ? dueDate.toISOString() : null, // Ajouter la date d'échéance si activée
     };
     
     try {
       // Créer le défi dans la base de données
       const createdTask = await createTask(newTask);
-      
+
       if (!createdTask) {
         throw new Error("Échec de la création du défi");
       }
 
       // Ajouter au calendrier uniquement si l'option est activée
       if (addToCalendar) {
-        const eventId = await addTaskToCalendar(createdTask, selectedDate);
-        if (eventId) {
-          // Mettre à jour le défi avec l'ID de l'événement calendrier
-          const updatedTasks = tasks.map(task => 
-            task.id === createdTask.id 
-              ? { ...task, calendarEventId: eventId } 
-              : task
+        // Demander la permission ici, juste avant d'ajouter au calendrier
+        const hasPermission = await requestCalendarPermissions();
+        if (hasPermission) {
+          const eventId = await addTaskToCalendar(createdTask, selectedDate);
+          if (eventId) {
+            // Mettre à jour le défi avec l'ID de l'événement calendrier
+            const updatedTasks = tasks.map(task => 
+              task.id === createdTask.id 
+                ? { ...task, calendarEventId: eventId } 
+                : task
+            );
+            setTasks(updatedTasks);
+            
+            // Sauvegarder la mise à jour dans AsyncStorage
+            await saveTasks(updatedTasks);
+          }
+        } else {
+          Alert.alert(
+            "Permission requise",
+            "Vous devez autoriser l'accès au calendrier pour ajouter ce défi à votre agenda."
           );
-          setTasks(updatedTasks);
-          
-          // Sauvegarder la mise à jour dans AsyncStorage
-          await saveTasks(updatedTasks);
         }
       }
       
@@ -1200,18 +1227,31 @@ const TasksScreen = ({ navigation }) => {
       
       // Fermer le formulaire
       toggleAddTaskForm();
+        // Confirmation
+      let messageConfirmation = "Votre nouveau défi a été ajouté avec succès";
       
-      // Confirmation
-      Alert.alert(
-        "Défi créé !", 
-        addToCalendar ? 
-          `Votre nouveau défi a été ajouté avec succès et planifié dans votre calendrier pour le ${selectedDate.toLocaleDateString('fr-FR', {
-            weekday: 'long', 
-            day: 'numeric', 
-            month: 'long'
-          })}.` :
-          "Votre nouveau défi a été ajouté avec succès."
-      );
+      // Ajouter l'info du calendrier si activée
+      if (addToCalendar) {
+        messageConfirmation += ` et planifié dans votre calendrier pour le ${selectedDate.toLocaleDateString('fr-FR', {
+          weekday: 'long', 
+          day: 'numeric', 
+          month: 'long'
+        })}`;
+      }
+      
+      // Ajouter l'info de la date d'échéance si activée
+      if (addDueDate) {
+        messageConfirmation += `. Il devra être complété avant le ${dueDate.toLocaleDateString('fr-FR', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        })}`;
+      }
+      
+      messageConfirmation += ".";
+      
+      Alert.alert("Défi créé !", messageConfirmation);
     } catch (error) {
       console.error("Error adding task:", error);
       Alert.alert("Erreur", "Impossible d'ajouter ce défi");
@@ -1425,8 +1465,7 @@ const TasksScreen = ({ navigation }) => {
     for (let i = 0; i < sectionIndex; i++) {
       globalIndex += taskSections[i].data.length;
     }
-    
-    return (
+      return (
       <Task
         title={item.title}
         description={item.description}
@@ -1437,6 +1476,8 @@ const TasksScreen = ({ navigation }) => {
         type={item.type}
         category={item.category}
         expiresAt={item.expiresAt}
+        dueDate={item.dueDate}
+        completedAt={item.completedAt}
         streak={streak?.count}
         onComplete={() => handleCompleteTask(item.id)}
         onDelete={() => handleDeleteTask(item.id)}
@@ -1774,6 +1815,171 @@ const TasksScreen = ({ navigation }) => {
                     )}
                   </View>
                   
+                  {/* Option d'ajout d'une date d'échéance maximale */}
+                  <View style={styles.calendarOptionContainer}>
+                    <Text style={styles.difficultyLabel}>Date d'échéance:</Text>
+                    <View style={styles.calendarOptionRow}>
+                      <Text style={styles.calendarOptionText}>
+                        Définir une date limite pour ce défi
+                      </Text>
+                      <Switch
+                        value={addDueDate}
+                        onValueChange={setAddDueDate}
+                        trackColor={{ false: "#d1d8e0", true: `${COLORS.secondary}80` }}
+                        thumbColor={addDueDate ? COLORS.secondary : "#f4f3f4"}
+                      />
+                    </View>
+                    
+                    {/* Date picker visible seulement si addDueDate est activé */}
+                    {addDueDate && (
+                      <View style={styles.datePickerContainer}>
+                        <Text style={styles.datePickerLabel}>Date limite de réalisation :</Text>
+                        <TouchableOpacity 
+                          style={styles.datePickerButton}
+                          onPress={() => setShowDueDatePicker(true)}
+                        >
+                          <Icon name="calendar" size={20} color="#3498db" style={styles.datePickerIcon} />
+                          <Text style={styles.datePickerText}>
+                            {dueDate.toLocaleDateString('fr-FR', {
+                              weekday: 'long',
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </Text>
+                          <Icon name="chevron-down" size={18} color={COLORS.textSecondary} />
+                        </TouchableOpacity>
+                        
+                        {/* Date Picker modal pour une meilleure expérience utilisateur */}
+                        {showDueDatePicker && (
+                          <View style={styles.datePickerModalContainer}>
+                            <View style={styles.datePickerHeader}>
+                              <Text style={styles.datePickerTitle}>Choisir une date d'échéance</Text>
+                              <TouchableOpacity onPress={() => setShowDueDatePicker(false)}>
+                                <Icon name="close" size={24} color={COLORS.textSecondary} />
+                              </TouchableOpacity>
+                            </View>
+                            <View style={styles.datePickerContent}>
+                              {Platform.OS === 'android' ? (
+                                <DateTimePicker
+                                  testID="dueDateTimePicker"
+                                  value={dueDate}
+                                  mode="date"
+                                  is24Hour={true}
+                                  display="calendar"
+                                  onChange={(event, date) => {
+                                    setShowDueDatePicker(false);
+                                    if (date) setDueDate(date);
+                                  }}
+                                  minimumDate={new Date()}
+                                />
+                              ) : (
+                                <View style={styles.simpleDatePicker}>
+                                  {/* Options de date rapides */}
+                                  <View style={styles.quickDateOptions}>
+                                    <TouchableOpacity
+                                      style={styles.quickDateButton}
+                                      onPress={() => {
+                                        const nextWeek = new Date();
+                                        nextWeek.setDate(nextWeek.getDate() + 7);
+                                        setDueDate(nextWeek);
+                                        setShowDueDatePicker(false);
+                                      }}
+                                    >
+                                      <Text style={styles.quickDateButtonText}>Dans 1 semaine</Text>
+                                    </TouchableOpacity>
+                                    
+                                    <TouchableOpacity
+                                      style={styles.quickDateButton}
+                                      onPress={() => {
+                                        const twoWeeks = new Date();
+                                        twoWeeks.setDate(twoWeeks.getDate() + 14);
+                                        setDueDate(twoWeeks);
+                                        setShowDueDatePicker(false);
+                                      }}
+                                    >
+                                      <Text style={styles.quickDateButtonText}>Dans 2 semaines</Text>
+                                    </TouchableOpacity>
+                                    
+                                    <TouchableOpacity
+                                      style={styles.quickDateButton}
+                                      onPress={() => {
+                                        const oneMonth = new Date();
+                                        oneMonth.setMonth(oneMonth.getMonth() + 1);
+                                        setDueDate(oneMonth);
+                                        setShowDueDatePicker(false);
+                                      }}
+                                    >
+                                      <Text style={styles.quickDateButtonText}>Dans 1 mois</Text>
+                                    </TouchableOpacity>
+                                  </View>
+                                  
+                                  {/* Sélecteur manuel (simple) */}
+                                  <View style={styles.manualDatePicker}>
+                                    <View style={styles.dateInputRow}>
+                                      <Text style={styles.dateInputLabel}>Jour:</Text>
+                                      <TextInput
+                                        style={styles.dateInput}
+                                        value={dueDate.getDate().toString()}
+                                        keyboardType="number-pad"
+                                        maxLength={2}
+                                        onChangeText={(text) => {
+                                          const day = parseInt(text) || 1;
+                                          const newDate = new Date(dueDate);
+                                          newDate.setDate(day);
+                                          setDueDate(newDate);
+                                        }}
+                                      />
+                                    </View>
+                                    
+                                    <View style={styles.dateInputRow}>
+                                      <Text style={styles.dateInputLabel}>Mois:</Text>
+                                      <TextInput
+                                        style={styles.dateInput}
+                                        value={(dueDate.getMonth() + 1).toString()}
+                                        keyboardType="number-pad"
+                                        maxLength={2}
+                                        onChangeText={(text) => {
+                                          const month = parseInt(text) || 1;
+                                          const newDate = new Date(dueDate);
+                                          newDate.setMonth(month - 1);
+                                          setDueDate(newDate);
+                                        }}
+                                      />
+                                    </View>
+                                    
+                                    <View style={styles.dateInputRow}>
+                                      <Text style={styles.dateInputLabel}>Année:</Text>
+                                      <TextInput
+                                        style={styles.dateInput}
+                                        value={dueDate.getFullYear().toString()}
+                                        keyboardType="number-pad"
+                                        maxLength={4}
+                                        onChangeText={(text) => {
+                                          const year = parseInt(text) || 2025;
+                                          const newDate = new Date(dueDate);
+                                          newDate.setFullYear(year);
+                                          setDueDate(newDate);
+                                        }}
+                                      />
+                                    </View>
+                                  </View>
+                                  
+                                  <TouchableOpacity
+                                    style={styles.confirmDateButton}
+                                    onPress={() => setShowDueDatePicker(false)}
+                                  >
+                                    <Text style={styles.confirmDateButtonText}>Confirmer</Text>
+                                  </TouchableOpacity>
+                                </View>
+                              )}
+                            </View>
+                          </View>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                  
                   <TouchableOpacity
                     style={styles.submitButton}
                     onPress={handleAddTask}
@@ -1786,14 +1992,14 @@ const TasksScreen = ({ navigation }) => {
           </>
         )}
         
-        <View style={styles.filterContainer}>
-          <ScrollView 
+        <View style={styles.filterContainer}>          <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false} 
             contentContainerStyle={styles.filterButtons}
           >
             {renderFilterButton('all', 'apps', 'Tous')}
-            {renderFilterButton('active', 'time', 'En cours')}
+            {renderFilterButton('daily', 'calendar', 'Quotidien')}
+            {renderFilterButton('custom', 'time', 'En cours')}
             {renderFilterButton('completed', 'checkmark-circle', 'Complétés')}
           </ScrollView>
         </View>
@@ -1802,13 +2008,14 @@ const TasksScreen = ({ navigation }) => {
           <View style={styles.emptyContainer}>
             <Animated.View style={{opacity: opacityAnim}}>
               <Icon name="list" size={60} color="#d1d8e0" />
-              <Text style={styles.emptyText}>Aucun défi {filter !== 'all' ? 'dans cette catégorie' : ''}</Text>
-              <Text style={styles.emptySubText}>
+              <Text style={styles.emptyText}>Aucun défi {filter !== 'all' ? 'dans cette catégorie' : ''}</Text>              <Text style={styles.emptySubText}>
                 {filter === 'all' 
                   ? 'Créez votre premier défi en appuyant sur "+ Nouveau défi"'
-                  : filter === 'active'
-                    ? 'Vous avez complété tous vos défis !'
-                    : 'Complétez des défis pour les voir ici'
+                  : filter === 'custom'
+                    ? 'Créez votre premier défi personnel en appuyant sur "+ Nouveau défi"'
+                    : filter === 'daily'
+                      ? 'Aucun défi quotidien disponible pour le moment'
+                      : 'Complétez des défis pour les voir ici'
                 }
               </Text>
               
@@ -1838,6 +2045,9 @@ const TasksScreen = ({ navigation }) => {
           onClose={() => setShowLevelUpAnimation(false)}
         />
       </View>
+      
+      {/* Espace blanc ajouté en bas de la page des défis */}
+      <View style={{ height: 40 }} />
     </SafeAreaView>
   );
 };

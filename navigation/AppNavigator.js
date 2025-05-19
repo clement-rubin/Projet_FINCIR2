@@ -165,7 +165,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
   );
 }
 
-function TabNavigator() {
+function TabNavigator({ isGuest, onLogout }) {
   return (
     <Tab.Navigator
       tabBar={props => <CustomTabBar {...props} />}
@@ -187,13 +187,14 @@ function TabNavigator() {
       />
       <Tab.Screen 
         name="Profile" 
-        component={ProfileScreen} 
+        // Passer onLogout et isGuest à ProfileScreen
+        children={props => <ProfileScreen {...props} isGuest={isGuest} onLogout={onLogout} />}
       />
     </Tab.Navigator>
   );
 }
 
-export default function AppNavigator() {
+export default function AppNavigator({ isGuest = false, onLogout }) {
   return (
     <NavigationContainer>
       <Stack.Navigator
@@ -234,7 +235,8 @@ export default function AppNavigator() {
       >
         <Stack.Screen 
           name="Main" 
-          component={TabNavigator} 
+          // Passer isGuest et onLogout au TabNavigator
+          children={props => <TabNavigator {...props} isGuest={isGuest} onLogout={onLogout} />}
           options={{
             cardStyle: { backgroundColor: 'transparent' },
           }}

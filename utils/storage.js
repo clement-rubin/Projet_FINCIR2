@@ -98,6 +98,8 @@ export const createTask = async (task) => {
       type: CHALLENGE_TYPES.REGULAR,
       completed: false,
       createdAt: new Date().toISOString(),
+      dueDate: task.dueDate || null, // Date d'échéance pour les défis personnels
+      completedAt: null, // Date à laquelle le défi a été validé
       calendarEventId: null  // Ajout du champ pour l'ID d'événement calendrier
     };
     
@@ -119,13 +121,16 @@ export const createTask = async (task) => {
  */
 export const completeTask = async (taskId) => {
   try {
+    // Date actuelle pour enregistrer la date de complétion
+    const completionDate = new Date().toISOString();
+    
     // 1. Tâches standards
     let tasks = await retrieveTasks();
     let found = false;
     let updatedTasks = tasks.map(task => {
       if (task.id === taskId) {
         found = true;
-        return { ...task, completed: true };
+        return { ...task, completed: true, completedAt: completionDate };
       }
       return task;
     });
@@ -140,7 +145,7 @@ export const completeTask = async (taskId) => {
     let updatedDailyTasks = dailyTasks.map(task => {
       if (task.id === taskId) {
         found = true;
-        return { ...task, completed: true };
+        return { ...task, completed: true, completedAt: completionDate };
       }
       return task;
     });
@@ -149,14 +154,12 @@ export const completeTask = async (taskId) => {
       await AsyncStorage.setItem(userKey, JSON.stringify(updatedDailyTasks));
       await addCompletedTask(taskId);
       return updatedDailyTasks;
-    }
-
-    // 3. Tâches temporaires
+    }    // 3. Tâches temporaires
     let timedTasks = await retrieveTimedTasks();
     let updatedTimedTasks = timedTasks.map(task => {
       if (task.id === taskId) {
         found = true;
-        return { ...task, completed: true };
+        return { ...task, completed: true, completedAt: completionDate };
       }
       return task;
     });
@@ -285,34 +288,43 @@ export const deleteTask = async (taskId) => {
  */
 export const retrievePoints = async () => {
   try {
-    const userKey = await getUserSpecificKey(POINTS_STORAGE_KEY);
-    const pointsJson = await AsyncStorage.getItem(userKey);
-    
-    if (pointsJson !== null) {
-      return parseInt(pointsJson, 10);
-    }
-    
-    // Si aucun point n'existe, retourner 0
-    return 0;
-  } catch (error) {
-    console.error('Erreur lors de la récupération des points:', error);
+    const points = await AsyncStorage.getItem(POINTS_STORAGE_KEY);
+    return points ? parseInt(points, 10) : 0;
+  } catch (e) {
+    console.error("Erreur lors de la récupération des points:", e);
     return 0;
   }
 };
 
 /**
- * Ajoute des points au total
+ * Stocker les points de l'utilisateur (assurez-vous que cette fonction REMPLACE les points précédents)
+ */
+export const storePoints = async (points) => {
+  try {
+    // Stocke exactement la valeur passée, remplaçant l'ancienne valeur
+    await AsyncStorage.setItem(POINTS_STORAGE_KEY, points.toString());
+    return points;
+  } catch (e) {
+    console.error("Erreur lors du stockage des points:", e);
+    return null;
+  }
+};
+
+/**
+ * Nouvelle fonction pour ajouter des points (si elle n'existe pas encore)
  */
 export const addPoints = async (pointsToAdd) => {
   try {
-    const currentPoints = await retrievePoints();
+    // Récupérer les points actuels
+    const currentPoints = await retrievePoints() || 0;
+    // Ajouter les nouveaux points
     const newPoints = currentPoints + pointsToAdd;
-    const userKey = await getUserSpecificKey(POINTS_STORAGE_KEY);
-    await AsyncStorage.setItem(userKey, newPoints.toString());
+    // Stocker le nouveau total
+    await AsyncStorage.setItem(POINTS_STORAGE_KEY, newPoints.toString());
     return newPoints;
-  } catch (error) {
-    console.error('Erreur lors de l\'ajout de points:', error);
-    return 0;
+  } catch (e) {
+    console.error("Erreur lors de l'ajout des points:", e);
+    return null;
   }
 };
 
