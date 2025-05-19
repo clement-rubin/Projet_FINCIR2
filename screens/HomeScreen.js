@@ -1427,7 +1427,7 @@ const CATEGORY_LABELS_FR = {
               ]}>
                 <View style={styles.greetingContainer}>
                   <Text style={styles.welcomeText}>Bienvenue sur</Text>
-                  <Text style={styles.appTitle}>GamingR</Text>
+                  <Text style={styles.appTitle}>ChallengR</Text>
                 </View>
                 
                 <View style={styles.taglineContainer}>
