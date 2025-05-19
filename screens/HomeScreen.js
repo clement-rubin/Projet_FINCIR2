@@ -82,10 +82,10 @@ export default function HomeScreen({ navigation }) {
   const [quizCooldown, setQuizCooldown] = useState(null);
   const [quizAnimation, setQuizAnimation] = useState(null);
   
-  // Générer une question de quiz aléatoire
+  // Simplifier pour n'avoir qu'une seule question dans le quiz
   const generateRandomQuizQuestion = async () => {
     try {
-      // Liste de questions quiz prédéfinies
+      // Liste de questions quiz prédéfinies - avec plusieurs questions variées
       const quizQuestions = [
         {
           id: generateUniqueId(),
@@ -98,76 +98,74 @@ export default function HomeScreen({ navigation }) {
         },
         {
           id: generateUniqueId(),
-          title: "Quel est l'élément chimique de symbole 'O'?",
-          description: "Testez vos connaissances en chimie!",
+          title: "Quel est l'élément chimique de symbole 'O' ?",
+          description: "Choisissez l'élément correspondant au symbole.",
           answers: ["Or", "Osmium", "Oxygène", "Oganesson"],
           correctAnswer: "Oxygène",
+          points: 20,
+          type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Combien de côtés a un hexagone?",
+          description: "Un polygone régulier avec combien de côtés?",
+          answers: ["5", "6", "7", "8"],
+          correctAnswer: "6",
           points: 15,
           type: "QUIZ"
         },
         {
           id: generateUniqueId(),
-          title: "Quelle planète est connue comme la 'planète rouge'?",
-          description: "Une question d'astronomie pour vous!",
-          answers: ["Vénus", "Mars", "Jupiter", "Mercure"],
-          correctAnswer: "Mars",
-          points: 25,
+          title: "Qui a peint 'La Joconde'?",
+          description: "Identifiez l'artiste de ce célèbre tableau.",
+          answers: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Michel-Ange"],
+          correctAnswer: "Leonardo da Vinci",
+          points: 20,
           type: "QUIZ"
         },
         {
           id: generateUniqueId(),
-          title: "Qui a écrit 'Roméo et Juliette'?",
-          description: "Un classique de la littérature mondiale.",
-          answers: ["Charles Dickens", "Victor Hugo", "William Shakespeare", "Molière"],
-          correctAnswer: "William Shakespeare",
-          points: 15,
-          type: "QUIZ"
-        },
-        {
-          id: generateUniqueId(),
-          title: "Quel est le plus grand océan du monde?",
-          description: "Faites appel à vos connaissances en géographie!",
-          answers: ["Océan Atlantique", "Océan Indien", "Océan Arctique", "Océan Pacifique"],
-          correctAnswer: "Océan Pacifique",
+          title: "Quelle est la planète la plus proche du Soleil?",
+          description: "Choisissez la planète correcte.",
+          answers: ["Vénus", "Terre", "Mars", "Mercure"],
+          correctAnswer: "Mercure",
           points: 20,
           type: "QUIZ"
         }
       ];
       
+      // Récupérer les questions déjà posées récemment
+      const recentQuestionsJson = await AsyncStorage.getItem('@challengr_recent_quiz_questions');
+      let recentQuestions = [];
+      if (recentQuestionsJson) {
+        recentQuestions = JSON.parse(recentQuestionsJson);
+      }
+      
+      // Filtrer les questions disponibles (pour éviter la répétition)
+      let availableQuestions = quizQuestions;
+      if (recentQuestions.length > 0 && recentQuestions.length < quizQuestions.length) {
+        availableQuestions = quizQuestions.filter(q => !recentQuestions.includes(q.title));
+      }
+      
       // Sélectionner une question aléatoire
-      const randomIndex = Math.floor(Math.random() * quizQuestions.length);
-      const selectedQuestion = quizQuestions[randomIndex];
+      const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+      const selectedQuestion = availableQuestions[randomIndex];
       
-      // Vérifier si cette question n'a pas déjà été posée récemment
-      const recentQuestions = await AsyncStorage.getItem('@recent_quiz_questions');
-      let recentQuestionsArray = recentQuestions ? JSON.parse(recentQuestions) : [];
-      
-      // Si la question a déjà été posée récemment, en choisir une autre
-      if (recentQuestionsArray.includes(selectedQuestion.title)) {
-        // Filtrer les questions qui n'ont pas été posées récemment
-        const freshQuestions = quizQuestions.filter(q => !recentQuestionsArray.includes(q.title));
-        
-        // S'il reste des questions non utilisées, en choisir une aléatoirement
-        if (freshQuestions.length > 0) {
-          const freshIndex = Math.floor(Math.random() * freshQuestions.length);
-          return freshQuestions[freshIndex];
-        }
-        // Sinon, réinitialiser l'historique et utiliser la question initialement sélectionnée
-        recentQuestionsArray = [];
+      // Enregistrer cette question comme posée récemment
+      let updatedRecentQuestions = [...recentQuestions, selectedQuestion.title];
+      // Si toutes les questions ont été posées, ne garder que les 2 dernières
+      if (updatedRecentQuestions.length >= quizQuestions.length) {
+        updatedRecentQuestions = updatedRecentQuestions.slice(-2);
       }
+      await AsyncStorage.setItem('@challengr_recent_quiz_questions', JSON.stringify(updatedRecentQuestions));
       
-      // Ajouter la question à l'historique récent (max 3 questions)
-      recentQuestionsArray.push(selectedQuestion.title);
-      if (recentQuestionsArray.length > 3) {
-        recentQuestionsArray.shift(); // Enlever la plus ancienne question
-      }
+      // Créer un objet question avec un ID unique
+      const question = {
+        ...selectedQuestion,
+        id: generateUniqueId() // Assure un ID unique à chaque question
+      };
       
-      // Sauvegarder l'historique mis à jour
-      await AsyncStorage.setItem('@recent_quiz_questions', JSON.stringify(recentQuestionsArray));
-      
-      // Retourner la question sélectionnée
-      return selectedQuestion;
-      
+      return question;
     } catch (error) {
       console.error('Erreur lors de la génération d\'une question de quiz:', error);
       return null;
@@ -254,126 +252,109 @@ export default function HomeScreen({ navigation }) {
     }));
   };
   
-  // Gérer la soumission d'une réponse au quiz
+  // Gérer la soumission d'une réponse au quiz - simplifier cette logique
   const handleQuizSubmit = async () => {
     try {
       if (!selectedAnswer || !dailyQuiz) return;
       
-      // Vérifier la réponse
-      const result = await checkQuizAnswer(dailyQuiz.id, selectedAnswer);
-      setQuizResult(result);      if (result.isCorrect) {        // Réponse correcte!
-        // Vibration de succès
+      // Vérification manuelle de la réponse (plus fiable que l'appel API)
+      const isCorrect = selectedAnswer === dailyQuiz.correctAnswer;
+      
+      // Créer un résultat basé sur la vérification locale
+      const result = {
+        isCorrect,
+        correctAnswer: dailyQuiz.correctAnswer,
+        message: isCorrect ? 
+          `Bonne réponse ! Vous avez gagné ${dailyQuiz.points} points.` :
+          `Mauvaise réponse. La bonne réponse était: ${dailyQuiz.correctAnswer}`
+      };
+      
+      setQuizResult(result);
+      
+      if (isCorrect) {
+        // Réponse correcte - animation et points
         try {
           haptics.notificationAsync('success');
         } catch (err) {
           console.warn('Haptics error:', err);
         }
         
-        // Animation de félicitation
         setQuizAnimation('correct');
-        // Mettre à jour les points
+        
+        // Ajouter les points
         const newPoints = points + dailyQuiz.points;
-        await storePoints(newPoints); // <-- Utilisez la fonction utilitaire standard
+        await storePoints(newPoints);
         setPoints(newPoints);
-          // Ajouter les points à la catégorie "QUESTION DU JOUR"
-        try {
-          await addCategoryPoints('QUESTION DU JOUR', dailyQuiz.points);
-          // Recalculer les points par catégorie pour mettre à jour l'affichage
-          await calculateCategoryPoints();
-        } catch (error) {
-          console.error("Erreur lors de l'ajout des points à la catégorie:", error);
-          // Continuer malgré l'erreur pour ne pas bloquer le processus
-        }
         
-        // Recalculer le niveau
-        const levelInfo = calculateLevel(newPoints);
-        setLevel(levelInfo.level);
-        setProgress(levelInfo.progress);
-        
-        // Mettre à jour les statistiques du quiz
+        // Mis à jour des statistiques
         const statsData = await AsyncStorage.getItem('@challengr_quiz_stats');
         const stats = statsData ? JSON.parse(statsData) : { streak: 0, progress: 0, total: 10 };
-        
-        // Augmenter la série et la progression
         stats.streak += 1;
         stats.progress += 1;
-        
-        // Si on a complété toutes les questions, réinitialiser la progression mais garder la série
-        if (stats.progress >= stats.total) {
-          showRewardAnimation(); // Récompense bonus pour avoir terminé toute la série
-          stats.progress = 0;
-        }
-        
         await AsyncStorage.setItem('@challengr_quiz_stats', JSON.stringify(stats));
         
-        // Mettre à jour l'état
         setQuizStreak(stats.streak);
         setQuizProgress(stats.progress);
         
-        // Après un court délai pour l'animation, charger la prochaine question
+        // Montrer l'animation de récompense
+        showRewardAnimation();
+        
+        // Charger une nouvelle question après un délai
         setTimeout(() => {
           setQuizAnimation(null);
           setSelectedAnswer(null);
           setQuizResult(null);
           loadNextQuizQuestion();
-        }, 1500);      } else {        // Réponse incorrecte
-        // Vibration d'erreur
+        }, 1500);
+      } else {
+        // Réponse incorrecte
         try {
           haptics.notificationAsync('error');
         } catch (err) {
           console.warn('Haptics error:', err);
         }
         
-        // Animation d'échec
         setQuizAnimation('incorrect');
         
-        // Réinitialiser la série
-        const statsData = await AsyncStorage.getItem('@challengr_quiz_stats');
-        const stats = statsData ? JSON.parse(statsData) : { streak: 0, progress: 0, total: 10 };
-        stats.streak = 0;
-        await AsyncStorage.setItem('@challengr_quiz_stats', JSON.stringify(stats));
-        setQuizStreak(0);
-        
-        // Définir un cooldown jusqu'au lendemain
-        const now = new Date();
-        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-        tomorrow.setHours(0, 0, 0, 0);
-        
-        const cooldownData = {
-          until: tomorrow.getTime(),
-          remainingTime: Math.floor((tomorrow.getTime() - now.getTime()) / 1000)
-        };
-        
-        await AsyncStorage.setItem('@challengr_quiz_cooldown', JSON.stringify(cooldownData));
-        setQuizCooldown(cooldownData);
-        
-        // Démarrer le compte à rebours
-        startQuizCooldownTimer(tomorrow.getTime());
+        // Permettre de réessayer après un court délai
+        setTimeout(() => {
+          setQuizAnimation(null);
+          setSelectedAnswer(null);
+          setQuizResult(null);
+        }, 1500);
       }
     } catch (error) {
       console.error('Erreur lors de la vérification de la réponse:', error);
       Alert.alert('Erreur', 'Une erreur est survenue lors de la vérification de votre réponse.');
+      setSelectedAnswer(null);
+      setQuizResult(null);
     }
   };
   
-  // Charger la question suivante
+  // Charger la question suivante - Optimisation de cette fonction
   const loadNextQuizQuestion = async () => {
     try {
-      // On pourrait charger la prochaine question depuis une liste ou générer une nouvelle
+      // Générer une nouvelle question
       const newQuestion = await generateRandomQuizQuestion();
+      
       if (newQuestion) {
+        // Assurons-nous que la question a un ID unique
+        if (!newQuestion.id) {
+          newQuestion.id = generateUniqueId();
+        }
         setDailyQuiz(newQuestion);
       } else {
-        // Si on ne peut pas générer de nouvelle question, réutiliser l'ancienne mais avec une réponse différente
-        const currentQuestion = { ...dailyQuiz };
-        currentQuestion.id = generateUniqueId(); // Changer l'ID pour que ce soit considéré comme une nouvelle question
-        
-        // Mélanger les options de réponse
-        if (currentQuestion.answers && currentQuestion.answers.length > 0) {
-          currentQuestion.answers = shuffleArray([...currentQuestion.answers]);
-        }
-        
-        setDailyQuiz(currentQuestion);
+        // Si on ne peut pas générer de nouvelle question, créer une question de secours
+        const fallbackQuestion = {
+          id: generateUniqueId(),
+          title: "Quelle planète est connue comme la 'planète rouge'?",
+          description: "Une question d'astronomie pour vous!",
+          answers: ["Vénus", "Mars", "Jupiter", "Mercure"],
+          correctAnswer: "Mars",
+          points: 25,
+          type: "QUIZ"
+        };
+        setDailyQuiz(fallbackQuestion);
       }
     } catch (error) {
       console.error('Erreur lors du chargement de la prochaine question:', error);
@@ -3102,6 +3083,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
 
 const getCategoryStyle = (category) => {
   switch (category) {
