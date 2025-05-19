@@ -32,33 +32,33 @@ import { useFocusEffect } from '@react-navigation/native';
 
 // Suppression du composant CustomNavBar
 
-// Images des badges (remplacer ces imports par références à vos propres images)
+// Redéfinition des badges avec des termes plus gaming
 const BADGES = {
   FIRST_CHALLENGE: {
-    name: "Premier Défi",
-    description: "Vous avez relevé votre premier défi!",
+    name: "Première Quête",
+    description: "Vous avez accompli votre première quête!",
     icon: "trophy",
     color: COLORS.secondary,
     unlockedAt: 1 // Nombre de défis complétées pour débloquer
   },
   FIVE_CHALLENGES: {
-    name: "Engagé",
-    description: "Vous avez complété 5 défis!",
+    name: "Aventurier",
+    description: "Vous avez accompli 5 quêtes!",
     icon: "star",
     color: COLORS.warning, 
     unlockedAt: 5
   },
   LEVEL_5: {
-    name: "Progresseur",
-    description: "Vous avez atteint le niveau 5!",
+    name: "Champion",
+    description: "Vous avez atteint le rang 5!",
     icon: "arrow-up",
     color: COLORS.success,
     unlockedAt: 0, // Utiliser le niveau pour débloquer
     levelRequired: 5
   },
   CONSISTENT: {
-    name: "Constance",
-    description: "Complétez 3 défis en moins de 7 jours",
+    name: "Guerrier Fidèle",
+    description: "Accomplissez 3 quêtes en moins de 7 jours",
     icon: "calendar-check",
     color: COLORS.error,
     locked: true // Toujours verrouillé pour la démo
@@ -594,14 +594,14 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
     );
   };
 
-  // Titre du profil basé sur le niveau
+  // Titre du profil basé sur le niveau - termes plus gaming
   const getUserTitle = () => {
-    if (level < 3) return 'Débutant';
+    if (level < 3) return 'Novice';
     if (level < 5) return 'Apprenti';
-    if (level < 8) return 'Aventurier';
-    if (level < 12) return 'Expert';
-    if (level < 18) return 'Maître';
-    return 'Légendaire';
+    if (level < 8) return 'Guerrier';
+    if (level < 12) return 'Héros';
+    if (level < 18) return 'Légende';
+    return 'Dieu du Gaming';
   };
   
   // Calcul des points pour le niveau suivant
@@ -667,7 +667,10 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.dark} />
       <ScrollView style={styles.container} contentContainerStyle={{paddingBottom: 100}}>
-        <Animated.View style={[styles.profileHeader, {opacity: headerFadeAnim}]}>
+        <LinearGradient
+          colors={['#1a2151', '#2d3a8c']}
+          style={styles.profileHeader}
+        >
           <Animated.View style={[
             styles.profileImageContainer, 
             {transform: [{scale: profileImageAnim}]}
@@ -690,7 +693,7 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
           </Animated.View>
           
           <Text style={styles.username}>{userProfile.username}</Text>
-          <Text style={styles.userTitle}>{getUserTitle()}</Text>
+          <Text style={styles.userTitle}>Rang: {getUserTitle()}</Text>
           
           {userProfile.bio && (
             <Text style={styles.userBio}>{userProfile.bio}</Text>
@@ -699,15 +702,15 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
           <View style={styles.headerStatsContainer}>
             <View style={styles.headerStat}>
               <Text style={styles.headerStatValue}>{completedTasks}</Text>
-              <Text style={styles.headerStatLabel}>Défis</Text>
+              <Text style={styles.headerStatLabel}>Quêtes</Text>
             </View>
             <View style={styles.headerStatDivider} />
             <View style={styles.headerStat}>
               <Text style={styles.headerStatValue}>{totalPoints}</Text>
-              <Text style={styles.headerStatLabel}>Points</Text>
+              <Text style={styles.headerStatLabel}>XP</Text>
             </View>
           </View>
-        </Animated.View>
+        </LinearGradient>
         
         <Animated.View 
           style={[
@@ -721,10 +724,10 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
           <View style={styles.levelCardHeader}>
             <View>
               <Text style={styles.levelCardTitle}>Progression</Text>
-              <Text style={styles.levelCardSubtitle}>Niveau {level} • {LEVEL_CONFIG[level]?.title || 'Utilisateur'}</Text>
+              <Text style={styles.levelCardSubtitle}>Rang {level} • {LEVEL_CONFIG[level]?.title || getUserTitle()}</Text>
             </View>
             <View style={styles.nextLevelPoints}>
-              <Text style={styles.nextLevelPointsText}>{getPointsForNextLevel()} points requis</Text>
+              <Text style={styles.nextLevelPointsText}>{getPointsForNextLevel()} XP requis</Text>
             </View>
           </View>
           
@@ -732,36 +735,36 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
             progress={Number(progress.toFixed(1))} 
             total={100} 
             height={12}
-            barColor={COLORS.secondary}
-            backgroundColor="#eef2fd"
+            barColor="#4e54c8"
+            backgroundColor="#292b45"
           />
           
           <View style={styles.levelAdvantagesContainer}>
-            <Text style={styles.levelAdvantagesTitle}>Avantages débloqués :</Text>
+            <Text style={styles.levelAdvantagesTitle}>Pouvoirs débloqués :</Text>
             
             {LEVEL_CONFIG[level]?.advantages.map((advantage, index) => (
               <View key={index} style={styles.levelAdvantageItem}>
-                <Icon name="checkmark-circle" size={18} color={COLORS.success} style={styles.levelAdvantageIcon} />
+                <Icon name="checkmark-circle" size={18} color="#32cd32" style={styles.levelAdvantageIcon} />
                 <Text style={styles.levelAdvantageText}>{advantage}</Text>
               </View>
             ))}
             
             {level < 15 && (
               <TouchableOpacity style={styles.viewMoreLevelsButton}>
-                <Text style={styles.viewMoreLevelsText}>Voir les avantages des niveaux supérieurs</Text>
+                <Text style={styles.viewMoreLevelsText}>Voir les pouvoirs des rangs supérieurs</Text>
                 <Icon name="chevron-forward" size={16} color={COLORS.secondary} />
               </TouchableOpacity>
             )}
           </View>
           
           <View style={styles.levelTipsContainer}>
-            <Icon name="bulb-outline" size={18} color={COLORS.warning} style={styles.tipIcon} />
+            <Icon name="flame-outline" size={18} color="#ff7f50" style={styles.tipIcon} />
             <Text style={styles.levelTips}>
               {completedTasks < 5 
-                ? "Complétez des défis pour gagner des points et monter de niveau." 
+                ? "Accomplissez des quêtes pour gagner de l'XP et monter de rang!" 
                 : level < 5
-                  ? "Essayez des défis plus difficiles pour progresser plus vite!"
-                  : "Votre constance est impressionnante. Continuez comme ça!"
+                  ? "Essayez des quêtes plus difficiles pour progresser plus vite!"
+                  : "Votre puissance est impressionnante. Continuez votre aventure!"
               }
             </Text>
           </View>
@@ -777,7 +780,7 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
           ]}
         >
           <View style={styles.sectionTitleContainer}>
-            <Text style={styles.sectionTitle}>Mes Badges</Text>
+            <Text style={styles.sectionTitle}>Mes Trophées</Text>
             <TouchableOpacity style={styles.seeAllButton}>
               <Text style={styles.seeAllButtonText}>Tous voir</Text>
             </TouchableOpacity>
@@ -803,7 +806,7 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
                     styles.badgeIconContainer,
                     badge.unlocked 
                       ? { backgroundColor: badge.color } 
-                      : { backgroundColor: COLORS.light }
+                      : { backgroundColor: '#292b45' }
                   ]}>
                     {!badge.unlocked && (
                       <View style={styles.badgeLockOverlay}>
@@ -904,35 +907,34 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.dark,
+    backgroundColor: '#0f1123',
     paddingTop: Platform.OS === 'android' ? SCREEN.statusBarHeight : 0,
   },
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#151736',
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#151736',
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
     fontWeight: '500',
   },
   profileHeader: {
-    backgroundColor: COLORS.dark,
     paddingTop: 30,
     paddingBottom: 30,
     alignItems: 'center',
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
-    shadowColor: COLORS.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
   },
@@ -941,13 +943,13 @@ const styles = StyleSheet.create({
     height: 130,
     borderRadius: 65,
     borderWidth: 4,
-    borderColor: COLORS.white,
+    borderColor: '#4e54c8',
     overflow: 'hidden',
     marginBottom: 15,
     backgroundColor: COLORS.background,
-    shadowColor: COLORS.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
   },
@@ -959,34 +961,37 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: COLORS.secondary,
+    backgroundColor: '#ff6b6b',
     width: 36,
     height: 36,
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: COLORS.white,
+    borderColor: '#fff',
   },
   levelBadgeText: {
-    color: COLORS.white,
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
   username: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: COLORS.white,
+    color: '#fff',
     marginBottom: 5,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   userTitle: {
     fontSize: 16,
-    color: COLORS.textLight,
+    color: '#a3d8f5',
     marginBottom: 10,
   },
   userBio: {
     fontSize: 14,
-    color: COLORS.light,
+    color: '#dedede',
     textAlign: 'center',
     maxWidth: '80%',
     marginBottom: 15,
@@ -998,6 +1003,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 10,
     marginTop: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   headerStat: {
     alignItems: 'center',
@@ -1006,28 +1013,30 @@ const styles = StyleSheet.create({
   headerStatValue: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: COLORS.white,
+    color: '#fff',
   },
   headerStatLabel: {
     fontSize: 14,
-    color: COLORS.textLight,
+    color: '#a3d8f5',
     marginTop: 2,
   },
   headerStatDivider: {
     width: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.3)',
     marginVertical: 5,
   },
   levelCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#1e2146',
     margin: 16,
     borderRadius: 15,
     padding: 20,
-    shadowColor: COLORS.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
+    borderWidth: 1,
+    borderColor: '#4e54c8',
   },
   levelCardHeader: {
     flexDirection: 'row',
@@ -1038,37 +1047,39 @@ const styles = StyleSheet.create({
   levelCardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.dark,
+    color: '#fff',
   },
   levelCardSubtitle: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
     marginTop: 2,
   },
   nextLevelPoints: {
-    backgroundColor: '#eef2fd',
+    backgroundColor: '#292b45',
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#4e54c8',
   },
   nextLevelPointsText: {
-    color: COLORS.secondary,
+    color: '#a3d8f5',
     fontSize: 12,
     fontWeight: '600',
   },
   levelAdvantagesContainer: {
     marginTop: 15,
     marginBottom: 15,
-    backgroundColor: '#f9f9fd',
+    backgroundColor: '#21254c',
     borderRadius: 12,
     padding: 15,
     borderLeftWidth: 3,
-    borderLeftColor: COLORS.secondary,
+    borderLeftColor: '#4e54c8',
   },
   levelAdvantagesTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.textPrimary,
+    color: '#fff',
     marginBottom: 10,
   },
   levelAdvantageItem: {
@@ -1077,14 +1088,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  levelAdvantageIcon: {
-    marginRight: 8,
+    borderBottomColor: '#292b45',
   },
   levelAdvantageText: {
     fontSize: 14,
-    color: COLORS.textPrimary,
+    color: '#dedede',
     flex: 1,
   },
   viewMoreLevelsButton: {
@@ -1096,7 +1104,7 @@ const styles = StyleSheet.create({
   },
   viewMoreLevelsText: {
     fontSize: 14,
-    color: COLORS.secondary,
+    color: '#4e54c8',
     fontWeight: '500',
     marginRight: 5,
   },
@@ -1104,11 +1112,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 16,
-    backgroundColor: '#fffbf2',
+    backgroundColor: '#272b52',
     borderRadius: 12,
     padding: 12,
     borderLeftWidth: 3,
-    borderLeftColor: COLORS.warning,
+    borderLeftColor: '#ff7f50',
   },
   tipIcon: {
     marginRight: 10,
@@ -1116,18 +1124,20 @@ const styles = StyleSheet.create({
   levelTips: {
     flex: 1,
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: '#dedede',
   },
   badgesSection: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#1e2146',
     margin: 16,
     borderRadius: 15,
     padding: 20,
-    shadowColor: COLORS.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
+    borderWidth: 1,
+    borderColor: '#4e54c8',
   },
   sectionTitleContainer: {
     flexDirection: 'row',
@@ -1138,14 +1148,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.dark,
+    color: '#fff',
   },
   seeAllButton: {
     paddingVertical: 5,
     paddingHorizontal: 12,
   },
   seeAllButtonText: {
-    color: COLORS.secondary,
+    color: '#4e54c8',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -1168,11 +1178,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
-    shadowColor: COLORS.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   badgeLockOverlay: {
     position: 'absolute',
@@ -1193,18 +1205,19 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderRadius: 35,
-    backgroundColor: 'transparent',
-    opacity: 0.3,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.5)',
+    opacity: 0.6,
     transform: [{ scale: 1.2 }],
   },
   badgeName: {
     fontSize: 14,
     textAlign: 'center',
     fontWeight: '500',
-    color: COLORS.textPrimary,
+    color: '#fff',
   },
   badgeNameLocked: {
-    color: COLORS.textLight,
+    color: '#6d7192',
   },
   actionsSection: {
     paddingVertical: 10,
@@ -1212,17 +1225,19 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   mainActionButton: {
-    backgroundColor: COLORS.secondary,
+    backgroundColor: '#ff6b6b',
     borderRadius: 12,
     paddingVertical: 16,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: COLORS.secondary,
+    shadowColor: '#ff6b6b',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.4,
     shadowRadius: 10,
     elevation: 8,
+    borderWidth: 1,
+    borderColor: '#ff8c8c',
   },
   mainActionButtonText: {
     color: COLORS.white,

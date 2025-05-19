@@ -8,6 +8,7 @@ const DAILY_TASKS_KEY = '@challengr_daily_tasks';
 const TIMED_TASKS_KEY = '@challengr_timed_tasks';
 const QUIZ_TASKS_KEY = '@challengr_quiz_tasks';
 const POINTS_STORAGE_KEY = '@challengr_points';
+const CATEGORY_POINTS_STORAGE_KEY = '@challengr_category_points'; // Nouvelle clé pour les points par catégorie
 const COMPLETED_TASKS_KEY = '@challengr_completed_tasks';
 const USER_PROFILE_KEY = '@challengr_user_profile';
 const STREAK_KEY = '@challengr_streak';
@@ -127,25 +128,33 @@ export const completeTask = async (taskId) => {
     // 1. Tâches standards
     let tasks = await retrieveTasks();
     let found = false;
+    let completedTask = null;
     let updatedTasks = tasks.map(task => {
       if (task.id === taskId) {
         found = true;
-        return { ...task, completed: true, completedAt: completionDate };
+        completedTask = { ...task, completed: true, completedAt: completionDate };
+        return completedTask;
       }
       return task;
     });
     if (found) {
       await saveTasks(updatedTasks);
       await addCompletedTask(taskId);
+      
+      // Ajouter les points à la catégorie correspondante
+      if (completedTask && completedTask.category && completedTask.points) {
+        await addCategoryPoints(completedTask.category, completedTask.points);
+      }
+      
       return updatedTasks;
-    }
-
-    // 2. Tâches quotidiennes
+    }    // 2. Tâches quotidiennes
     let dailyTasks = await retrieveDailyTasks();
+    let completedDailyTask = null;
     let updatedDailyTasks = dailyTasks.map(task => {
       if (task.id === taskId) {
         found = true;
-        return { ...task, completed: true, completedAt: completionDate };
+        completedDailyTask = { ...task, completed: true, completedAt: completionDate };
+        return completedDailyTask;
       }
       return task;
     });
@@ -153,13 +162,21 @@ export const completeTask = async (taskId) => {
       const userKey = await getUserSpecificKey(DAILY_TASKS_KEY);
       await AsyncStorage.setItem(userKey, JSON.stringify(updatedDailyTasks));
       await addCompletedTask(taskId);
+      
+      // Ajouter les points à la catégorie correspondante
+      if (completedDailyTask && completedDailyTask.category && completedDailyTask.points) {
+        await addCategoryPoints(completedDailyTask.category, completedDailyTask.points);
+      }
+      
       return updatedDailyTasks;
     }    // 3. Tâches temporaires
     let timedTasks = await retrieveTimedTasks();
+    let completedTimedTask = null;
     let updatedTimedTasks = timedTasks.map(task => {
       if (task.id === taskId) {
         found = true;
-        return { ...task, completed: true, completedAt: completionDate };
+        completedTimedTask = { ...task, completed: true, completedAt: completionDate };
+        return completedTimedTask;
       }
       return task;
     });
@@ -167,6 +184,12 @@ export const completeTask = async (taskId) => {
       const userKey = await getUserSpecificKey(TIMED_TASKS_KEY);
       await AsyncStorage.setItem(userKey, JSON.stringify(updatedTimedTasks));
       await addCompletedTask(taskId);
+      
+      // Ajouter les points à la catégorie correspondante
+      if (completedTimedTask && completedTimedTask.category && completedTimedTask.points) {
+        await addCategoryPoints(completedTimedTask.category, completedTimedTask.points);
+      }
+      
       return updatedTimedTasks;
     }
 
@@ -324,6 +347,68 @@ export const addPoints = async (pointsToAdd) => {
     return newPoints;
   } catch (e) {
     console.error("Erreur lors de l'ajout des points:", e);
+    return null;
+  }
+};
+
+/**
+ * Stocke les points pour une catégorie spécifique
+ */
+export const storeCategoryPoints = async (category, points) => {
+  try {
+    // Récupérer les points des catégories existantes
+    const userKey = await getUserSpecificKey(CATEGORY_POINTS_STORAGE_KEY);
+    const existingPointsJson = await AsyncStorage.getItem(userKey);
+    let categoryPoints = {};
+    
+    if (existingPointsJson) {
+      categoryPoints = JSON.parse(existingPointsJson);
+    }
+    
+    // Mettre à jour les points pour la catégorie spécifique
+    categoryPoints[category] = points;
+    
+    // Enregistrer les points mis à jour
+    await AsyncStorage.setItem(userKey, JSON.stringify(categoryPoints));
+    return true;
+  } catch (e) {
+    console.error("Erreur lors du stockage des points par catégorie:", e);
+    return false;
+  }
+};
+
+/**
+ * Récupère tous les points par catégorie
+ */
+export const retrieveCategoryPoints = async () => {
+  try {
+    const userKey = await getUserSpecificKey(CATEGORY_POINTS_STORAGE_KEY);
+    const pointsJson = await AsyncStorage.getItem(userKey);
+    
+    if (pointsJson) {
+      return JSON.parse(pointsJson);
+    }
+    
+    return {};
+  } catch (e) {
+    console.error("Erreur lors de la récupération des points par catégorie:", e);
+    return {};
+  }
+};
+
+/**
+ * Ajoute des points à une catégorie spécifique
+ */
+export const addCategoryPoints = async (category, pointsToAdd) => {
+  try {
+    const categoryPoints = await retrieveCategoryPoints();
+    const currentPoints = categoryPoints[category] || 0;
+    const newPoints = currentPoints + pointsToAdd;
+    
+    await storeCategoryPoints(category, newPoints);
+    return newPoints;
+  } catch (e) {
+    console.error("Erreur lors de l'ajout des points par catégorie:", e);
     return null;
   }
 };

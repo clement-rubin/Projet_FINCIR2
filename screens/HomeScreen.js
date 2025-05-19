@@ -30,10 +30,19 @@ import haptics from '../utils/haptics';
 import MapView from 'react-native-maps';
 import { Marker } from 'react-native-maps';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { retrievePoints, retrieveDailyTasks, retrieveQuizTasks, checkQuizAnswer, retrieveTasks, storePoints } from '../utils/storage';
+import { 
+  retrievePoints, 
+  retrieveDailyTasks, 
+  retrieveQuizTasks, 
+  checkQuizAnswer, 
+  retrieveTasks, 
+  storePoints, 
+  retrieveCategoryPoints,
+  addCategoryPoints
+} from '../utils/storage';
 import ProgressBar from '../components/ProgressBar';
 import Icon, { COLORS } from '../components/common/Icon';
-import { SCREEN, calculateLevel, generateUniqueId, CHALLENGE_TYPES } from '../utils/constants';
+import { SCREEN, calculateLevel, generateUniqueId, CHALLENGE_TYPES, CHALLENGE_CATEGORIES } from '../utils/constants';
 import { addTaskToCalendar } from '../services/calendarService';
 
 const { width, height } = SCREEN;
@@ -254,18 +263,21 @@ export default function HomeScreen({ navigation }) {
       const result = await checkQuizAnswer(dailyQuiz.id, selectedAnswer);
       setQuizResult(result);
       
-      if (result.isCorrect) {
-        // Réponse correcte!
+      if (result.isCorrect) {        // Réponse correcte!
         // Vibration de succès
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        haptics.notificationAsync(haptics.NotificationFeedbackType.Success);
         
         // Animation de félicitation
         setQuizAnimation('correct');
-        
-        // Mettre à jour les points
+          // Mettre à jour les points
         const newPoints = points + dailyQuiz.points;
         await storePoints(newPoints); // <-- Utilisez la fonction utilitaire standard
         setPoints(newPoints);
+        
+        // Ajouter les points à la catégorie "QUESTION DU JOUR"
+        await addCategoryPoints('QUESTION DU JOUR', dailyQuiz.points);
+        // Recalculer les points par catégorie pour mettre à jour l'affichage
+        await calculateCategoryPoints();
         
         // Recalculer le niveau
         const levelInfo = calculateLevel(newPoints);
@@ -299,10 +311,9 @@ export default function HomeScreen({ navigation }) {
           setQuizResult(null);
           loadNextQuizQuestion();
         }, 1500);
-      } else {
-        // Réponse incorrecte
+      } else {        // Réponse incorrecte
         // Vibration d'erreur
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        haptics.notificationAsync(haptics.NotificationFeedbackType.Error);
         
         // Animation d'échec
         setQuizAnimation('incorrect');
@@ -456,7 +467,6 @@ export default function HomeScreen({ navigation }) {
       ])
     ).start();
   };
-
   // Charger les points et calculer le niveau
   const loadUserData = async () => {
     try {
@@ -468,6 +478,9 @@ export default function HomeScreen({ navigation }) {
       const levelInfo = calculateLevel(userPoints);
       setLevel(levelInfo.level);
       setProgress(levelInfo.progress);
+      
+      // Charger les points par catégorie
+      await calculateCategoryPoints();
     } catch (error) {
       console.error('Erreur lors du chargement des points utilisateur:', error);
       Alert.alert('Erreur', 'Impossible de charger les données utilisateur.');
@@ -1054,12 +1067,18 @@ export default function HomeScreen({ navigation }) {
       
       // Sauvegarder les défis mis à jour
       await AsyncStorage.setItem('@challengr_daily_tasks', JSON.stringify(updatedTasks));
-      
-      // Ajouter les points à l'utilisateur
+        // Ajouter les points à l'utilisateur
       const currentPoints = await retrievePoints() || 0;
       const newPoints = currentPoints + dailyTask.points;
       await storePoints(newPoints); // <-- Utilisez la fonction utilitaire standard
       setPoints(newPoints);
+      
+      // Ajouter les points à la catégorie
+      if (dailyTask.category) {
+        await addCategoryPoints(dailyTask.category, dailyTask.points);
+        // Recalculer les points par catégorie pour mettre à jour l'affichage
+        await calculateCategoryPoints();
+      }
       
       // Recalculer le niveau
       const levelInfo = calculateLevel(newPoints);
@@ -1314,42 +1333,55 @@ const CATEGORY_LABELS_FR = {
   const [showProgressDetail, setShowProgressDetail] = useState(false);
   const [categoryPoints, setCategoryPoints] = useState({});
   const [categoryTotal, setCategoryTotal] = useState(0);
-
   // Fonction utilitaire pour calculer les points par catégorie
   const calculateCategoryPoints = async () => {
     try {
-      // Récupérer toutes les tâches (standards, quotidiennes)
-      const [allTasks, dailyTasks, quizTasks] = await Promise.all([
-        retrieveTasks ? retrieveTasks() : [],
-        retrieveDailyTasks ? retrieveDailyTasks() : [],
-        retrieveQuizTasks ? retrieveQuizTasks() : [],
-      ]);
-      // Prendre toutes les tâches complétées (standards + quotidiennes)
-      const completedTasks = [...(allTasks || []), ...(dailyTasks || [])].filter(t => t.completed);
+      // Récupérer les points par catégorie depuis AsyncStorage
+      const categoryPointsData = await retrieveCategoryPoints();
+      
+      if (Object.keys(categoryPointsData).length > 0) {
+        // Si nous avons des données, les utiliser directement
+        setCategoryPoints(categoryPointsData);
+        
+        // Calculer le total des points
+        const total = Object.values(categoryPointsData).reduce((sum, points) => sum + points, 0);
+        setCategoryTotal(total);
+      } else {
+        // Sinon, faire comme avant: calculer les points à partir des tâches complétées
+        // Récupérer toutes les tâches (standards, quotidiennes)
+        const [allTasks, dailyTasks, quizTasks] = await Promise.all([
+          retrieveTasks ? retrieveTasks() : [],
+          retrieveDailyTasks ? retrieveDailyTasks() : [],
+          retrieveQuizTasks ? retrieveQuizTasks() : [],
+        ]);
+        // Prendre toutes les tâches complétées (standards + quotidiennes)
+        const completedTasks = [...(allTasks || []), ...(dailyTasks || [])].filter(t => t.completed);
 
-      // Calcul des points par catégorie pour les tâches
-      const pointsByCategory = {};
-      let total = 0;
-      completedTasks.forEach(task => {
-        const cat = task.category || 'AUTRE';
-        pointsByCategory[cat] = (pointsByCategory[cat] || 0) + (task.points || 0);
-        total += (task.points || 0);
-      });
-
-      // Ajouter les points des quiz complétés sous la catégorie "QUESTION DU JOUR"
-      if (quizTasks && Array.isArray(quizTasks)) {
-        quizTasks.forEach(q => {
-          if (q.completed) {
-            const cat = 'QUESTION DU JOUR';
-            pointsByCategory[cat] = (pointsByCategory[cat] || 0) + (q.points || 0);
-            total += (q.points || 0);
-          }
+        // Calcul des points par catégorie pour les tâches
+        const pointsByCategory = {};
+        let total = 0;
+        completedTasks.forEach(task => {
+          const cat = task.category || 'AUTRE';
+          pointsByCategory[cat] = (pointsByCategory[cat] || 0) + (task.points || 0);
+          total += (task.points || 0);
         });
-      }
 
-      setCategoryPoints(pointsByCategory);
-      setCategoryTotal(total);
+        // Ajouter les points des quiz complétés sous la catégorie "QUESTION DU JOUR"
+        if (quizTasks && Array.isArray(quizTasks)) {
+          quizTasks.forEach(q => {
+            if (q.completed) {
+              const cat = 'QUESTION DU JOUR';
+              pointsByCategory[cat] = (pointsByCategory[cat] || 0) + (q.points || 0);
+              total += (q.points || 0);
+            }
+          });
+        }
+
+        setCategoryPoints(pointsByCategory);
+        setCategoryTotal(total);
+      }
     } catch (e) {
+      console.error("Erreur lors du calcul des points par catégorie:", e);
       setCategoryPoints({});
       setCategoryTotal(0);
     }
@@ -1456,8 +1488,62 @@ const CATEGORY_LABELS_FR = {
                   height={12}
                   barColor={COLORS.secondary}
                   backgroundColor="#eef2fd"
-                />
-              </TouchableOpacity>
+                />              </TouchableOpacity>
+            </Animated.View>
+
+            {/* Barres d'XP par catégorie */}
+            <Animated.View style={[
+              styles.categoryProgressContainer, 
+              { 
+                opacity: levelCardOpacity, 
+                transform: [{ scale: levelCardAnim }] 
+              }
+            ]}>
+              <View style={styles.categoryProgressHeader}>
+                <Text style={styles.categoryProgressTitle}>Progression par catégorie</Text>
+              </View>
+              
+              {Object.keys(categoryPoints).length === 0 ? (
+                <Text style={styles.noCategoriesText}>Complétez des défis pour voir votre progression par catégorie</Text>
+              ) : (
+                <>
+                  {Object.entries(categoryPoints)
+                    .sort(([, pointsA], [, pointsB]) => pointsB - pointsA) // Trier par points décroissants
+                    .slice(0, 5) // Limiter à 5 catégories maximum
+                    .map(([category, points]) => {
+                      // Déterminer la couleur de la barre en fonction de la catégorie
+                      const categoryInfo = Object.values(CHALLENGE_CATEGORIES).find(
+                        c => c.id.toUpperCase() === category || c.name.toUpperCase() === category
+                      );
+                      const barColor = categoryInfo ? categoryInfo.color : COLORS.primary;
+                      // Déterminer le niveau max pour cette catégorie (100 points par défaut)
+                      const categoryMaxPoints = Math.max(100, points * 1.5);
+                      
+                      return (
+                        <View key={category} style={styles.categoryProgressItem}>
+                          <Text style={styles.categoryLabel}>
+                            {CATEGORY_LABELS_FR[category] || category}
+                          </Text>
+                          <ProgressBar 
+                            progress={points} 
+                            total={categoryMaxPoints} 
+                            height={8}
+                            barColor={barColor}
+                            backgroundColor="#eef2fd"
+                          />
+                        </View>
+                      );
+                    })
+                  }
+                  <TouchableOpacity 
+                    style={styles.viewAllCategoriesButton} 
+                    onPress={openProgressDetail}
+                  >
+                    <Text style={styles.viewAllCategoriesText}>Voir toutes les catégories</Text>
+                    <Icon name="arrow-forward" size={16} color={COLORS.primary} />
+                  </TouchableOpacity>
+                </>
+              )}
             </Animated.View>
 
             {/* Défi du jour mis en évidence */}
@@ -2198,8 +2284,7 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     marginTop: 4,
     fontWeight: '500',
-  },
-  levelCard: {
+  },  levelCard: {
     marginBottom: 25,
     backgroundColor: COLORS.white,
     padding: 20,
@@ -2212,20 +2297,56 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#f0f3f8',
   },
-  levelHeader: {
+  categoryProgressContainer: {
+    marginBottom: 25,
+    backgroundColor: COLORS.white,
+    padding: 20,
+    borderRadius: 20,
+    shadowColor: COLORS.black,
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#f0f3f8',
+  },
+  categoryProgressHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 15,
   },
-  levelTitle: {
-    fontSize: 20,
+  categoryProgressTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.dark,
+    color: COLORS.textDark,
   },
-  levelProgress: {
+  categoryProgressItem: {
+    marginBottom: 15,
+  },
+  categoryLabel: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    fontWeight: '500',
+    color: COLORS.textDark,
+    marginBottom: 5,
+  },
+  noCategoriesText: {
+    fontSize: 14,
+    color: COLORS.textLight,
+    textAlign: 'center',
+    marginVertical: 10,
+  },
+  viewAllCategoriesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    marginTop: 5,
+  },
+  viewAllCategoriesText: {
+    fontSize: 14,
+    color: COLORS.primary,
+    marginRight: 5,
     fontWeight: '500',
   },
   dailyChallengeContainer: {
