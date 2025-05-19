@@ -58,23 +58,31 @@ import {
   getRelativeTime
 } from '../utils/dateUtils';
 
-// Suppression du composant CustomNavBar
+// Ajout de constantes de couleur gaming
+const GAMING_COLORS = {
+  background: '#151736',
+  cardBackground: '#1e2146',
+  secondary: '#4e54c8',
+  accent: '#a3d8f5',
+  darkBlue: '#21254c',
+  headerBg: '#0f1123',
+};
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.secondary, // Changement de blanc (#fff) à la couleur du bandeau (COLORS.secondary)
+    backgroundColor: GAMING_COLORS.headerBg, // Couleur sombre comme sur HomeScreen
     paddingTop: Platform.OS === 'android' ? SCREEN.statusBarHeight : 0,
   },
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: GAMING_COLORS.background, // Même fond que HomeScreen
   },
   header: {
     paddingTop: 12,
     paddingBottom: 12,
     paddingHorizontal: 16,
-    backgroundColor: COLORS.secondary,
+    backgroundColor: GAMING_COLORS.headerBg, // Fond sombre pour le header
   },
   headerContent: {
     flexDirection: 'row',
@@ -82,14 +90,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
     color: COLORS.white,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 3,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: 'rgba(255, 255, 255, 0.85)',
     marginTop: 2,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   headerActions: {
     flexDirection: 'row',
@@ -100,15 +114,25 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   addButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
   addButtonText: {
     color: COLORS.white,
     fontWeight: '600',
     fontSize: 14,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   addTaskForm: {
     position: 'absolute',
@@ -116,14 +140,16 @@ const styles = StyleSheet.create({
     right: '5%',
     top: '10%',
     maxHeight: '80%',
-    backgroundColor: COLORS.white,
+    backgroundColor: GAMING_COLORS.cardBackground, // Couleur de carte comme HomeScreen
     borderRadius: 25,
     elevation: 8,
-    shadowColor: COLORS.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.25,
     shadowRadius: 15,
     zIndex: 1000,
+    borderWidth: 1,
+    borderColor: '#292b45',
   },
   addTaskFormScroll: {
     width: '100%',
@@ -134,18 +160,22 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: COLORS.textPrimary,
+    color: '#fff', // Texte blanc pour les titres
     marginBottom: 15,
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e1e8f0',
+    borderColor: '#292b45',
     borderRadius: 15,
     padding: 12,
     marginBottom: 15,
     fontSize: 16,
-    backgroundColor: '#f8faff',
+    backgroundColor: '#272b52', // Couleur légèrement plus claire
+    color: '#fff', // Texte blanc
   },
   textArea: {
     height: 80,
@@ -195,9 +225,9 @@ const styles = StyleSheet.create({
   filterContainer: {
     paddingVertical: 12,
     paddingLeft: 12,
-    backgroundColor: COLORS.white,
+    backgroundColor: GAMING_COLORS.cardBackground, // Couleur de carte comme HomeScreen
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f4f8',
+    borderBottomColor: '#292b45',
   },
   filterButtonContainer: {
     marginRight: 10,
@@ -211,19 +241,20 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 16,
-    backgroundColor: COLORS.background,
-    borderWidth: 0,
+    backgroundColor: '#272b52', // Couleur légèrement plus claire que le fond
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   filterIcon: {
     marginRight: 6,
   },
   activeFilter: {
-    backgroundColor: COLORS.secondary,
+    backgroundColor: GAMING_COLORS.secondary, // Bleu/violet accent de HomeScreen
   },
   filterText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#666',
+    color: '#a3aed0', // Couleur claire pour le texte
   },
   activeFilterText: {
     color: COLORS.white,
@@ -238,18 +269,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: 'transparent',
   },
   emptyText: {
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 20,
     marginBottom: 10,
-    color: COLORS.textSecondary,
+    color: '#a3d8f5', // Couleur bleu clair comme HomeScreen
     textAlign: 'center',
   },
   emptySubText: {
     fontSize: 14,
-    color: COLORS.textLight,
+    color: '#a3aed0', // Couleur claire pour le texte secondaire
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -272,9 +304,16 @@ const styles = StyleSheet.create({
   modalContent: {
     backgroundColor: COLORS.white,
     borderRadius: 15,
-    width: '100%',
+    width: '85%',
     maxHeight: '80%',
     padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 20,
+    borderWidth: 1,
+    borderColor: `${COLORS.secondary}40`,
   },
   modalScrollView: {
     maxHeight: 400,
@@ -388,18 +427,27 @@ const styles = StyleSheet.create({
   },
   bonusContainer: {
     marginBottom: 15,
+    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+    borderRadius: 12,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(46, 204, 113, 0.3)',
   },
   bonusTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: 'bold',
     color: COLORS.success,
     textAlign: 'center',
-    marginBottom: 5,
+    marginBottom: 8,
+    textShadowColor: 'rgba(46, 204, 113, 0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   bonusDescription: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: '#32ac66',
     textAlign: 'center',
+    lineHeight: 20,
   },
   navBar: {
     height: 60,
@@ -439,21 +487,31 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   sectionHeader: {
-    backgroundColor: '#f8fafc',
-    paddingVertical: 10,
+    backgroundColor: '#21254c',
+    paddingVertical: 12,
     paddingHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 10,
+    marginBottom: 12,
     borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4e54c8',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.textPrimary,
+    color: '#fff',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   sectionInfo: {
     fontSize: 12,
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
     marginTop: 4,
   },
   categoryContainer: {
@@ -817,9 +875,9 @@ const TasksScreen = ({ navigation }) => {
     // Section pour les séries si l'utilisateur a une série en cours
     if (streak.count > 0) {
       sections.push({
-        title: `🔥 Série de ${streak.count} jour${streak.count > 1 ? 's' : ''}`,
+        title: `🔥 Combo x${streak.count}`,
         data: [],
-        info: `Maintenez votre série en complétant au moins un défi chaque jour. Votre dernière activité: ${new Date(streak.lastCompletionDate).toLocaleDateString()}`
+        info: `Maintenez votre combo en complétant au moins une quête chaque jour. Dernière activité: ${new Date(streak.lastCompletionDate).toLocaleDateString()}`
       });
     }
     
@@ -835,9 +893,9 @@ const TasksScreen = ({ navigation }) => {
     const filteredDailyTasks = dailyTasks.filter(filterTask);
     if (filteredDailyTasks.length > 0) {
       sections.push({
-        title: "📅 Quotidien",
+        title: "📅 Quêtes journalières",
         data: filteredDailyTasks,
-        info: "Ces défis sont générés automatiquement chaque jour. Complétez-les pour maintenir votre série!"
+        info: "Ces quêtes sont générées automatiquement chaque jour. Accomplissez-les pour maintenir votre combo!"
       });
     }
     
@@ -845,9 +903,9 @@ const TasksScreen = ({ navigation }) => {
     const filteredTimedTasks = timedTasks.filter(filterTask);
     if (filteredTimedTasks.length > 0) {
       sections.push({
-        title: "⏱️ Défis à durée limitée",
+        title: "⏱️ Quêtes éphémères",
         data: filteredTimedTasks,
-        info: "Attention! Ces défis expirent bientôt. Relevez-les avant qu'il ne soit trop tard."
+        info: "Attention! Ces quêtes disparaîtront bientôt. Relevez le défi avant qu'il ne soit trop tard."
       });
     }
     
@@ -857,18 +915,18 @@ const TasksScreen = ({ navigation }) => {
       // Si on est dans le filtre "completed", on montre tous les défis complétés dans une seule section
       if (filter === 'completed') {
         sections.push({
-          title: "✅ Défis complétés",
+          title: "✅ Quêtes accomplies",
           data: filteredRegularTasks,
-          info: "Historique de tous vos défis complétés"
+          info: "Journal de vos victoires et accomplissements"
         });
       } else if (filter === 'custom' || filter === 'all') {
         // Sinon, on sépare les défis actifs 
         const activeRegularTasks = filteredRegularTasks.filter(task => !task.completed);
         if (activeRegularTasks.length > 0) {
           sections.push({
-            title: "📝 En cours",
+            title: "📝 Aventures en cours",
             data: activeRegularTasks,
-            info: "Défis que vous avez créés vous-même. Ajoutez-en d'autres avec le bouton '+'"
+            info: "Quêtes personnalisées que vous avez créées. Forgez votre destin avec le bouton '+'"
           });
         }
       }
@@ -905,9 +963,9 @@ const TasksScreen = ({ navigation }) => {
       // Section pour les séries si l'utilisateur a une série en cours
     if (streak.count > 0) {
       sections.push({
-        title: `🔥 Série de ${streak.count} jour${streak.count > 1 ? 's' : ''}`,
+        title: `🔥 Combo x${streak.count}`,
         data: [],
-        info: `Maintenez votre série en complétant au moins un défi chaque jour. Votre dernière activité: ${new Date(streak.lastCompletionDate).toLocaleDateString()}`
+        info: `Maintenez votre combo en complétant au moins une quête chaque jour. Dernière activité: ${new Date(streak.lastCompletionDate).toLocaleDateString()}`
       });
     }
     
@@ -924,9 +982,9 @@ const TasksScreen = ({ navigation }) => {
     const filteredDailyTasks = filterByType(dailyTasks, 'daily');
     if (filteredDailyTasks.length > 0) {
       sections.push({
-        title: "📅 Quotidien",
+        title: "📅 Quêtes journalières",
         data: filteredDailyTasks,
-        info: "Ces défis sont générés automatiquement chaque jour. Complétez-les pour maintenir votre série!"
+        info: "Ces quêtes sont générées automatiquement chaque jour. Accomplissez-les pour maintenir votre combo!"
       });
     }
 
@@ -934,9 +992,9 @@ const TasksScreen = ({ navigation }) => {
     const filteredTimedTasks = filterByType(timedTasks, 'timed');
     if (filteredTimedTasks.length > 0) {
       sections.push({
-        title: "⏱️ Défis à durée limitée",
+        title: "⏱️ Quêtes éphémères",
         data: filteredTimedTasks,
-        info: "Attention! Ces défis expirent bientôt. Relevez-les avant qu'il ne soit trop tard."
+        info: "Attention! Ces quêtes disparaîtront bientôt. Relevez le défi avant qu'il ne soit trop tard."
       });
     }    // Section pour les défis standards
     const filteredRegularTasks = filterByType(tasks, 'custom');
@@ -946,15 +1004,15 @@ const TasksScreen = ({ navigation }) => {
       
       if ((filterType === 'all' || filterType === 'custom') && activeRegularTasks.length > 0) {
         sections.push({
-          title: "📝 En cours",
+          title: "📝 Aventures en cours",
           data: activeRegularTasks,
-          info: "Défis que vous avez créés vous-même. Ajoutez-en d'autres avec le bouton '+'"
+          info: "Quêtes personnalisées que vous avez créées. Forgez votre destin avec le bouton '+'"
         });
       }
 
       if ((filterType === 'all' || filterType === 'completed') && completedRegularTasks.length > 0) {
         sections.push({
-          title: "✅ Défis complétés",
+          title: "✅ Quêtes accomplies",
           data: completedRegularTasks
         });
       }
@@ -1579,14 +1637,14 @@ const TasksScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <StatusBar barStyle="light-content" backgroundColor={GAMING_COLORS.headerBg} />
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View>
-              <Text style={styles.headerTitle}>Mes Défis</Text>
+              <Text style={styles.headerTitle}>Mes Quêtes</Text>
               <Text style={styles.headerSubtitle}>
-                Niveau {level} • {points} points
+                Rang {level} • {points} XP
               </Text>
             </View>
             
@@ -1603,7 +1661,7 @@ const TasksScreen = ({ navigation }) => {
                 onPress={toggleAddTaskForm}
               >
                 <Text style={styles.addButtonText}>
-                  {showAddTask ? 'Annuler' : '+ Nouveau défi'}
+                  {showAddTask ? 'Annuler' : '+ Nouvelle quête'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -2002,10 +2060,10 @@ const TasksScreen = ({ navigation }) => {
             showsHorizontalScrollIndicator={false} 
             contentContainerStyle={styles.filterButtons}
           >
-            {renderFilterButton('all', 'apps', 'Tous')}
-            {renderFilterButton('daily', 'calendar', 'Quotidien')}
+            {renderFilterButton('all', 'apps', 'Toutes')}
+            {renderFilterButton('daily', 'calendar', 'Journalières')}
             {renderFilterButton('custom', 'time', 'En cours')}
-            {renderFilterButton('completed', 'checkmark-circle', 'Complétés')}
+            {renderFilterButton('completed', 'checkmark-circle', 'Accomplies')}
           </ScrollView>
         </View>
         
@@ -2014,16 +2072,16 @@ const TasksScreen = ({ navigation }) => {
             <Animated.View style={{opacity: opacityAnim}}>
               <Icon name="list" size={60} color="#d1d8e0" />
               <Text style={styles.emptyText}>
-                Aucun défi{filter !== 'all' ? ' dans cette catégorie' : ''}
+                Aucune quête{filter !== 'all' ? ' dans cette catégorie' : ''}
               </Text>
               <Text style={styles.emptySubText}>
                 {filter === 'all' 
-                  ? 'Créez votre premier défi en appuyant sur "+ Nouveau défi"'
+                  ? 'Créez votre première quête en appuyant sur "+ Nouvelle quête"'
                   : filter === 'custom'
-                    ? 'Créez votre premier défi personnel en appuyant sur "+ Nouveau défi"'
+                    ? 'Créez votre première quête personnelle en appuyant sur "+ Nouvelle quête"'
                     : filter === 'daily'
-                      ? 'Aucun défi quotidien disponible pour le moment'
-                      : 'Complétez des défis pour les voir ici'
+                      ? 'Aucune quête journalière disponible pour le moment'
+                      : 'Accomplissez des quêtes pour les voir ici'
                 }
               </Text>
               {filter !== 'all' && (
@@ -2031,7 +2089,7 @@ const TasksScreen = ({ navigation }) => {
                   style={styles.emptyActionButton}
                   onPress={() => applyFilter('all')}
                 >
-                  <Text style={styles.emptyActionButtonText}>Voir tous les défis</Text>
+                  <Text style={styles.emptyActionButtonText}>Voir toutes les quêtes</Text>
                 </TouchableOpacity>
               )}
             </Animated.View>

@@ -33,6 +33,16 @@ import { useFocusEffect } from '@react-navigation/native';
 import { SCREEN, STORAGE_KEYS } from '../utils/constants';
 import { LinearGradient } from 'expo-linear-gradient';
 
+// Ajouter ces constantes de couleur gaming pour unifier le thème
+const GAMING_COLORS = {
+  background: '#151736',
+  cardBackground: '#1e2146',
+  secondary: '#4e54c8',
+  accent: '#a3d8f5',
+  darkBlue: '#21254c',
+  headerBg: '#0f1123',
+};
+
 const FriendsScreen = ({ navigation }) => {
   // États et refs inchangés
   const [search, setSearch] = useState('');
@@ -940,7 +950,7 @@ const FriendsScreen = ({ navigation }) => {
           ListEmptyComponent={
             !isLoading ? (
               <View style={styles.emptyContainer}>
-                <Icon name="mail-outline" size={60} color={COLORS.textLight} />
+                <Icon name="mail-outline" size={60} color="#a3d8f5" />
                 <Text style={styles.emptyText}>Aucune demande en attente</Text>
               </View>
             ) : null
@@ -960,16 +970,16 @@ const FriendsScreen = ({ navigation }) => {
           ListEmptyComponent={
             isSearching ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
+                <ActivityIndicator size="large" color={GAMING_COLORS.secondary} />
               </View>
             ) : search.length > 2 ? (
               <View style={styles.emptyContainer}>
-                <Icon name="search-outline" size={60} color={COLORS.textLight} />
+                <Icon name="search-outline" size={60} color="#a3d8f5" />
                 <Text style={styles.emptyText}>Aucun utilisateur trouvé</Text>
               </View>
             ) : (
               <View style={styles.emptyContainer}>
-                <Icon name="search-outline" size={60} color={COLORS.textLight} />
+                <Icon name="search-outline" size={60} color="#a3d8f5" />
                 <Text style={styles.emptyText}>
                   Saisissez au moins 3 caractères pour rechercher
                 </Text>
@@ -1015,17 +1025,19 @@ const FriendsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: GAMING_COLORS.background,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.light,
+    backgroundColor: GAMING_COLORS.cardBackground,
     borderRadius: 10,
     paddingHorizontal: 10,
     marginHorizontal: 16,
     marginTop: 16,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#292b45',
   },
   searchIcon: {
     marginRight: 10,
@@ -1034,13 +1046,14 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     fontSize: 16,
+    color: '#fff',
   },
   tabContainer: {
     flexDirection: 'row',
     marginHorizontal: 16,
     marginBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.light,
+    borderBottomColor: '#292b45',
   },
   tab: {
     paddingVertical: 12,
@@ -1049,14 +1062,14 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: COLORS.primary,
+    borderBottomColor: GAMING_COLORS.secondary,
   },
   tabText: {
     fontSize: 16,
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
   },
   activeTabText: {
-    color: COLORS.primary,
+    color: '#fff',
     fontWeight: '600',
   },
   tabWithBadge: {
@@ -1088,8 +1101,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
+    paddingHorizontal: 10,
+    marginBottom: 8,
+    borderRadius: 12,
+    backgroundColor: GAMING_COLORS.cardBackground,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.light,
+    borderBottomColor: '#292b45',
+    borderWidth: 1,
+    borderColor: '#292b45',
   },
   userInfo: {
     flexDirection: 'row',
@@ -1100,10 +1119,12 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: COLORS.primary,
+    backgroundColor: GAMING_COLORS.secondary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   avatarText: {
     color: COLORS.white,
@@ -1118,11 +1139,14 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.textPrimary,
+    color: '#fff',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
   },
   userHandle: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
   },
   actionButtons: {
     flexDirection: 'row',
@@ -1131,26 +1155,30 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderColor: GAMING_COLORS.secondary,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(78, 84, 200, 0.1)',
   },
   requestActions: {
     flexDirection: 'row',
   },
   acceptButton: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: GAMING_COLORS.secondary,
+    borderColor: GAMING_COLORS.secondary,
   },
   pendingBadge: {
-    backgroundColor: COLORS.light,
+    backgroundColor: 'rgba(78, 84, 200, 0.2)',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(78, 84, 200, 0.3)',
   },
   pendingText: {
-    color: COLORS.textSecondary,
+    color: '#a3d8f5',
     fontSize: 12,
+    fontWeight: '500',
   },
   loadingOverlay: {
     position: 'absolute',
@@ -1161,6 +1189,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
+    backgroundColor: 'rgba(15, 17, 35, 0.7)',
   },
   loadingContainer: {
     flex: 1,
@@ -1176,13 +1205,13 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
     marginTop: 10,
     textAlign: 'center',
   },
   emptySubText: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
     marginTop: 6,
     textAlign: 'center',
   },
@@ -1194,16 +1223,18 @@ const styles = StyleSheet.create({
   },
   loadMoreText: {
     marginLeft: 8,
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
   },
   botFriendsButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.primary,
+    backgroundColor: GAMING_COLORS.secondary,
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 20,
     marginTop: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   botFriendsButtonText: {
     color: COLORS.white,
@@ -1215,11 +1246,11 @@ const styles = StyleSheet.create({
   },
   tabIndicator: {
     height: 2,
-    width: '20%', // Largeur fixe
-    backgroundColor: COLORS.primary,
+    width: '20%',
+    backgroundColor: GAMING_COLORS.secondary,
     position: 'absolute',
     bottom: 0,
-    left: 0, // Ne pas utiliser left pour l'animation, nous utilisons translateX
+    left: 0,
   },
   // Nouveaux styles pour l'onglet couple
   coupleContainer: {
