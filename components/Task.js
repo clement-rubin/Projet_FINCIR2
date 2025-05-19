@@ -1,588 +1,494 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import Icon from './common/Icon';
-import { CHALLENGE_TYPES, CHALLENGE_CATEGORIES } from '../utils/constants';
-import { formatDate, getTimeRemaining, getRelativeTime } from '../utils/dateUtils';
+import { getRelativeTime } from '../utils/dateUtils';
 
 const Task = ({ 
   title, 
   description, 
   points, 
   difficulty, 
-  difficultyColor = '#3498db',
+  difficultyColor,
+  completed,
+  type,
   category,
-  type = CHALLENGE_TYPES.REGULAR,
-  completed, 
   expiresAt,
   dueDate,
   completedAt,
   streak,
-  onComplete, 
+  onComplete,
   onDelete,
   onRate,
-  userRating = 0,
-  index = 0 // Nouvel indice pour animer l'entrée en cascade
+  userRating,
+  index = 0
 }) => {
-  // Animation d'entrée de la tâche
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-  const translateYAnim = useRef(new Animated.Value(30)).current;
-
+  const [showOptions, setShowOptions] = useState(false);
+  const [showDescription, setShowDescription] = useState(false);
+  const [rating, setRating] = useState(userRating || 0);
+  
+  // Animation
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.97)).current;
+  
   useEffect(() => {
-    // Animation d'entrée avec délai basé sur l'index pour effet cascade
-    const delay = index * 100; // Délai progressif basé sur l'indice de l'élément
+    const timeout = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 500,
+          delay: index * 100,
+          useNativeDriver: true
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          friction: 8,
+          useNativeDriver: true
+        })
+      ]).start();
+    }, 100);
     
-    Animated.parallel([
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 400,
-        delay: delay,
-        useNativeDriver: true
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 7,
-        tension: 50,
-        delay: delay,
-        useNativeDriver: true
-      }),
-      Animated.timing(translateYAnim, {
-        toValue: 0,
-        duration: 400,
-        delay: delay,
-        useNativeDriver: true
-      })
-    ]).start();
+    return () => clearTimeout(timeout);
   }, []);
-
-  // Calcul du temps restant pour les défis temporaires
-  const getRemainingTimeText = () => {
-    if (!expiresAt) return null;
-    
-    // Utiliser notre fonction utilitaire pour obtenir un texte convivial
-    return getTimeRemaining(expiresAt);
-  };
-    // Formater la date d'expiration pour l'affichage
-  const getExpirationDateText = () => {
-    if (!expiresAt) return null;
-    
-    const expireDate = new Date(expiresAt);
-    
-    // Utiliser notre fonction de formatage avec des options adaptées
-    return formatDate(expireDate, { 
-      showWeekday: true, 
-      showTime: true, 
-      showYear: false 
-    });
+  
+  const toggleOptions = () => {
+    setShowOptions(!showOptions);
   };
   
-  // Formater la date d'échéance pour l'affichage
-  const getDueDateText = () => {
+  const toggleDescription = () => {
+    setShowDescription(!showDescription);
+  };
+  
+  const handleRate = (value) => {
+    setRating(value);
+    if (onRate) onRate(value);
+  };
+  
+  // Détermine si une date d'échéance arrive bientôt (dans les 24 heures)
+  const isUrgent = () => {
+    if (!dueDate) return false;
+    
+    const now = new Date();
+    const due = new Date(dueDate);
+    const diffInHours = (due - now) / (1000 * 60 * 60);
+    
+    return diffInHours > 0 && diffInHours < 24;
+  };
+  
+  // Formatage de l'expiration
+  const getExpiryInfo = () => {
+    if (!expiresAt) return null;
+    
+    return getRelativeTime(expiresAt);
+  };
+  
+  // Formatage de la date d'échéance
+  const getDueDateInfo = () => {
     if (!dueDate) return null;
     
-    const dueDateObj = new Date(dueDate);
-    
-    // Utiliser notre fonction de formatage avec des options adaptées
-    return formatDate(dueDateObj, { 
-      showWeekday: true, 
-      showTime: false,
-      showYear: true
-    });
-  };
-  
-  // Formater la date de validation pour l'affichage
-  const getCompletedAtText = () => {
-    if (!completedAt) return null;
-    
-    const completedAtDate = new Date(completedAt);
-    
-    // Utiliser notre fonction de formatage avec des options adaptées
-    return formatDate(completedAtDate, { 
-      showWeekday: true, 
-      showTime: true,
-      showYear: false
-    });
-  };
-  
-  // Style spécifique selon le type de défi et la catégorie
-  const getTaskTypeStyle = () => {
-    const baseStyle = {
-      borderLeftWidth: 5,
-    };
-
-    if (completed) {
-      return {
-        ...baseStyle,
-        backgroundColor: '#e8f5e9',
-        borderLeftColor: '#4caf50',
-      };
-    }
-
-    // Si c'est un défi quotidien, on garde le style orange
-    if (type === CHALLENGE_TYPES.DAILY) {
-      return {
-        ...baseStyle,
-        borderLeftColor: '#f39c12',
-        backgroundColor: '#fffbef'
-      };
-    }
-
-    // Pour les défis standards, on utilise la couleur de la catégorie
-    const categoryInfo = getCategoryInfo();
-    if (categoryInfo) {
-      return {
-        ...baseStyle,
-        borderLeftColor: categoryInfo.color,
-        backgroundColor: `${categoryInfo.color}10`, // Très légère teinte de la couleur de la catégorie
-      };
-    }
-
-    // Style par défaut si pas de catégorie
-    return baseStyle;
-  };
-  
-  // Récupérer l'icône et la couleur de la catégorie (si définie)
-  const getCategoryInfo = () => {
-    if (!category) return null;
-    
-    const categoryKey = Object.keys(CHALLENGE_CATEGORIES).find(
-      key => CHALLENGE_CATEGORIES[key].id.toLowerCase() === category.toLowerCase()
-    );
-    
-    return categoryKey ? CHALLENGE_CATEGORIES[categoryKey] : null;
-  };
-    const categoryInfo = getCategoryInfo();
-  const timeRemainingText = getRemainingTimeText();
-  const expirationDateText = getExpirationDateText();
-  const dueDateText = getDueDateText();
-  const completedAtText = getCompletedAtText();
-
-  const [showRating, setShowRating] = useState(false);
-  const [rating, setRating] = useState(0);
-
-  const handleComplete = () => {
-    // Valider directement le défi
-    onComplete();
-    // Afficher l'option de notation
-    setShowRating(true);
-  };
-
-  const handleRateSubmit = () => {
-    if (onRate) {
-      onRate(rating);
-    }
-    setShowRating(false);
-  };
-
-  const handleSkipRating = () => {
-    setShowRating(false);
-  };
-
-  const renderStars = () => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <TouchableOpacity
-          key={i}
-          onPress={() => setRating(i)}
-          style={styles.starButton}
-        >
-          <Icon
-            name={i <= rating ? "star" : "star-outline"}
-            size={30}
-            color={i <= rating ? "#FFD700" : "#bbb"}
-          />
-        </TouchableOpacity>
-      );
-    }
-    return stars;
-  };
-
-  const renderCompletedRating = () => {
-    if (!completed || !userRating) return null;
-    
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <Icon
-          key={i}
-          name={i <= userRating ? "star" : "star-outline"}
-          size={16}
-          color={i <= userRating ? "#FFD700" : "#bbb"}
-          style={{ marginRight: 2 }}
-        />
-      );
-    }
-    
-    return (
-      <View style={styles.completedRatingContainer}>
-        <Text style={styles.completedRatingLabel}>Difficulté évaluée :</Text>
-        <View style={styles.completedStarsContainer}>
-          {stars}
-        </View>
-      </View>
-    );
-  };
-  
-  // Dictionnaire pour traduire les catégories en français
-  const CATEGORY_LABELS_FR = {
-    FITNESS: "Sport",
-    MINDFULNESS: "Méditation",
-    LEARNING: "Lecture / Apprentissage",
-    SOCIAL: "Social",
-    PRODUCTIVITY: "Productivité",
-    CREATIVITY: "Créativité",
-    WELLBEING: "Bien-être",
-    NUTRITION: "Nutrition",
-    CULTURE: "Culture",
-    QUIZ: "Question du jour",
-    "QUESTION DU JOUR": "Question du jour",
-    CUSTOM: "Personnalisé",
-    AUTRE: "Autre"
+    return getRelativeTime(dueDate);
   };
 
   return (
-    <Animated.View style={[styles.container, getTaskTypeStyle(), { transform: [{ scale: scaleAnim }, { translateY: translateYAnim }], opacity: opacityAnim }]}>
-      {/* Badges de type et catégorie */}
-      <View style={styles.badgeContainer}>
-        {type === CHALLENGE_TYPES.DAILY && (
-          <View style={[styles.typeBadge, { backgroundColor: '#f39c12' }]}>
-            <Icon name="today" size={12} color="#fff" style={styles.badgeIcon} />
-            <Text style={styles.typeBadgeText}>Quotidien</Text>
+    <Animated.View 
+      style={[
+        styles.taskContainer, 
+        { 
+          opacity: fadeAnim,
+          transform: [{ scale: scaleAnim }]
+        }
+      ]}
+    >
+      {/* Badges spéciaux et indicateurs */}
+      {type === 'DAILY' && (
+        <View style={styles.typeIndicator}>
+          <Icon name="calendar" size={12} color="#fff" />
+          <Text style={styles.typeText}>Quotidien</Text>
+        </View>
+      )}
+      
+      {streak > 0 && (
+        <View style={styles.streakBadge}>
+          <Text style={styles.streakText}>{streak}🔥</Text>
+        </View>
+      )}
+      
+      {/* Effet de brillance pour les tâches urgentes */}
+      {dueDate && isUrgent() && <View style={styles.glowEffect} />}
+      
+      {/* Contenu principal de la tâche */}
+      <View style={styles.taskContent}>
+        <View style={styles.taskHeader}>
+          <Text 
+            style={styles.taskTitle}
+            numberOfLines={showDescription ? undefined : 1}
+          >
+            {title}
+          </Text>
+          <View style={styles.pointsContainer}>
+            <Text style={styles.points}>+{points}</Text>
           </View>
+        </View>
+        
+        {showDescription && (
+          <Text style={styles.taskDescription}>
+            {description}
+          </Text>
         )}
         
-        {type === CHALLENGE_TYPES.TIMED && (
-          <View style={[styles.typeBadge, { backgroundColor: '#e74c3c' }]}>
-            <Icon name="timer" size={12} color="#fff" style={styles.badgeIcon} />
-            <Text style={styles.typeBadgeText}>Temporaire</Text>
+        <View style={styles.taskMeta}>
+          <View style={styles.taskInfo}>
+            {category && (
+              <View style={styles.taskCategory}>
+                <Text style={styles.categoryText}>{category}</Text>
+              </View>
+            )}
+            <View 
+              style={[
+                styles.taskDifficulty,
+                { backgroundColor: difficultyColor }
+              ]}
+            >
+              <Text style={styles.difficultyText}>{difficulty}</Text>
+            </View>
           </View>
-        )}
-        
-        {type === CHALLENGE_TYPES.STREAK && (
-          <View style={[styles.typeBadge, { backgroundColor: '#9b59b6' }]}>
-            <Icon name="flame" size={12} color="#fff" style={styles.badgeIcon} />
-            <Text style={styles.typeBadgeText}>Série: {streak || 0}</Text>
+          
+          <View style={styles.taskActions}>
+            {!completed && (
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.completeButton]}
+                onPress={onComplete}
+              >
+                <Icon name="checkmark" size={18} color="#2ecc71" />
+              </TouchableOpacity>
+            )}
+            
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={toggleDescription}
+            >
+              <Icon name={showDescription ? "chevron-up" : "chevron-down"} size={18} color="#fff" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.deleteButton]}
+              onPress={onDelete}
+            >
+              <Icon name="trash" size={18} color="#e74c3c" />
+            </TouchableOpacity>
           </View>
-        )}
+        </View>
         
-        {categoryInfo && (
-          <View style={[styles.categoryBadge, { backgroundColor: categoryInfo.color + '20', borderColor: categoryInfo.color }]}>
-            <Icon name={categoryInfo.icon} size={12} color={categoryInfo.color} style={styles.badgeIcon} />
-            <Text style={[styles.categoryBadgeText, { color: categoryInfo.color }]}>
-              {CATEGORY_LABELS_FR[categoryInfo.id] || categoryInfo.name}
+        {/* Informations supplémentaires */}
+        {dueDate && (
+          <View style={styles.dueDateContainer}>
+            <Icon name="time" size={14} color="#a3d8f5" />
+            <Text style={[
+              styles.dueDateText,
+              isUrgent() && styles.expiryWarning
+            ]}>
+              {isUrgent() ? "Urgent! " : ""}
+              À faire {getDueDateInfo()}
             </Text>
           </View>
         )}
+        
+        {expiresAt && (
+          <View style={styles.dueDateContainer}>
+            <Icon name="alarm" size={14} color="#a3d8f5" />
+            <Text style={styles.dueDateText}>
+              Expire {getExpiryInfo()}
+            </Text>
+          </View>
+        )}
+        
+        {/* Options de notation pour les tâches complétées */}
+        {completed && (
+          <>
+            <View style={styles.ratingContainer}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity
+                  key={star}
+                  style={[
+                    styles.ratingButton,
+                    rating >= star && styles.ratingButtonActive
+                  ]}
+                  onPress={() => handleRate(star)}
+                >
+                  <Icon 
+                    name={rating >= star ? "star" : "star-outline"} 
+                    size={20} 
+                    color={rating >= star ? "#ffd700" : "#7f8c8d"} 
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+            
+            <View style={styles.completedInfo}>
+              <Text style={styles.completedAt}>
+                Complété {completedAt ? getRelativeTime(completedAt) : "récemment"}
+              </Text>
+            </View>
+          </>
+        )}
       </View>
       
-      <View style={styles.taskInfo}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.description}>{description}</Text>
-        
-        <View style={styles.metaContainer}>
-          <View style={[styles.pointsContainer, { backgroundColor: difficultyColor + '20', borderColor: difficultyColor }]}>
-            <Icon name="star" size={14} color={difficultyColor} style={styles.pointsIcon} />
-            <Text style={[styles.pointsText, { color: difficultyColor }]}>+{points} points</Text>
-          </View>
-            {timeRemainingText && (
-            <View style={styles.timeContainer}>
-              <Icon name="time" size={14} color="#e74c3c" style={styles.timeIcon} />
-              <Text style={styles.timeText}>{timeRemainingText}</Text>
-            </View>
-          )}
-          
-          {dueDateText && !completed && (
-            <View style={styles.dueDateContainer}>
-              <Icon name="calendar" size={14} color="#3498db" style={styles.dueDateIcon} />
-              <Text style={styles.dueDateText}>Échéance: {dueDateText}</Text>
-            </View>
-          )}
-          
-          {completedAt && completed && (
-            <View style={styles.completedAtContainer}>
-              <Icon name="checkmark-circle" size={14} color="#2ecc71" style={styles.completedAtIcon} />
-              <Text style={styles.completedAtText}>Validé le: {completedAtText}</Text>
-            </View>
-          )}
-          
-          {renderCompletedRating()}
+      {/* Overlay pour les tâches complétées */}
+      {completed && (
+        <View style={styles.completedOverlay}>
+          <Text style={styles.completedText}>Accompli</Text>
         </View>
-      </View>
-      
-      <View style={styles.buttonContainer}>
-        {!completed && !showRating && (
-          <TouchableOpacity 
-            style={styles.completeButton} 
-            onPress={handleComplete}
-          >
-            <Icon name="checkmark" size={16} color="#fff" style={styles.buttonIcon} />
-            <Text style={styles.buttonText}>Terminer</Text>
-          </TouchableOpacity>
-        )}
-        
-        {showRating && (
-          <View style={styles.ratingContainer}>
-            <Text style={styles.ratingText}>Comment avez-vous trouvé ce défi ?</Text>
-            <View style={styles.starsContainer}>
-              {renderStars()}
-            </View>
-            <View style={styles.ratingButtons}>
-              <TouchableOpacity 
-                style={[styles.submitRatingButton, styles.skipButton]}
-                onPress={handleSkipRating}
-              >
-                <Text style={styles.skipButtonText}>Passer</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.submitRatingButton}
-                onPress={handleRateSubmit}
-              >
-                <Text style={styles.submitRatingText}>Valider la note</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {!completed && !showRating && (
-          <TouchableOpacity 
-            style={styles.deleteButton} 
-            onPress={onDelete}
-          >
-            <Icon name="trash" size={16} color="#e74c3c" style={styles.buttonIcon} />
-            <Text style={styles.deleteButtonText}>Supprimer</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      )}
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    marginVertical: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  badgeContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 10,
-  },
-  typeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+  taskContainer: {
+    marginBottom: 15,
     borderRadius: 12,
-    marginRight: 8,
-    marginBottom: 5,
-  },
-  badgeIcon: {
-    marginRight: 4,
-  },
-  typeBadgeText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  categoryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#1e2146',
     borderWidth: 1,
-    marginRight: 8,
-    marginBottom: 5,
+    borderColor: '#292b45',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  categoryBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+  taskContent: {
+    padding: 15,
   },
-  taskInfo: {
-    marginBottom: 10,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  description: {
-    fontSize: 14,
-    color: '#666',
+  taskHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  metaContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  pointsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 10,
-    marginBottom: 5,
-  },
-  pointsIcon: {
-    marginRight: 4,
-  },
-  pointsText: {
+  taskTitle: {
+    fontSize: 17,
     fontWeight: 'bold',
-    fontSize: 13,
+    color: '#fff',
+    flex: 1,
+    marginRight: 10,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
-  timeContainer: {
+  taskDescription: {
+    fontSize: 14,
+    color: '#a3aed0',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  taskMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  taskInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffe5e0',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 5,
-  },  timeIcon: {
-    marginRight: 4,
   },
-  timeText: {
-    color: '#e74c3c',
+  taskDifficulty: {
     fontSize: 12,
     fontWeight: '600',
+    color: '#fff',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginRight: 8,
+  },
+  difficultyText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  taskCategory: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#fff',
+    backgroundColor: 'rgba(78, 84, 200, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginRight: 8,
+  },
+  categoryText: {
+    color: '#a3d8f5',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  taskActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionButton: {
+    width: 35,
+    height: 35,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 6,
+    backgroundColor: 'rgba(78, 84, 200, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  completeButton: {
+    backgroundColor: 'rgba(46, 204, 113, 0.2)',
+  },
+  deleteButton: {
+    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+  },
+  pointsContainer: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#4e54c8',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#21254c',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  points: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  completedOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  completedText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    textTransform: 'uppercase',
+    backgroundColor: 'rgba(46, 204, 113, 0.8)',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 5,
+    transform: [{ rotate: '-15deg' }],
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 3,
   },
   dueDateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e8f4fc',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-    marginBottom: 5,
-    marginRight: 6,
-  },
-  dueDateIcon: {
-    marginRight: 4,
+    marginTop: 10,
+    backgroundColor: 'rgba(78, 84, 200, 0.1)',
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(78, 84, 200, 0.2)',
   },
   dueDateText: {
-    color: '#3498db',
     fontSize: 12,
-    fontWeight: '600',
+    color: '#a3d8f5',
+    marginLeft: 5,
   },
-  completedAtContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e8f8e8',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-    marginBottom: 5,
-    marginRight: 6,
-  },
-  completedAtIcon: {
-    marginRight: 4,
-  },
-  completedAtText: {
-    color: '#2ecc71',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 10,
-  },
-  completeButton: {
-    backgroundColor: '#3498db',
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-    marginRight: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  deleteButton: {
-    backgroundColor: '#f8f8f8',
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  buttonIcon: {
-    marginRight: 5,
-  },
-  buttonText: {
-    color: '#fff',
+  expiryWarning: {
+    color: '#ff7675',
     fontWeight: 'bold',
-  },
-  deleteButtonText: {
-    color: '#e74c3c',
   },
   ratingContainer: {
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  ratingText: {
-    fontSize: 16,
-    marginBottom: 10,
-    color: '#666',
-  },
-  starsContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 15,
-  },
-  starButton: {
-    padding: 5,
-  },
-  submitRatingButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-  },
-  submitRatingText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  completedRatingContainer: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    marginTop: 8,
-  },
-  completedRatingLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
-  },
-  completedStarsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ratingButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
     marginTop: 10,
   },
-  skipButton: {
-    backgroundColor: '#f8f8f8',
-    borderColor: '#ddd',
-    borderWidth: 1,
+  ratingButton: {
+    padding: 5,
+    marginHorizontal: 2,
   },
-  skipButtonText: {
-    color: '#666',
-  }
+  ratingButtonActive: {
+    // No change needed
+  },
+  completedInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    justifyContent: 'flex-end',
+  },
+  completedAt: {
+    fontSize: 11,
+    color: '#a3aed0',
+    fontStyle: 'italic',
+  },
+  // Animations and effects
+  streakBadge: {
+    position: 'absolute',
+    top: -8,
+    left: -8,
+    backgroundColor: '#ff9f43',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#21254c',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+    zIndex: 2,
+  },
+  streakText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  glowEffect: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'rgba(78, 84, 200, 0.5)',
+  },
+  typeIndicator: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: 'rgba(52, 152, 219, 0.8)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  typeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginLeft: 3,
+  },
 });
 
 export default Task;
