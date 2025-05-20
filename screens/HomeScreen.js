@@ -77,7 +77,7 @@ export default function HomeScreen({ navigation }) {
   const [quizResult, setQuizResult] = useState(null);
   const [quizStreak, setQuizStreak] = useState(0);
   const [quizProgress, setQuizProgress] = useState(0);
-  const [quizProgressTotal, setQuizProgressTotal] = useState(10);
+  const [quizProgressTotal, setQuizProgressTotal] = useState(5); // Limite à 5 quiz/jour
   const [quizCooldown, setQuizCooldown] = useState(null);
   const [quizAnimation, setQuizAnimation] = useState(null);
   
@@ -179,30 +179,40 @@ export default function HomeScreen({ navigation }) {
       if (cooldownData) {
         const { until, remainingTime } = JSON.parse(cooldownData);
         const now = new Date().getTime();
-        
         if (now < until) {
-          // Le cooldown est toujours actif
           setQuizCooldown({
             until,
             remainingTime: Math.floor((until - now) / 1000)
           });
-          
-          // Démarrer le compte à rebours
           startQuizCooldownTimer(until);
           return;
         } else {
-          // Le cooldown est terminé, on peut le supprimer
           await AsyncStorage.removeItem('@challengr_quiz_cooldown');
         }
       }
-      
+
       // Charger les statistiques du quiz
       const statsData = await AsyncStorage.getItem('@challengr_quiz_stats');
       if (statsData) {
         const stats = JSON.parse(statsData);
         setQuizStreak(stats.streak || 0);
         setQuizProgress(stats.progress || 0);
-        setQuizProgressTotal(stats.total || 10);
+        setQuizProgressTotal(5); // Toujours 5 quiz max/jour
+
+        // Si déjà 5 quiz sont faits, activer le cooldown jusqu'à minuit
+        if ((stats.progress || 0) >= 5) {
+          const now = new Date();
+          const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+          const until = tomorrow.getTime();
+          const cooldown = {
+            until,
+            remainingTime: Math.floor((until - now.getTime()) / 1000)
+          };
+          await AsyncStorage.setItem('@challengr_quiz_cooldown', JSON.stringify(cooldown));
+          setQuizCooldown(cooldown);
+          startQuizCooldownTimer(until);
+          return;
+        }
       }
       
       // Récupérer la question du jour
@@ -287,13 +297,28 @@ export default function HomeScreen({ navigation }) {
         
         // Mis à jour des statistiques
         const statsData = await AsyncStorage.getItem('@challengr_quiz_stats');
-        const stats = statsData ? JSON.parse(statsData) : { streak: 0, progress: 0, total: 10 };
+        const stats = statsData ? JSON.parse(statsData) : { streak: 0, progress: 0, total: 5 };
         stats.streak += 1;
         stats.progress += 1;
+        stats.total = 5; // Toujours 5 quiz max/jour
         await AsyncStorage.setItem('@challengr_quiz_stats', JSON.stringify(stats));
-        
         setQuizStreak(stats.streak);
         setQuizProgress(stats.progress);
+
+        // Si on atteint 5 quiz, activer le cooldown jusqu'à minuit
+        if (stats.progress >= 5) {
+          const now = new Date();
+          const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+          const until = tomorrow.getTime();
+          const cooldown = {
+            until,
+            remainingTime: Math.floor((until - now.getTime()) / 1000)
+          };
+          await AsyncStorage.setItem('@challengr_quiz_cooldown', JSON.stringify(cooldown));
+          setQuizCooldown(cooldown);
+          startQuizCooldownTimer(until);
+          return;
+        }
         
         // Montrer l'animation de récompense
         showRewardAnimation();
@@ -1709,12 +1734,12 @@ const CATEGORY_LABELS_FR = {
                       <View 
                         style={[
                           styles.quizProgressFill, 
-                          { width: `${(quizProgress / quizProgressTotal) * 100}%` }
+                          { width: `${Math.min((quizProgress / quizProgressTotal), 1) * 100}%` }
                         ]} 
                       />
                     </View>
                     <Text style={styles.quizProgressText}>
-                      {quizProgress}/{quizProgressTotal} <Text style={{color: '#8e44ad'}}>niveaux</Text>
+                      {Math.min(quizProgress, 5)}/5 <Text style={{color: '#8e44ad'}}>niveaux</Text>
                     </Text>
                   </View>
                   
@@ -1976,7 +2001,7 @@ const CATEGORY_LABELS_FR = {
                   value={newActivity.description}
                   onChangeText={(text) =>
                     setNewActivity((prev) => ({ ...prev, description: text }))
-                  }
+                                   }
                   multiline
                 />
                 <TouchableOpacity
