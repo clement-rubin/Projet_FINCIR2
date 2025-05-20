@@ -15,6 +15,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import FriendsScreen from '../screens/FriendsScreen';
 import ConversationScreen from '../screens/ConversationScreen';
 import AboutUsScreen from '../screens/AboutUs';
+import NearbyTasksScreen from '../screens/NearbyTasksScreen';
 import Icon, { COLORS } from '../components/common/Icon';
 
 const Stack = createStackNavigator();
@@ -68,6 +69,10 @@ function CustomTabBar({ state, descriptors, navigation }) {
               } else if (route.name === 'Tasks') {
                 iconName = isFocused ? 'list' : 'list-outline';
                 title = 'Quêtes';
+                iconColor = isFocused ? '#a3d8f5' : '#fff';
+              } else if (route.name === 'NearbyTasks') {
+                iconName = isFocused ? 'location' : 'location-outline';
+                title = 'Autour de moi';
                 iconColor = isFocused ? '#a3d8f5' : '#fff';
               } else if (route.name === 'Profile') {
                 iconName = isFocused ? 'person' : 'person-outline';
@@ -208,6 +213,10 @@ function TabNavigator({ isGuest, onLogout }) {
       <Tab.Screen 
         name="Tasks" 
         component={TasksScreen} 
+      />
+      <Tab.Screen 
+        name="NearbyTasks" 
+        component={NearbyTasksScreen} 
       />
       <Tab.Screen 
         name="Friends" 
