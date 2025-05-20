@@ -305,18 +305,29 @@ export default function HomeScreen({ navigation }) {
         setQuizStreak(stats.streak);
         setQuizProgress(stats.progress);
 
-        // Si on atteint 5 quiz, activer le cooldown jusqu'à minuit
+        // Si on atteint 5 quiz, célébration puis cooldown
         if (stats.progress >= 5) {
-          const now = new Date();
-          const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
-          const until = tomorrow.getTime();
-          const cooldown = {
-            until,
-            remainingTime: Math.floor((until - now.getTime()) / 1000)
-          };
-          await AsyncStorage.setItem('@challengr_quiz_cooldown', JSON.stringify(cooldown));
-          setQuizCooldown(cooldown);
-          startQuizCooldownTimer(until);
+          // Montrer l'animation de récompense (victoire) comme pour les autres questions
+          showRewardAnimation();
+
+          // Attendre la célébration puis activer le cooldown et afficher la page "Challenge réussi"
+          setTimeout(async () => {
+            setQuizAnimation(null);
+            setSelectedAnswer(null);
+            setQuizResult(null);
+
+            // Activer le cooldown jusqu'à minuit
+            const now = new Date();
+            const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+            const until = tomorrow.getTime();
+            const cooldown = {
+              until,
+              remainingTime: Math.floor((until - now.getTime()) / 1000)
+            };
+            await AsyncStorage.setItem('@challengr_quiz_cooldown', JSON.stringify(cooldown));
+            setQuizCooldown(cooldown);
+            startQuizCooldownTimer(until);
+          }, 1500); // même délai que pour les autres questions
           return;
         }
         
@@ -1748,13 +1759,38 @@ const CATEGORY_LABELS_FR = {
                     {/* Si en cooldown, afficher le message d'attente */}
                     {quizCooldown ? (
                       <View style={styles.quizCooldownContainer}>
-                        <Icon name="hourglass" size={40} color="#e74c3c" style={styles.cooldownIcon} />
-                        <Text style={styles.cooldownTitle}>Challenge échoué!</Text>
+                        <Icon
+                          name="hourglass"
+                          size={40}
+                          color={quizProgress >= quizProgressTotal ? "#32cd32" : "#e74c3c"}
+                          style={styles.cooldownIcon}
+                        />
+                        <Text
+                          style={[
+                            styles.cooldownTitle,
+                            quizProgress >= quizProgressTotal
+                              ? { color: '#32cd32' }
+                              : { color: '#e74c3c' }
+                          ]}
+                        >
+                          {
+                            quizProgress >= quizProgressTotal
+                              ? "Challenge réussi !"
+                              : "Challenge échoué!"
+                          }
+                        </Text>
                         <Text style={styles.cooldownDescription}>
                           Prochain défi disponible dans :
                         </Text>
                         <View style={styles.cooldownTimerContainer}>
-                          <Text style={styles.cooldownTimer}>
+                          <Text
+                            style={[
+                              styles.cooldownTimer,
+                              quizProgress >= quizProgressTotal
+                                ? { color: '#32cd32' }
+                                : { color: '#e74c3c' }
+                            ]}
+                          >
                             {formatCooldownTime(quizCooldown.remainingTime)}
                           </Text>
                         </View>
@@ -2001,7 +2037,7 @@ const CATEGORY_LABELS_FR = {
                   value={newActivity.description}
                   onChangeText={(text) =>
                     setNewActivity((prev) => ({ ...prev, description: text }))
-                                   }
+                  }
                   multiline
                 />
                 <TouchableOpacity
@@ -2028,7 +2064,7 @@ const CATEGORY_LABELS_FR = {
                   if (coordinate) {
                     setNewActivity((prev) => ({
                       ...prev,
-                      coordinate, // Set the coordinate when a point is selected
+                      coordinate: coordinate, // Set the coordinate when a point is selected
                     }));
                   }
                 }}
