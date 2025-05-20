@@ -41,10 +41,9 @@ function CustomTabBar({ state, descriptors, navigation }) {
       )
     ]).start();
   }, [state.index]);
-
   return (
     <View style={styles.tabBarContainer}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="light-content" backgroundColor="rgba(0,0,0,0)" translucent={true} hidden={Platform.OS === 'android'} />
       <BlurView intensity={90} tint="dark" style={styles.blurContainer}>
         <LinearGradient
           colors={['#1a2151', '#2d3a8c']} // Couleurs plus cohérentes avec le thème gaming

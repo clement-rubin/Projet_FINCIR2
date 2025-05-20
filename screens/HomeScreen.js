@@ -1537,11 +1537,9 @@ const CATEGORY_LABELS_FR = {
   const openProgressDetail = async () => {
     await calculateCategoryPoints();
     setShowProgressDetail(true);
-  };
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+  };  return (
+    <View style={styles.safeArea}>
+      <StatusBar hidden={true} />
       <ScrollView 
         style={styles.container} 
         showsVerticalScrollIndicator={false}
@@ -2377,15 +2375,14 @@ const CATEGORY_LABELS_FR = {
 
       {/* Ajustons l'espace blanc en bas pour éviter que le contenu ne soit masqué par la nouvelle barre de navigation */}
       <View style={{ height: 90 }} />
-    </SafeAreaView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
+const styles = StyleSheet.create({  safeArea: {
     flex: 1,
     backgroundColor: '#0f1123',
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    paddingTop: 0,
   },
   container: {
     flex: 1,

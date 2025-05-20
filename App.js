@@ -404,11 +404,11 @@ export default function App() {
     }
   }, [loadingComplete]);
 
-  // Afficher le splash screen animé
+  // Afficher le splash screen animé  
   if (!splashFinished) {
     return (
       <Animated.View style={[styles.splashContainer, { opacity: fadeAnim }]}>
-        <StatusBar style="light" />
+        <StatusBar hidden={true} />
         <Animated.View style={{ opacity: backgroundOpacity }}>
           <LinearGradient
             colors={[GAMING_COLORS.darkBlue, GAMING_COLORS.primary, GAMING_COLORS.secondary]}
@@ -576,7 +576,7 @@ export default function App() {
 
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar hidden={true} />
       <AppNavigator isGuest={isGuest} onLogout={handleLogout} />
       
       {/* Afficher les questions d'onboarding si c'est la première connexion */}
