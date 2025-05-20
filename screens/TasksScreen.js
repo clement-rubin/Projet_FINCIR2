@@ -719,6 +719,9 @@ const TasksScreen = ({ navigation }) => {
   const [level, setLevel] = useState(1);  
   const [filteredTasks, setFilteredTasks] = useState([]);
   const [filter, setFilter] = useState('all');
+  // Ajouter un état pour les défis du CIR Day
+  const [cirDayChallenges, setCirDayChallenges] = useState([]);
+  
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [difficulty, setDifficulty] = useState('MEDIUM');
@@ -752,7 +755,8 @@ const TasksScreen = ({ navigation }) => {
     all: new Animated.Value(filter === 'all' ? 1 : 0.7),
     daily: new Animated.Value(filter === 'daily' ? 1 : 0.7),
     custom: new Animated.Value(filter === 'custom' ? 1 : 0.7),
-    completed: new Animated.Value(filter === 'completed' ? 1 : 0.7)
+    completed: new Animated.Value(filter === 'completed' ? 1 : 0.7),
+    cirday: new Animated.Value(filter === 'cirday' ? 1 : 0.7) // Ajouter l'animation pour l'onglet CIR Day
   });
 
   const [taskRatings, setTaskRatings] = useState({});
@@ -781,11 +785,14 @@ const TasksScreen = ({ navigation }) => {
     // Charger les données
     loadUserData();
     loadTaskRatings();
+    // Charger les défis du CIR Day
+    loadCirDayChallenges();
 
     // Configurer l'écouteur de focus pour recharger les données quand on revient sur cet écran
     const unsubscribe = navigation.addListener('focus', () => {
       loadUserData();
       loadTaskRatings();
+      loadCirDayChallenges(); // Ajouter le rechargement des défis CIR Day
       // Réappliquer le filtre actuel à chaque focus
       applyFilter(filter);
     });
@@ -867,6 +874,95 @@ const TasksScreen = ({ navigation }) => {
       setIsLoading(false);
     }
   };
+
+  // Charger les défis spécifiques au CIR Day
+  const loadCirDayChallenges = async () => {
+    try {
+      // Vérifier d'abord s'il y a des défis CIR Day enregistrés
+      const savedCirDayChallenges = await AsyncStorage.getItem('@challengr_cirday_challenges');
+      let cirDayChallengesList = [];
+      
+      if (savedCirDayChallenges) {
+        cirDayChallengesList = JSON.parse(savedCirDayChallenges);
+      } else {
+        // Si aucun défi n'existe encore, créer les défis par défaut pour CIR Day
+        cirDayChallengesList = [
+          {
+            id: 'cirday-1',
+            title: "Raconter une blague",
+            description: "Faites nous rire avec une blague",
+            points: 10,
+            difficulty: "EASY",
+            difficultyLabel: "Facile",
+            category: "CIR_DAY",
+            completed: false,
+            createdAt: new Date().toISOString(),
+            type: CHALLENGE_TYPES.SPECIAL
+          },
+          {
+            id: 'cirday-2',
+            title: "Saboter un autre groupe",
+            description: "Aidez notre équipe à gagner en sabotant un autre groupe",
+            points: 50,
+            difficulty: "HARD",
+            difficultyLabel: "Difficile",
+            category: "CIR_DAY",
+            completed: false,
+            createdAt: new Date().toISOString(),
+            type: CHALLENGE_TYPES.SPECIAL
+          },
+          {
+            id: 'cirday-3',
+            title: "Faire 10 pompes",
+            description: "Relevez ce défi sportif pendant l'événement",
+            points: 25,
+            difficulty: "MEDIUM",
+            difficultyLabel: "Moyen",
+            category: "CIR_DAY",
+            completed: false,
+            createdAt: new Date().toISOString(),
+            type: CHALLENGE_TYPES.SPECIAL
+          },
+          {
+            id: 'cirday-4',
+            title: "Selfie de groupe",
+            description: "Prenez un selfie avec au moins 4 autres personnes",
+            points: 25,
+            difficulty: "MEDIUM",
+            difficultyLabel: "Moyen",
+            category: "CIR_DAY",
+            completed: false,
+            createdAt: new Date().toISOString(),
+            type: CHALLENGE_TYPES.SPECIAL
+          },
+          {
+            id: 'cirday-5',
+            title: "Voter pour nous",
+            description: "Aidez notre équipe à gagner en votant pour nous",
+            points: 100000,
+            difficulty: "EASY",
+            difficultyLabel: "Facile",
+            category: "CIR_DAY",
+            completed: false,
+            createdAt: new Date().toISOString(),
+            type: CHALLENGE_TYPES.SPECIAL
+          }
+        ];
+        
+        // Enregistrer les défis CIR Day par défaut
+        await AsyncStorage.setItem('@challengr_cirday_challenges', JSON.stringify(cirDayChallengesList));
+      }
+      
+      setCirDayChallenges(cirDayChallengesList);
+      
+      // Mettre à jour les sections
+      organizeTasks(tasks, dailyTasks, timedTasks);
+      
+    } catch (error) {
+      console.error("Erreur lors du chargement des défis CIR Day:", error);
+    }
+  };
+
   // Organiser les défis en sections pour l'affichage
   const organizeTasks = (regularTasks, dailyTasks, timedTasks) => {
     const sections = [];
@@ -886,6 +982,7 @@ const TasksScreen = ({ navigation }) => {
       if (filter === 'daily') return task.type === CHALLENGE_TYPES.DAILY;
       if (filter === 'custom') return task.type !== CHALLENGE_TYPES.DAILY && !task.completed;
       if (filter === 'completed') return task.completed;
+      if (filter === 'cirday') return task.category === 'CIR DAY'; // Filtrer par catégorie pour CIR Day
       return true;
     };
       // Section pour les défis quotidiens
@@ -905,6 +1002,16 @@ const TasksScreen = ({ navigation }) => {
         title: "⏱️ Quêtes éphémères",
         data: filteredTimedTasks,
         info: "Attention! Ces quêtes disparaîtront bientôt. Relevez le défi avant qu'il ne soit trop tard."
+      });
+    }
+    
+    // Section pour les défis CIR Day
+    const filteredCirDayChallenges = cirDayChallenges.filter(filterTask);
+    if (filteredCirDayChallenges.length > 0) {
+      sections.push({
+        title: "🎯 Défis CIR Day",
+        data: filteredCirDayChallenges,
+        info: "Défis spéciaux pour l'événement CIR Day. Participez et gagnez des points bonus!"
       });
     }
     
@@ -937,7 +1044,7 @@ const TasksScreen = ({ navigation }) => {
     setFilter(filterType);
     
     // Récupérer toutes les tâches
-    const allTasksArray = [...dailyTasks, ...timedTasks, ...tasks];
+    const allTasksArray = [...dailyTasks, ...timedTasks, ...tasks, ...cirDayChallenges];
     
     // Mettre à jour les tâches filtrées pour l'affichage selon le nouveau système de filtrage
     let filtered;
@@ -953,14 +1060,17 @@ const TasksScreen = ({ navigation }) => {
     } else if (filterType === 'completed') {
       // "Complétés" montre tous les défis complétés
       filtered = allTasksArray.filter(task => task.completed);
+    } else if (filterType === 'cirday') {
+      // "CIR Day" montre uniquement les défis de l'événement CIR Day
+      filtered = cirDayChallenges;
     }
     
     setFilteredTasks(filtered);
     
     // Mettre à jour les sections avec le nouveau filtre
     const sections = [];
-      // Section pour les séries si l'utilisateur a une série en cours
-    if (streak.count > 0) {
+    // Section pour les séries si l'utilisateur a une série en cours
+    if (streak.count > 0 && filterType !== 'cirday') {
       sections.push({
         title: `🔥 Combo x${streak.count}`,
         data: [],
@@ -974,8 +1084,34 @@ const TasksScreen = ({ navigation }) => {
       if (filterType === 'daily') return type === 'daily' ? tasks : [];
       if (filterType === 'custom') return type === 'custom' ? tasks.filter(task => !task.completed) : [];
       if (filterType === 'completed') return tasks.filter(task => task.completed);
+      if (filterType === 'cirday') return type === 'cirday' ? tasks : [];
       return [];
     };
+
+    // Section spéciale pour les défis CIR Day
+    if (filterType === 'cirday') {
+      const activeCirDayChallenges = cirDayChallenges.filter(task => !task.completed);
+      const completedCirDayChallenges = cirDayChallenges.filter(task => task.completed);
+      
+      if (activeCirDayChallenges.length > 0) {
+        sections.push({
+          title: "🎯 Défis CIR Day",
+          data: activeCirDayChallenges,
+          info: "Défis spéciaux pour l'événement CIR Day. Participez et gagnez des points bonus!"
+        });
+      }
+      
+      if (completedCirDayChallenges.length > 0) {
+        sections.push({
+          title: "✅ Défis CIR Day complétés",
+          data: completedCirDayChallenges,
+          info: "Défis que vous avez déjà relevés pendant l'événement"
+        });
+      }
+      
+      setTaskSections(sections);
+      return;
+    }
 
     // Section pour les défis quotidiens
     const filteredDailyTasks = filterByType(dailyTasks, 'daily');
@@ -995,7 +1131,21 @@ const TasksScreen = ({ navigation }) => {
         data: filteredTimedTasks,
         info: "Attention! Ces quêtes disparaîtront bientôt. Relevez le défi avant qu'il ne soit trop tard."
       });
-    }    // Section pour les défis standards
+    }
+    
+    // Section pour les défis CIR Day dans l'onglet "Tous"
+    if (filterType === 'all') {
+      const filteredCirDayChallenges = cirDayChallenges.filter(task => !task.completed);
+      if (filteredCirDayChallenges.length > 0) {
+        sections.push({
+          title: "🎯 Défis CIR Day",
+          data: filteredCirDayChallenges,
+          info: "Défis spéciaux pour l'événement CIR Day. Participez et gagnez des points bonus!"
+        });
+      }
+    }
+
+    // Section pour les défis standards
     const filteredRegularTasks = filterByType(tasks, 'custom');
     if (filteredRegularTasks.length > 0) {
       const activeRegularTasks = filteredRegularTasks.filter(task => !task.completed);
@@ -1103,11 +1253,20 @@ const TasksScreen = ({ navigation }) => {
         }
       }
       
+      // Vérifier dans les défis CIR Day
+      if (!task) {
+        const cirDayTask = cirDayChallenges.find(t => t.id === id);
+        if (cirDayTask) {
+          task = cirDayTask;
+          taskType = 'cirday';
+        }
+      }
+      
       if (!task || task.completed) return;
 
       // Marquer immédiatement le défi comme complété dans l'état local
       const updateTaskLocally = (tasksList, taskId) => {
-        return tasksList.map(t => t.id === taskId ? { ...t, completed: true } : t);
+        return tasksList.map(t => t.id === taskId ? { ...t, completed: true, completedAt: new Date().toISOString() } : t);
       };
 
       if (taskType === 'standard') {
@@ -1116,11 +1275,20 @@ const TasksScreen = ({ navigation }) => {
         setDailyTasks(updateTaskLocally(dailyTasks, id));
       } else if (taskType === 'timed') {
         setTimedTasks(updateTaskLocally(timedTasks, id));
-      }      // Calculer les points avec le bonus
+      } else if (taskType === 'cirday') {
+        const updatedCirDayChallenges = updateTaskLocally(cirDayChallenges, id);
+        setCirDayChallenges(updatedCirDayChallenges);
+        await AsyncStorage.setItem('@challengr_cirday_challenges', JSON.stringify(updatedCirDayChallenges));
+      }
+      
+      // Calculer les points avec le bonus
       const levelInfo = calculateLevel(points);
       const bonusMultiplier = levelInfo.bonusMultiplier;
       const basePoints = task.points;
-      const pointsToAdd = Math.floor(basePoints * bonusMultiplier);
+      // Points bonus spéciaux pour les défis CIR Day
+      const pointsToAdd = taskType === 'cirday' 
+        ? Math.floor(basePoints * bonusMultiplier * 1.5) // 50% bonus supplémentaire pour les défis CIR Day
+        : Math.floor(basePoints * bonusMultiplier);
       
       // Mettre à jour les points et le défi dans la base de données
       await Promise.all([
@@ -1155,11 +1323,21 @@ const TasksScreen = ({ navigation }) => {
         setShowLevelUpAnimation(true);
       }
 
+      // Message spécial pour les défis CIR Day
+      if (taskType === 'cirday') {
+        Alert.alert(
+          "Défi CIR Day complété !",
+          `Merci pour votre participation ! Vous avez gagné ${pointsToAdd} points (avec bonus spécial CIR Day de 50%)`,
+          [{ text: "Super !" }]
+        );
+      }
+
       // Réorganiser les sections
       const allTasks = [
         ...updateTaskLocally(dailyTasks, id),
         ...updateTaskLocally(timedTasks, id),
-        ...updateTaskLocally(tasks, id)
+        ...updateTaskLocally(tasks, id),
+        ...updateTaskLocally(cirDayChallenges, id)
       ];
       organizeTasks(tasks, dailyTasks, timedTasks);
       applyFilter(filter, allTasks);
@@ -1863,6 +2041,7 @@ const TasksScreen = ({ navigation }) => {
             {renderFilterButton('daily', 'calendar', 'Journalières')}
             {renderFilterButton('custom', 'time', 'En cours')}
             {renderFilterButton('completed', 'checkmark-circle', 'Accomplies')}
+            {renderFilterButton('cirday', 'trophy', 'CIR Day')}
           </ScrollView>
         </View>
         

@@ -58,6 +58,13 @@ export const CHALLENGE_CATEGORIES = {
     name: 'Relaxation',
     icon: 'leaf',
     color: '#27ae60'
+  },
+  CIR_DAY: {
+    id: 'CIR_DAY',
+    name: 'CIR Day',
+    icon: 'trophy',
+    color: '#8e44ad',
+    description: 'Défis spéciaux pour l\'événement CIR Day'
   }
 };
 
@@ -69,7 +76,8 @@ export const CHALLENGE_TYPES = {
   STREAK: 'streak',       // Défis qui demandent une série de complétion consécutive
   COMMUNITY: 'community', // Défis de la communauté
   COMPLETED: 'completed', // Défis complétés par l'utilisateur
-  COUPLE: 'couple'        // Défis à réaliser en couple
+  COUPLE: 'couple',        // Défis à réaliser en couple
+  SPECIAL: 'SPECIAL'      // Défis spéciaux (ex: événements, promotions)
 };
 
 // Clés de stockage pour AsyncStorage
