@@ -548,6 +548,9 @@ export default function HomeScreen({ navigation }) {
   const rewardScaleAnim = useRef(new Animated.Value(0.8)).current;
   const rewardOpacityAnim = useRef(new Animated.Value(0)).current;
 
+  // State for managing selected activity for map navigation
+  const [activityToNavigate, setActivityToNavigate] = useState(null);
+
   // Charger les données utilisateur
   useEffect(() => {
     async function init() {
@@ -2178,9 +2181,11 @@ const CATEGORY_LABELS_FR = {
                     }}
                     title={challenge.title}
                     description={challenge.description}
-                    onPress={() => navigateToActivity(challenge)}
+                    tracksViewChanges={false}
+                    tappable={true}
+                    onPress={() => setActivityToNavigate(challenge)}
                   >
-                    <View style={[styles.challengeMarker, getCategoryStyle(challenge.category)]}>
+                    <View pointerEvents="none" style={[styles.challengeMarker, getCategoryStyle(challenge.category)]}>
                       <Icon
                         name={getCategoryIcon(challenge.category)}
                         size={20}
@@ -2197,11 +2202,14 @@ const CATEGORY_LABELS_FR = {
                     pinColor="blue"
                     title={newActivity.title}
                     description={newActivity.description || "Description de l'activité"}
+                    tracksViewChanges={false}
+                    tappable={true}
                     onPress={() =>
-                      handleSelectPoint({
+                      setActivityToNavigate({
                         ...newActivity,
-                        id: generateUniqueId(),
+                        id: newActivity.id || generateUniqueId(),
                         category: "CUSTOM",
+                        points: 10,
                       })
                     }
                   />
@@ -2229,45 +2237,71 @@ const CATEGORY_LABELS_FR = {
         </View>
       </Modal>
 
-      {/* Modal for editing or navigating to a selected point */}
-      {selectedPoint && (
+      {/* Modal for activity details and navigation */}
+      {activityToNavigate && (
         <Modal
-          visible={!!selectedPoint}
+          visible={!!activityToNavigate}
           animationType="slide"
           transparent={true}
+          onRequestClose={() => setActivityToNavigate(null)}
         >
-          <View style={styles.pointModalContainer}>
-            <Text style={styles.pointModalTitle}>Modifier le point</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Titre"
-              value={selectedPoint.title}
-              onChangeText={(text) =>
-                setSelectedPoint((prev) => ({ ...prev, title: text }))
-              }
-            />
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder="Description"
-              value={selectedPoint.description}
-              onChangeText={(text) =>
-                setSelectedPoint((prev) => ({ ...prev, description: text }))
-              }
-              multiline
-            />
-                       <View style={styles.pointModalActions}>
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={handleSavePoint}
-              >
-                <Text style={styles.saveButtonText}>Enregistrer</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.navigateButton}
-                onPress={() => navigateToPoint(selectedPoint)}
-              >
-                <Text style={styles.navigateButtonText}>S'y rendre</Text>
-              </TouchableOpacity>
+          <View style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <View style={{
+              backgroundColor: '#1e2146',
+              borderRadius: 20,
+              padding: 24,
+              width: '85%',
+              borderWidth: 1,
+              borderColor: '#4e54c8',
+              // Décale le contenu vers le haut
+              marginBottom: 40
+            }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#fff', marginBottom: 10 }}>
+                {activityToNavigate.title}
+              </Text>
+              <Text style={{ fontSize: 15, color: '#a3aed0', marginBottom: 16, marginTop: 4 }}>
+                {activityToNavigate.description}
+              </Text>
+              <Text style={{ fontSize: 14, color: '#ffd700', marginBottom: 10 }}>
+                {activityToNavigate.points} XP
+              </Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#4e54c8',
+                    borderRadius: 10,
+                    paddingVertical: 10,
+                    paddingHorizontal: 18,
+                    alignItems: 'center',
+                    marginRight: 8,
+                    flex: 1
+                  }}
+                  onPress={() => setActivityToNavigate(null)}
+                >
+                  <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 15 }}>Fermer</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#32cd32',
+                    borderRadius: 10,
+                    paddingVertical: 10,
+                    paddingHorizontal: 18,
+                    alignItems: 'center',
+                    flex: 1
+                  }}
+                  onPress={() => {
+                    navigateToActivity(activityToNavigate);
+                    setActivityToNavigate(null);
+                  }}
+                >
+                  <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 15 }}>S'y rendre</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
