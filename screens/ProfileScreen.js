@@ -107,9 +107,38 @@ const BADGES = {
   CONSISTENT: {
     name: "Guerrier Fidèle",
     description: "Accomplissez 3 quêtes en moins de 7 jours",
-    icon: "checkmark-circle", // Remplacer calendar-check par checkmark-circle
+    icon: "checkmark-circle",
     color: COLORS.error,
-    locked: true // Toujours verrouillé pour la démo
+    locked: true
+  },
+  // Nouveaux badges liés à la culture générale ou à la maîtrise de thèmes
+  QUIZ_MASTER: {
+    name: "Maître du Quiz",
+    description: "A répondu correctement à 10 questions de culture générale",
+    icon: "brain",
+    color: "#6c5ce7",
+    quizCorrectRequired: 10
+  },
+  QUIZ_LEGEND: {
+    name: "Légende du Quiz",
+    description: "A répondu correctement à 50 questions de culture générale",
+    icon: "award",
+    color: "#00b894",
+    quizCorrectRequired: 50
+  },
+  MULTI_THEME: {
+    name: "Polyvalent",
+    description: "A réussi des défis dans 5 thèmes différents",
+    icon: "layer-group",
+    color: "#fd79a8",
+    themesRequired: 5
+  },
+  THEME_MASTER: {
+    name: "Spécialiste",
+    description: "A maîtrisé un thème (10 défis réussis dans le même thème)",
+    icon: "book-open",
+    color: "#fab1a0",
+    masteredThemeRequired: 1
   }
 };
 
@@ -277,6 +306,13 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
       const completedCount = tasks?.length || 0;
       setCompletedTasks(completedCount);
       
+      // Récupère le nombre de bonnes réponses aux quiz et les thèmes (à adapter selon votre stockage)
+      // Supposons que retrieveQuizStats() retourne { correct: number, themes: { [theme]: count } }
+      let quizStats = { correct: 0, themes: {} };
+      if (typeof retrieveQuizStats === "function") {
+        quizStats = await retrieveQuizStats() || { correct: 0, themes: {} };
+      }
+      
       // Détermine quels badges sont débloqués
       const unlockedBadges = [
         { ...BADGES.FIRST_CHALLENGE, unlocked: completedCount >= BADGES.FIRST_CHALLENGE.unlockedAt },
@@ -288,7 +324,12 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
         { ...BADGES.LEVEL_15, unlocked: levelInfo.level >= BADGES.LEVEL_15.levelRequired },
         { ...BADGES.LEVEL_18, unlocked: levelInfo.level >= BADGES.LEVEL_18.levelRequired },
         { ...BADGES.LEVEL_20, unlocked: levelInfo.level >= BADGES.LEVEL_20.levelRequired },
-        { ...BADGES.CONSISTENT, unlocked: !BADGES.CONSISTENT.locked }
+        { ...BADGES.CONSISTENT, unlocked: !BADGES.CONSISTENT.locked },
+        // Nouveaux badges culture G
+        { ...BADGES.QUIZ_MASTER, unlocked: (quizStats.correct || 0) >= BADGES.QUIZ_MASTER.quizCorrectRequired },
+        { ...BADGES.QUIZ_LEGEND, unlocked: (quizStats.correct || 0) >= BADGES.QUIZ_LEGEND.quizCorrectRequired },
+        { ...BADGES.MULTI_THEME, unlocked: (Object.keys(quizStats.themes || {}).filter(theme => quizStats.themes[theme] > 0).length) >= BADGES.MULTI_THEME.themesRequired },
+        { ...BADGES.THEME_MASTER, unlocked: (Object.keys(quizStats.themes || {}).filter(theme => quizStats.themes[theme] >= 10).length) >= BADGES.THEME_MASTER.masteredThemeRequired }
       ];
       
       setBadges(unlockedBadges);

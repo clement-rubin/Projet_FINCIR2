@@ -130,6 +130,105 @@ export default function HomeScreen({ navigation }) {
           correctAnswer: "Mercure",
           points: 20,
           type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Dans quel pays se trouve la ville de Marrakech ?",
+          description: "Sélectionnez le pays correspondant.",
+          answers: ["Maroc", "Égypte", "Espagne", "Turquie"],
+          correctAnswer: "Maroc",
+          points: 15,
+          type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Quel est le plus grand océan du monde ?",
+          description: "Choisissez la bonne réponse.",
+          answers: ["Océan Atlantique", "Océan Indien", "Océan Pacifique", "Océan Arctique"],
+          correctAnswer: "Océan Pacifique",
+          points: 15,
+          type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Qui a écrit 'Les Misérables' ?",
+          description: "Sélectionnez l'auteur de ce roman célèbre.",
+          answers: ["Victor Hugo", "Émile Zola", "Gustave Flaubert", "Molière"],
+          correctAnswer: "Victor Hugo",
+          points: 20,
+          type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Quelle est la langue officielle du Brésil ?",
+          description: "Choisissez la langue officielle.",
+          answers: ["Espagnol", "Portugais", "Français", "Anglais"],
+          correctAnswer: "Portugais",
+          points: 15,
+          type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Quel est l'animal terrestre le plus rapide ?",
+          description: "Sélectionnez l'animal le plus rapide sur terre.",
+          answers: ["Lion", "Guépard", "Antilope", "Léopard"],
+          correctAnswer: "Guépard",
+          points: 15,
+          type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Dans quelle ville se trouve la statue de la Liberté ?",
+          description: "Sélectionnez la ville correcte.",
+          answers: ["Paris", "Londres", "New York", "Los Angeles"],
+          correctAnswer: "New York",
+          points: 15,
+          type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Quel est le plus long fleuve du monde ?",
+          description: "Choisissez le fleuve le plus long.",
+          answers: ["Nil", "Amazone", "Yangtsé", "Mississippi"],
+          correctAnswer: "Amazone",
+          points: 20,
+          type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Qui a inventé l'ampoule électrique ?",
+          description: "Sélectionnez l'inventeur célèbre.",
+          answers: ["Nikola Tesla", "Thomas Edison", "Benjamin Franklin", "Isaac Newton"],
+          correctAnswer: "Thomas Edison",
+          points: 15,
+          type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Quel pays a remporté la Coupe du Monde de football 2018 ?",
+          description: "Sélectionnez le pays vainqueur.",
+          answers: ["Brésil", "Allemagne", "France", "Argentine"],
+          correctAnswer: "France",
+          points: 15,
+          type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Quelle est la monnaie officielle du Japon ?",
+          description: "Choisissez la bonne monnaie.",
+          answers: ["Yuan", "Won", "Yen", "Dollar"],
+          correctAnswer: "Yen",
+          points: 15,
+          type: "QUIZ"
+        },
+        {
+          id: generateUniqueId(),
+          title: "Quel scientifique a développé la théorie de la relativité ?",
+          description: "Sélectionnez le bon scientifique.",
+          answers: ["Isaac Newton", "Albert Einstein", "Galilée", "Marie Curie"],
+          correctAnswer: "Albert Einstein",
+          points: 20,
+          type: "QUIZ"
         }
       ];
       
