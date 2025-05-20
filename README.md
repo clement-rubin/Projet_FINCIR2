@@ -1,6 +1,6 @@
 # 🌟 ChallengR - Relevez des défis, transformez-vous ! 🌟
 
-![ChallengR Logo](./assets/icon.png)
+![ChallengR Logo](./assets/newicon.png)
 
 ## 📱 Présentation du projet
 

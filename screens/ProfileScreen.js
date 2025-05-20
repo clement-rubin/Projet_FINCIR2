@@ -611,7 +611,7 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
                         />
                       ) : (
                         <Image 
-                          source={require('../assets/icon.png')} 
+                          source={require('../assets/newicon.png')} 
                           style={styles.profileImagePreview}
                         />
                       )}
@@ -778,7 +778,7 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
               />
             ) : (
               <Image 
-                source={require('../assets/icon.png')}  
+                source={require('../assets/newicon.png')}  
                 style={styles.profileImage}
                 onError={(e) => console.log('Image non trouvée, utilisation de l\'image par défaut')}
               />

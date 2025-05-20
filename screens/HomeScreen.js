@@ -1551,7 +1551,7 @@ const CATEGORY_LABELS_FR = {
         {/* Section d'en-tête avec dégradé et effet parallaxe */}
         <View style={styles.headerContainer}>
           <ImageBackground 
-            source={require('../assets/icon.png')}
+            source={require('../assets/newicon.png')}
             style={styles.headerBackground}
             imageStyle={styles.imageOverlay}
           >

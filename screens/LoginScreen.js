@@ -218,7 +218,7 @@ const LoginScreen = ({ onLoginSuccess, onGuestLogin }) => {
             <View style={styles.headerContainer}>
               <Animated.View style={[styles.logoContainer, { transform: [{ scale: logoScale }] }]}>
                 <Image 
-                  source={require('../assets/icon.png')} 
+                  source={require('../assets/newicon.png')} 
                   style={styles.logo}
                 />
               </Animated.View>

@@ -95,7 +95,7 @@ const AboutUsScreen = ({ navigation }) => {
           ]}
         >
           <Image 
-            source={require('../assets/icon.png')} 
+            source={require('../assets/newicon.png')} 
             style={styles.logo}
             resizeMode="contain"
           />

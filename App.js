@@ -465,7 +465,7 @@ export default function App() {
         
         {/* Logo avec effet de pulsation et glitch */}
         <Animated.Image 
-          source={require('./assets/icon.png')} 
+          source={require('./assets/newicon.png')} 
           style={[
             styles.splashLogo, 
             { 
