@@ -56,6 +56,54 @@ const BADGES = {
     unlockedAt: 0, // Utiliser le niveau pour débloquer
     levelRequired: 5
   },
+  LEVEL_8: {
+    name: "Maître",
+    description: "Vous avez atteint le rang 8!",
+    icon: "medal",
+    color: "#f7b731",
+    unlockedAt: 0,
+    levelRequired: 8
+  },
+  LEVEL_10: {
+    name: "Élite",
+    description: "Vous avez atteint le rang 10!",
+    icon: "crown",
+    color: "#9b59b6",
+    unlockedAt: 0,
+    levelRequired: 10
+  },
+  LEVEL_12: {
+    name: "Légendaire",
+    description: "Vous avez atteint le rang 12!",
+    icon: "dragon",
+    color: "#00b894",
+    unlockedAt: 0,
+    levelRequired: 12
+  },
+  LEVEL_15: {
+    name: "Mythique",
+    description: "Vous avez atteint le rang 15!",
+    icon: "gem",
+    color: "#00cec9",
+    unlockedAt: 0,
+    levelRequired: 15
+  },
+  LEVEL_18: {
+    name: "Immortel",
+    description: "Vous avez atteint le rang 18!",
+    icon: "infinity",
+    color: "#fdcb6e",
+    unlockedAt: 0,
+    levelRequired: 18
+  },
+  LEVEL_20: {
+    name: "Dieu du Jeu",
+    description: "Vous avez atteint le rang 20!",
+    icon: "bolt",
+    color: "#e17055",
+    unlockedAt: 0,
+    levelRequired: 20
+  },
   CONSISTENT: {
     name: "Guerrier Fidèle",
     description: "Accomplissez 3 quêtes en moins de 7 jours",
@@ -87,6 +135,7 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const [showAllBadges, setShowAllBadges] = useState(false);
   
   // États pour l'édition du profil
   const [editedProfile, setEditedProfile] = useState({});
@@ -233,6 +282,12 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
         { ...BADGES.FIRST_CHALLENGE, unlocked: completedCount >= BADGES.FIRST_CHALLENGE.unlockedAt },
         { ...BADGES.FIVE_CHALLENGES, unlocked: completedCount >= BADGES.FIVE_CHALLENGES.unlockedAt },
         { ...BADGES.LEVEL_5, unlocked: levelInfo.level >= BADGES.LEVEL_5.levelRequired },
+        { ...BADGES.LEVEL_8, unlocked: levelInfo.level >= BADGES.LEVEL_8.levelRequired },
+        { ...BADGES.LEVEL_10, unlocked: levelInfo.level >= BADGES.LEVEL_10.levelRequired },
+        { ...BADGES.LEVEL_12, unlocked: levelInfo.level >= BADGES.LEVEL_12.levelRequired },
+        { ...BADGES.LEVEL_15, unlocked: levelInfo.level >= BADGES.LEVEL_15.levelRequired },
+        { ...BADGES.LEVEL_18, unlocked: levelInfo.level >= BADGES.LEVEL_18.levelRequired },
+        { ...BADGES.LEVEL_20, unlocked: levelInfo.level >= BADGES.LEVEL_20.levelRequired },
         { ...BADGES.CONSISTENT, unlocked: !BADGES.CONSISTENT.locked }
       ];
       
@@ -781,18 +836,23 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
         >
           <View style={styles.sectionTitleContainer}>
             <Text style={styles.sectionTitle}>Mes Trophées</Text>
-            <TouchableOpacity style={styles.seeAllButton}>
-              <Text style={styles.seeAllButtonText}>Tous voir</Text>
+            <TouchableOpacity
+              style={styles.seeAllButton}
+              onPress={() => setShowAllBadges(!showAllBadges)}
+            >
+              <Text style={styles.seeAllButtonText}>
+                {showAllBadges ? "Réduire" : "Tous voir"}
+              </Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.badgesGrid}>
-            {badges.map((badge, index) => (
+            {(showAllBadges ? badges : badges.slice(0, 4)).map((badge, index) => (
               <Animated.View 
                 key={index} 
                 style={[
                   styles.badge, 
-                  {transform: [{scale: badgeScales[index] || 1}]}
+                  {transform: [{scale: badgeScales[index % badgeScales.length] || 1}]}
                 ]}
               >
                 <Pressable
