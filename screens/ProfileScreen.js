@@ -56,6 +56,54 @@ const BADGES = {
     unlockedAt: 0, // Utiliser le niveau pour débloquer
     levelRequired: 5
   },
+  LEVEL_8: {
+    name: "Maître",
+    description: "Vous avez atteint le rang 8!",
+    icon: "medal",
+    color: "#f7b731",
+    unlockedAt: 0,
+    levelRequired: 8
+  },
+  LEVEL_10: {
+    name: "Élite",
+    description: "Vous avez atteint le rang 10!",
+    icon: "crown",
+    color: "#9b59b6",
+    unlockedAt: 0,
+    levelRequired: 10
+  },
+  LEVEL_12: {
+    name: "Légendaire",
+    description: "Vous avez atteint le rang 12!",
+    icon: "dragon",
+    color: "#00b894",
+    unlockedAt: 0,
+    levelRequired: 12
+  },
+  LEVEL_15: {
+    name: "Mythique",
+    description: "Vous avez atteint le rang 15!",
+    icon: "gem",
+    color: "#00cec9",
+    unlockedAt: 0,
+    levelRequired: 15
+  },
+  LEVEL_18: {
+    name: "Immortel",
+    description: "Vous avez atteint le rang 18!",
+    icon: "infinity",
+    color: "#fdcb6e",
+    unlockedAt: 0,
+    levelRequired: 18
+  },
+  LEVEL_20: {
+    name: "Dieu du Jeu",
+    description: "Vous avez atteint le rang 20!",
+    icon: "bolt",
+    color: "#e17055",
+    unlockedAt: 0,
+    levelRequired: 20
+  },
   CONSISTENT: {
     name: "Guerrier Fidèle",
     description: "Accomplissez 3 quêtes en moins de 7 jours",
@@ -87,6 +135,7 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const [showAllBadges, setShowAllBadges] = useState(false);
   
   // États pour l'édition du profil
   const [editedProfile, setEditedProfile] = useState({});
@@ -233,6 +282,12 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
         { ...BADGES.FIRST_CHALLENGE, unlocked: completedCount >= BADGES.FIRST_CHALLENGE.unlockedAt },
         { ...BADGES.FIVE_CHALLENGES, unlocked: completedCount >= BADGES.FIVE_CHALLENGES.unlockedAt },
         { ...BADGES.LEVEL_5, unlocked: levelInfo.level >= BADGES.LEVEL_5.levelRequired },
+        { ...BADGES.LEVEL_8, unlocked: levelInfo.level >= BADGES.LEVEL_8.levelRequired },
+        { ...BADGES.LEVEL_10, unlocked: levelInfo.level >= BADGES.LEVEL_10.levelRequired },
+        { ...BADGES.LEVEL_12, unlocked: levelInfo.level >= BADGES.LEVEL_12.levelRequired },
+        { ...BADGES.LEVEL_15, unlocked: levelInfo.level >= BADGES.LEVEL_15.levelRequired },
+        { ...BADGES.LEVEL_18, unlocked: levelInfo.level >= BADGES.LEVEL_18.levelRequired },
+        { ...BADGES.LEVEL_20, unlocked: levelInfo.level >= BADGES.LEVEL_20.levelRequired },
         { ...BADGES.CONSISTENT, unlocked: !BADGES.CONSISTENT.locked }
       ];
       
@@ -781,18 +836,23 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
         >
           <View style={styles.sectionTitleContainer}>
             <Text style={styles.sectionTitle}>Mes Trophées</Text>
-            <TouchableOpacity style={styles.seeAllButton}>
-              <Text style={styles.seeAllButtonText}>Tous voir</Text>
+            <TouchableOpacity
+              style={styles.seeAllButton}
+              onPress={() => setShowAllBadges(!showAllBadges)}
+            >
+              <Text style={styles.seeAllButtonText}>
+                {showAllBadges ? "Réduire" : "Tous voir"}
+              </Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.badgesGrid}>
-            {badges.map((badge, index) => (
+            {(showAllBadges ? badges : badges.slice(0, 4)).map((badge, index) => (
               <Animated.View 
                 key={index} 
                 style={[
                   styles.badge, 
-                  {transform: [{scale: badgeScales[index] || 1}]}
+                  {transform: [{scale: badgeScales[index % badgeScales.length] || 1}]}
                 ]}
               >
                 <Pressable
@@ -1351,9 +1411,16 @@ const styles = StyleSheet.create({
   editProfileModalContent: {
     width: '90%',
     height: '80%',
-    backgroundColor: COLORS.white,
+    backgroundColor: '#1e2146', // fond sombre
     borderRadius: 20,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#4e54c8',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12,
   },
   editProfileHeader: {
     flexDirection: 'row',
@@ -1362,24 +1429,25 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.light,
+    borderBottomColor: '#292b45',
+    backgroundColor: '#23265a', // header sombre
   },
   editProfileTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.dark,
+    color: '#fff',
   },
   editProfileCloseButton: {
     padding: 5,
   },
   editProfileSaveButton: {
-    backgroundColor: COLORS.secondary,
+    backgroundColor: '#4e54c8',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
   },
   editProfileSaveText: {
-    color: COLORS.white,
+    color: '#fff',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -1396,11 +1464,13 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     marginBottom: 8,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#272b52',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
     position: 'relative',
+    borderWidth: 2,
+    borderColor: '#4e54c8',
   },
   profileImagePreview: {
     width: '100%',
@@ -1410,13 +1480,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: 'rgba(74, 102, 247, 0.9)',
+    backgroundColor: '#4e54c8',
     padding: 8,
     borderRadius: 20,
   },
   changePhotoText: {
     fontSize: 14,
-    color: COLORS.secondary,
+    color: '#a3d8f5',
     fontWeight: '600',
   },
   formField: {
@@ -1425,46 +1495,47 @@ const styles = StyleSheet.create({
   formLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.textPrimary,
+    color: '#a3aed0',
     marginBottom: 8,
   },
   optionalText: {
     fontWeight: 'normal',
-    color: COLORS.textLight,
+    color: '#6d7192',
   },
   formInput: {
-    backgroundColor: COLORS.background,
+    backgroundColor: '#272b52',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 10,
     fontSize: 16,
-    color: COLORS.dark,
+    color: '#fff',
     borderWidth: 1,
-    borderColor: '#e6e9ed',
+    borderColor: '#4e54c8',
   },
   inputError: {
-    borderColor: COLORS.error,
+    borderColor: '#e74c3c',
   },
   errorText: {
-    color: COLORS.error,
+    color: '#e74c3c',
     fontSize: 12,
     marginTop: 4,
   },
   formTextarea: {
-    backgroundColor: COLORS.background,
+    backgroundColor: '#272b52',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 10,
-    fontSize: 16,
-    color: COLORS.dark,
-    minHeight: 120,
+    fontSize: 15,
+    color: '#fff',
     borderWidth: 1,
-    borderColor: '#e6e9ed',
+    borderColor: '#4e54c8',
+    minHeight: 80,
+    textAlignVertical: 'top',
   },
   charCounter: {
     alignSelf: 'flex-end',
     fontSize: 12,
-    color: COLORS.textLight,
+    color: '#6d7192',
     marginTop: 4,
   },
   logoutButton: {
