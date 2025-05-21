@@ -2021,11 +2021,7 @@ const CATEGORY_LABELS_FR = {
                             <View style={styles.correctResultIcon}>
                               <Icon name="trophy" size={30} color={COLORS.white} />
                             </View>
-<<<<<<< HEAD
-                                                       <Text style={styles.resultMessage}>
-=======
-                                                                                                                                                                             <Text style={styles.resultMessage}>
->>>>>>> 7b239aa9aa53b9c0ef8bfd5b8d18a5051c7fc963
+                            <Text style={styles.resultMessage}>
                               Défi déjà relevé avec succès!
                             </Text>
                             <Text style={styles.completedQuizPoints}>
