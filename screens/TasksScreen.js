@@ -754,9 +754,9 @@ const TasksScreen = ({ navigation }) => {
   const [filterAnims] = useState({
     all: new Animated.Value(filter === 'all' ? 1 : 0.7),
     daily: new Animated.Value(filter === 'daily' ? 1 : 0.7),
-    custom: new Animated.Value(filter === 'custom' ? 1 : 0.7),
+    custom: new Animated.Value(filter === 'custom' ? 1 : 0.7), // Nouvel onglet "Défis Perso"
     completed: new Animated.Value(filter === 'completed' ? 1 : 0.7),
-    cirday: new Animated.Value(filter === 'cirday' ? 1 : 0.7) // Ajouter l'animation pour l'onglet CIR Day
+    cirday: new Animated.Value(filter === 'cirday' ? 1 : 0.7)
   });
 
   const [taskRatings, setTaskRatings] = useState({});
@@ -980,9 +980,9 @@ const TasksScreen = ({ navigation }) => {
     const filterTask = (task) => {
       if (filter === 'all') return true;
       if (filter === 'daily') return task.type === CHALLENGE_TYPES.DAILY;
-      if (filter === 'custom') return task.type !== CHALLENGE_TYPES.DAILY && !task.completed;
       if (filter === 'completed') return task.completed;
       if (filter === 'cirday') return task.category === 'CIR DAY'; // Filtrer par catégorie pour CIR Day
+      if (filter === 'custom') return !task.category; // Filtrer les défis sans catégorie (défis personnalisés)
       return true;
     };
       // Section pour les défis quotidiens
@@ -1025,7 +1025,7 @@ const TasksScreen = ({ navigation }) => {
           data: filteredRegularTasks,
           info: "Journal de vos victoires et accomplissements"
         });
-      } else if (filter === 'custom' || filter === 'all') {
+      } else if (filter === 'all') {
         // Sinon, on sépare les défis actifs 
         const activeRegularTasks = filteredRegularTasks.filter(task => !task.completed);
         if (activeRegularTasks.length > 0) {
@@ -1055,8 +1055,8 @@ const TasksScreen = ({ navigation }) => {
       // "Quotidien" montre uniquement les défis quotidiens
       filtered = dailyTasks;
     } else if (filterType === 'custom') {
-      // "En cours" montre uniquement les défis créés par l'utilisateur non complétés
-      filtered = tasks.filter(task => !task.completed);
+      // "Défis Perso" montre uniquement les défis créés par l'utilisateur
+      filtered = tasks;
     } else if (filterType === 'completed') {
       // "Complétés" montre tous les défis complétés
       filtered = allTasksArray.filter(task => task.completed);
@@ -1070,7 +1070,7 @@ const TasksScreen = ({ navigation }) => {
     // Mettre à jour les sections avec le nouveau filtre
     const sections = [];
     // Section pour les séries si l'utilisateur a une série en cours
-    if (streak.count > 0 && filterType !== 'cirday') {
+    if (streak.count > 0 && filterType !== 'cirday' && filterType !== 'completed') {
       sections.push({
         title: `🔥 Combo x${streak.count}`,
         data: [],
@@ -1078,16 +1078,50 @@ const TasksScreen = ({ navigation }) => {
       });
     }
     
-    // Filtrer les défis selon le type et le filtre actuel
-    const filterByType = (tasks, type) => {
-      if (filterType === 'all') return tasks;
-      if (filterType === 'daily') return type === 'daily' ? tasks : [];
-      if (filterType === 'custom') return type === 'custom' ? tasks.filter(task => !task.completed) : [];
-      if (filterType === 'completed') return tasks.filter(task => task.completed);
-      if (filterType === 'cirday') return type === 'cirday' ? tasks : [];
-      return [];
-    };
-
+    // Section spéciale pour les défis complétés
+    if (filterType === 'completed') {
+      // Organiser les défis complétés par type
+      const completedDailyTasks = dailyTasks.filter(task => task.completed);
+      const completedTimedTasks = timedTasks.filter(task => task.completed);
+      const completedCirDayTasks = cirDayChallenges.filter(task => task.completed);
+      const completedUserTasks = tasks.filter(task => task.completed);
+      
+      if (completedDailyTasks.length > 0) {
+        sections.push({
+          title: "📅 Quêtes journalières accomplies",
+          data: completedDailyTasks,
+          info: "Défis quotidiens que vous avez relevés avec succès"
+        });
+      }
+      
+      if (completedTimedTasks.length > 0) {
+        sections.push({
+          title: "⏱️ Quêtes éphémères accomplies",
+          data: completedTimedTasks,
+          info: "Défis à durée limitée que vous avez complétés à temps"
+        });
+      }
+      
+      if (completedCirDayTasks.length > 0) {
+        sections.push({
+          title: "🎯 Défis CIR Day accomplis",
+          data: completedCirDayTasks,
+          info: "Défis spéciaux de l'événement CIR Day que vous avez réussis"
+        });
+      }
+      
+      if (completedUserTasks.length > 0) {
+        sections.push({
+          title: "✅ Aventures accomplies",
+          data: completedUserTasks,
+          info: "Défis personnalisés que vous avez créés et complétés"
+        });
+      }
+      
+      setTaskSections(sections);
+      return;
+    }
+    
     // Section spéciale pour les défis CIR Day
     if (filterType === 'cirday') {
       const activeCirDayChallenges = cirDayChallenges.filter(task => !task.completed);
@@ -1113,24 +1147,57 @@ const TasksScreen = ({ navigation }) => {
       return;
     }
 
-    // Section pour les défis quotidiens
-    const filteredDailyTasks = filterByType(dailyTasks, 'daily');
-    if (filteredDailyTasks.length > 0) {
-      sections.push({
-        title: "📅 Quêtes journalières",
-        data: filteredDailyTasks,
-        info: "Ces quêtes sont générées automatiquement chaque jour. Accomplissez-les pour maintenir votre combo!"
-      });
+    // Section spéciale pour "Défis Perso"
+    if (filterType === 'custom') {
+      const activeUserTasks = tasks.filter(task => !task.completed);
+      const completedUserTasks = tasks.filter(task => task.completed);
+      
+      if (activeUserTasks.length > 0) {
+        sections.push({
+          title: "📝 Mes défis en cours",
+          data: activeUserTasks,
+          info: "Défis personnalisés que vous avez créés. Ajoutez de nouveaux défis avec le bouton '+ Nouvelle quête'"
+        });
+      }
+      
+      if (completedUserTasks.length > 0) {
+        sections.push({
+          title: "✅ Mes défis accomplis",
+          data: completedUserTasks,
+          info: "Défis personnalisés que vous avez créés et complétés"
+        });
+      }
+      
+      if (activeUserTasks.length === 0 && completedUserTasks.length === 0) {
+        // Laisser la section vide, l'interface affichera un message "Aucune quête"
+      }
+      
+      setTaskSections(sections);
+      return;
     }
 
-    // Section pour les défis temporaires
-    const filteredTimedTasks = filterByType(timedTasks, 'timed');
-    if (filteredTimedTasks.length > 0) {
-      sections.push({
-        title: "⏱️ Quêtes éphémères",
-        data: filteredTimedTasks,
-        info: "Attention! Ces quêtes disparaîtront bientôt. Relevez le défi avant qu'il ne soit trop tard."
-      });
+    // Section pour les défis quotidiens
+    if (filterType === 'all' || filterType === 'daily') {
+      const filteredDailyTasks = filterType === 'daily' ? dailyTasks : dailyTasks.filter(task => !task.completed);
+      if (filteredDailyTasks.length > 0) {
+        sections.push({
+          title: "📅 Quêtes journalières",
+          data: filteredDailyTasks,
+          info: "Ces quêtes sont générées automatiquement chaque jour. Accomplissez-les pour maintenir votre combo!"
+        });
+      }
+    }
+
+    // Section pour les défis temporaires (uniquement dans All)
+    if (filterType === 'all') {
+      const activeTimedTasks = timedTasks.filter(task => !task.completed);
+      if (activeTimedTasks.length > 0) {
+        sections.push({
+          title: "⏱️ Quêtes éphémères",
+          data: activeTimedTasks,
+          info: "Attention! Ces quêtes disparaîtront bientôt. Relevez le défi avant qu'il ne soit trop tard."
+        });
+      }
     }
     
     // Section pour les défis CIR Day dans l'onglet "Tous"
@@ -1146,29 +1213,33 @@ const TasksScreen = ({ navigation }) => {
     }
 
     // Section pour les défis standards
-    const filteredRegularTasks = filterByType(tasks, 'custom');
-    if (filteredRegularTasks.length > 0) {
-      const activeRegularTasks = filteredRegularTasks.filter(task => !task.completed);
-      const completedRegularTasks = filteredRegularTasks.filter(task => task.completed);
-      
-      if ((filterType === 'all' || filterType === 'custom') && activeRegularTasks.length > 0) {
+    if (filterType === 'all') {
+      const activeRegularTasks = tasks.filter(task => !task.completed);
+      if (activeRegularTasks.length > 0) {
         sections.push({
           title: "📝 Aventures en cours",
           data: activeRegularTasks,
           info: "Quêtes personnalisées que vous avez créées. Forgez votre destin avec le bouton '+'"
         });
       }
-
-      if ((filterType === 'all' || filterType === 'completed') && completedRegularTasks.length > 0) {
+      
+      // Ajouter une section pour montrer quelques tâches complétées récentes dans l'onglet Tous
+      const recentCompletedTasks = allTasksArray
+        .filter(task => task.completed)
+        .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+        .slice(0, 3); // Montrer seulement les 3 plus récentes
+    
+      if (recentCompletedTasks.length > 0) {
         sections.push({
-          title: "✅ Quêtes accomplies",
-          data: completedRegularTasks
+          title: "✅ Accomplissements récents",
+          data: recentCompletedTasks,
+          info: "Vos succès les plus récents. Voir l'onglet 'Accomplies' pour tout afficher."
         });
       }
     }
 
     setTaskSections(sections);
-  };
+};
 
   // Fonction pour animer les filtres lors de la sélection
   const animateFilter = (newFilter) => {
@@ -2039,7 +2110,7 @@ const TasksScreen = ({ navigation }) => {
           >
             {renderFilterButton('all', 'apps', 'Toutes')}
             {renderFilterButton('daily', 'calendar', 'Journalières')}
-            {renderFilterButton('custom', 'time', 'En cours')}
+            {renderFilterButton('custom', 'create', 'Défis Perso')}
             {renderFilterButton('completed', 'checkmark-circle', 'Accomplies')}
             {renderFilterButton('cirday', 'trophy', 'CIR Day')}
           </ScrollView>
@@ -2056,7 +2127,7 @@ const TasksScreen = ({ navigation }) => {
                 {filter === 'all' 
                   ? 'Créez votre première quête en appuyant sur "+ Nouvelle quête"'
                   : filter === 'custom'
-                    ? 'Créez votre première quête personnelle en appuyant sur "+ Nouvelle quête"'
+                    ? 'Créez votre premier défi personnel en appuyant sur "+ Nouvelle quête"'
                     : filter === 'daily'
                       ? 'Aucune quête journalière disponible pour le moment'
                       : 'Accomplissez des quêtes pour les voir ici'
@@ -2075,6 +2146,7 @@ const TasksScreen = ({ navigation }) => {
         ) : (
           renderTasksByType()
         )}
+        
         
         {renderLevelInfo()}
         

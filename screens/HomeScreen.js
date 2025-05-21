@@ -2021,7 +2021,11 @@ const CATEGORY_LABELS_FR = {
                             <View style={styles.correctResultIcon}>
                               <Icon name="trophy" size={30} color={COLORS.white} />
                             </View>
+<<<<<<< HEAD
                                                        <Text style={styles.resultMessage}>
+=======
+                                                                                                                                                                             <Text style={styles.resultMessage}>
+>>>>>>> 7b239aa9aa53b9c0ef8bfd5b8d18a5051c7fc963
                               Défi déjà relevé avec succès!
                             </Text>
                             <Text style={styles.completedQuizPoints}>
@@ -2400,9 +2404,6 @@ const CATEGORY_LABELS_FR = {
           </View>
         </View>
       </Modal>
-
-      {/* Ajustons l'espace blanc en bas pour éviter que le contenu ne soit masqué par la nouvelle barre de navigation */}
-      <View style={{ height: 90 }} />
     </View>
   );
 }
@@ -2410,8 +2411,8 @@ const CATEGORY_LABELS_FR = {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0f1123',
-    paddingTop: 0,
+    backgroundColor: '#151736',
+    // Ne pas mettre de paddingTop ici, le StatusBar est déjà géré ailleurs
   },
   container: {
     flex: 1,
