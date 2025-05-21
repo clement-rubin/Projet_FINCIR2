@@ -406,9 +406,6 @@ export default function HomeScreen({ navigation }) {
 
         // Si on atteint 5 quiz, célébration puis cooldown
         if (stats.progress >= 5) {
-          // Montrer l'animation de récompense (victoire) comme pour les autres questions
-          showRewardAnimation();
-
           // Attendre la célébration puis activer le cooldown et afficher la page "Challenge réussi"
           setTimeout(async () => {
             setQuizAnimation(null);
@@ -429,9 +426,6 @@ export default function HomeScreen({ navigation }) {
           }, 1500); // même délai que pour les autres questions
           return;
         }
-        
-        // Montrer l'animation de récompense
-        showRewardAnimation();
         
         // Charger une nouvelle question après un délai
         setTimeout(() => {
