@@ -1551,11 +1551,38 @@ const CATEGORY_LABELS_FR = {
             imageStyle={styles.imageOverlay}
           >
             <LinearGradient
-              colors={['rgba(36, 59, 85, 0.95)', 'rgba(91, 36, 122, 0.95)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+              colors={['rgba(36, 59, 85, 0.97)', 'rgba(91, 36, 122, 0.97)', 'rgba(23, 35, 67, 0.97)']}
+              start={{ x: 0, y: 0.2 }}
+              end={{ x: 1, y: 0.8 }}
               style={styles.gradient}
+              locations={[0, 0.5, 1]}
             >
+              {/* Ajout d'éléments décoratifs subtils */}
+              <View style={{
+                position: 'absolute',
+                top: 20,
+                left: 20,
+                right: 20,
+                bottom: 20,
+                opacity: 0.1,
+                borderRadius: 40,
+                borderWidth: 2,
+                borderColor: '#fff',
+                pointerEvents: 'none',
+              }} />
+              <View style={{
+                position: 'absolute',
+                top: 40,
+                left: 40,
+                right: 40,
+                bottom: 40,
+                opacity: 0.05,
+                borderRadius: 30,
+                borderWidth: 1,
+                borderColor: '#fff',
+                pointerEvents: 'none',
+              }} />
+              
               <Animated.View style={[
                 styles.welcomeSection, 
                 { 
@@ -1961,7 +1988,8 @@ const CATEGORY_LABELS_FR = {
                                 name={quizResult.isCorrect ? "trophy" : "close-circle"} 
                                 size={30} 
                                 color={COLORS.white} 
-                              />
+ 
+ />
                             </View>
                             <Text style={styles.resultMessage}>
                               {quizResult.isCorrect ? 
@@ -2366,17 +2394,15 @@ const CATEGORY_LABELS_FR = {
           </View>
         </View>
       </Modal>
-
-      {/* Ajustons l'espace blanc en bas pour éviter que le contenu ne soit masqué par la nouvelle barre de navigation */}
-      <View style={{ height: 90 }} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({  safeArea: {
+const styles = StyleSheet.create({
+  safeArea: {
     flex: 1,
-    backgroundColor: '#0f1123',
-    paddingTop: 0,
+    backgroundColor: '#151736',
+    // Ne pas mettre de paddingTop ici, le StatusBar est déjà géré ailleurs
   },
   container: {
     flex: 1,
@@ -2386,54 +2412,82 @@ const styles = StyleSheet.create({  safeArea: {
     height: 220,
     width: '100%',
     overflow: 'hidden',
+    borderBottomLeftRadius: 30,  // Ajout de coins arrondis en bas
+    borderBottomRightRadius: 30, // pour une transition plus douce avec le contenu
   },
   headerBackground: {
     height: '100%',
     width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   imageOverlay: {
     resizeMode: 'cover',
-    opacity: 0.15,
+    opacity: 0.25,  // Légère augmentation de l'opacité pour plus de visibilité
   },
   gradient: {
     flex: 1,
     paddingTop: Platform.OS === 'android' ? 60 : 40,
     paddingHorizontal: 20,
     justifyContent: 'center',
+    // Dégradé amélioré avec 3 couleurs pour un effet plus professionnel
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
   welcomeSection: {
     alignItems: 'center',
+    position: 'relative',  // Pour permettre de positionner des éléments par dessus
   },
   greetingContainer: {
     alignItems: 'center',
+    width: '100%',
   },
   welcomeText: {
     fontSize: 20,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: 'rgba(255, 255, 255, 0.95)',  // Plus visible
     fontWeight: '500',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',  // Ombre pour plus de lisibilité
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   appTitle: {
-    fontSize: 50,
+    fontSize: 54,  // Légèrement plus grand
     fontWeight: 'bold',
     color: '#fff',
     letterSpacing: 2,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 5,
+    textShadowRadius: 6,  // Ombre plus prononcée pour effet 3D
+    marginVertical: 10,  // Ajout d'espace autour du titre
   },
   taglineContainer: {
     marginTop: 5,
     marginBottom: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',  // Fond subtil pour améliorer la lisibilité
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    shadowRadius: 5,
   },
   tagline: {
     fontSize: 16,
     color: '#a3d8f5',
     textAlign: 'center',
     letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   contentContainer: {
-    flex: 1,
-    marginTop: -40,
+    flex: 1, // Changé de -40 à -25 pour abaisser le conteneur (moins de chevauchement)
     paddingHorizontal: 15,
     paddingBottom: 30,
   },
@@ -2535,7 +2589,7 @@ const styles = StyleSheet.create({  safeArea: {
   },
   levelProgress: {
     fontSize: 14,
-    color: '#a3d8f5',
+    color: '#a3aed0',
   },
   categoryProgressContainer: {
     marginBottom: 25,

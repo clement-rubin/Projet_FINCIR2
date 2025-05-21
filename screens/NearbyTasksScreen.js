@@ -177,7 +177,7 @@ export default function NearbyTasksScreen() {
           Alert.alert("Erreur", "Impossible d'ouvrir l'application de cartographie.");
         }
       })
-      .catch((err) => console.error("Erreur lors de l'ouverture de la carte :", err));
+      .catch((err) => console.error("Erreur lors d'ouverture de la carte :", err));
   };
   
   // Function to handle selecting a point (existing or new)
@@ -300,7 +300,7 @@ export default function NearbyTasksScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#151736" translucent />
       
-      {/* Header */}
+      {/* Header - updated for better navbar integration */}
       <LinearGradient
         colors={['#1a2151', '#151736']}
         start={{ x: 0, y: 0 }}
@@ -308,7 +308,7 @@ export default function NearbyTasksScreen() {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Défis autour de moi</Text>
+          <Text style={styles.headerTitle}>Explorer</Text>
           <View style={styles.headerActions}>
             <TouchableOpacity 
               style={styles.refreshButton} 
@@ -329,6 +329,7 @@ export default function NearbyTasksScreen() {
             </TouchableOpacity>
           </View>
         </View>
+        <Text style={styles.headerSubtitle}>Défis et activités à proximité</Text>
       </LinearGradient>
       
       {/* Add Activity Form */}
@@ -634,9 +635,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#151736',
   },
   header: {
-    paddingTop: StatusBar.currentHeight + 15,
+    paddingTop: StatusBar.currentHeight + 10,
     paddingHorizontal: 20,
     paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   headerContent: {
     flexDirection: 'row',
@@ -644,9 +647,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#a3aed0',
+    marginTop: 5,
   },
   headerActions: {
     flexDirection: 'row',
@@ -780,7 +788,7 @@ const styles = StyleSheet.create({
   },
   challengeInfoCard: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 80, // Updated to leave space for the navbar
     left: 20,
     right: 20,
     backgroundColor: '#21254c',

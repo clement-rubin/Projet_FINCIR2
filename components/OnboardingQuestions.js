@@ -64,6 +64,19 @@ const QUESTIONS = [
   }
 ];
 
+// Couleurs gaming
+const GAMING_COLORS = {
+  background: '#151736',
+  cardBackground: '#1e2146',
+  secondary: '#4e54c8',
+  accent: '#a3d8f5',
+  darkBlue: '#21254c',
+  headerBg: '#0f1123',
+  neon: '#00ffff',
+  purple: '#9933ff',
+  gold: '#ffd700',
+};
+
 const { width } = Dimensions.get('window');
 
 const OnboardingQuestions = ({ isVisible, onComplete }) => {
@@ -235,6 +248,7 @@ const OnboardingQuestions = ({ isVisible, onComplete }) => {
           <TextInput
             style={styles.textInput}
             placeholder={question.placeholder}
+            placeholderTextColor="#a3aed0"
             value={answers[question.id] || ''}
             onChangeText={(text) => handleTextInput(text, question.id)}
             maxLength={question.maxLength}
@@ -246,6 +260,7 @@ const OnboardingQuestions = ({ isVisible, onComplete }) => {
             <TextInput
               style={styles.textarea}
               placeholder={question.placeholder}
+              placeholderTextColor="#a3aed0"
               value={answers[question.id] || ''}
               onChangeText={(text) => handleTextInput(text, question.id)}
               multiline
@@ -275,7 +290,7 @@ const OnboardingQuestions = ({ isVisible, onComplete }) => {
                 <Icon 
                   name={option.icon} 
                   size={24} 
-                  color={(answers[question.id] || []).includes(option.id) ? COLORS.white : COLORS.secondary} 
+                  color={(answers[question.id] || []).includes(option.id) ? COLORS.white : GAMING_COLORS.accent} 
                 />
                 <Text 
                   style={[
@@ -331,7 +346,7 @@ const OnboardingQuestions = ({ isVisible, onComplete }) => {
               style={styles.backButton}
               onPress={handlePreviousQuestion}
             >
-              <Icon name="arrow-back" size={24} color={COLORS.secondary} />
+              <Icon name="arrow-back" size={24} color={GAMING_COLORS.accent} />
               <Text style={styles.backButtonText}>Précédent</Text>
             </TouchableOpacity>
           )}
@@ -358,7 +373,7 @@ const OnboardingQuestions = ({ isVisible, onComplete }) => {
     >
       <SafeAreaView style={styles.container}>
         <LinearGradient
-          colors={[COLORS.secondary, COLORS.primary]}
+          colors={[GAMING_COLORS.background, GAMING_COLORS.darkBlue]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.background}
@@ -373,6 +388,7 @@ const OnboardingQuestions = ({ isVisible, onComplete }) => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          <Text style={styles.headerTitle}>Personnalisez votre aventure</Text>
           {renderQuestion()}
         </ScrollView>
         
@@ -396,20 +412,37 @@ const OnboardingQuestions = ({ isVisible, onComplete }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: GAMING_COLORS.background,
   },
   background: {
     ...StyleSheet.absoluteFillObject,
-    opacity: 0.9,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: GAMING_COLORS.accent,
+    textAlign: 'center',
+    marginBottom: 20,
+    textShadowColor: 'rgba(163, 216, 245, 0.4)',
+    textShadowOffset: {width: 0, height: 2},
+    textShadowRadius: 4,
+    letterSpacing: 1,
   },
   progressBarContainer: {
     height: 6,
     width: '100%',
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(78, 84, 200, 0.3)',
   },
   progressBar: {
     height: '100%',
-    backgroundColor: COLORS.white,
+    backgroundColor: GAMING_COLORS.secondary,
+    borderTopRightRadius: 3,
+    borderBottomRightRadius: 3,
+    shadowColor: GAMING_COLORS.secondary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 4,
   },
   scrollView: {
     flex: 1,
@@ -417,58 +450,79 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: 20,
-    justifyContent: 'center',
+    paddingTop: 40,
   },
   questionContainer: {
-    backgroundColor: COLORS.white,
+    backgroundColor: GAMING_COLORS.cardBackground,
     borderRadius: 20,
-    padding: 20,
+    padding: 24,
     marginVertical: 20,
-    shadowColor: COLORS.dark,
+    shadowColor: GAMING_COLORS.secondary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(78, 84, 200, 0.4)',
   },
   questionHeader: {
     marginBottom: 25,
   },
   questionTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: COLORS.dark,
+    color: GAMING_COLORS.accent,
     marginBottom: 8,
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0,0,0,0.2)',
+    textShadowOffset: {width: 0, height: 1},
+    textShadowRadius: 2,
   },
   questionSubtitle: {
     fontSize: 16,
-    color: COLORS.textSecondary,
+    color: '#a3aed0',
+    lineHeight: 22,
   },
   textInput: {
-    backgroundColor: COLORS.background,
+    backgroundColor: GAMING_COLORS.darkBlue,
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 12,
     fontSize: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#e6e9ed',
+    borderColor: 'rgba(78, 84, 200, 0.3)',
+    color: '#fff',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   textareaContainer: {
     marginBottom: 20,
   },
   textarea: {
-    backgroundColor: COLORS.background,
+    backgroundColor: GAMING_COLORS.darkBlue,
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 12,
     fontSize: 16,
     minHeight: 120,
     borderWidth: 1,
-    borderColor: '#e6e9ed',
+    borderColor: 'rgba(78, 84, 200, 0.3)',
+    color: '#fff',
+    textAlignVertical: 'top',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   charCounter: {
     alignSelf: 'flex-end',
     fontSize: 12,
-    color: COLORS.textLight,
+    color: '#a3aed0',
     marginTop: 5,
+    marginRight: 2,
   },
   optionsContainer: {
     flexDirection: 'row',
@@ -480,24 +534,39 @@ const styles = StyleSheet.create({
     width: '48%',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: GAMING_COLORS.darkBlue,
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e6e9ed',
+    borderColor: 'rgba(78, 84, 200, 0.3)',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   optionSelected: {
-    backgroundColor: COLORS.secondary,
-    borderColor: COLORS.secondary,
+    backgroundColor: GAMING_COLORS.secondary,
+    borderColor: GAMING_COLORS.accent,
+    shadowColor: GAMING_COLORS.secondary,
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 5,
   },
   optionText: {
-    fontSize: 16,
-    color: COLORS.textPrimary,
+    fontSize: 15,
+    color: '#dedede',
     marginLeft: 10,
+    fontWeight: '500',
   },
   optionTextSelected: {
     color: COLORS.white,
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: {width: 0, height: 1},
+    textShadowRadius: 2,
   },
   cameraSection: {
     alignItems: 'center',
@@ -511,14 +580,23 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: COLORS.secondary,
+    backgroundColor: GAMING_COLORS.secondary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
+    borderWidth: 2,
+    borderColor: GAMING_COLORS.accent,
+    shadowColor: GAMING_COLORS.secondary,
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 6,
   },
   cameraTriggerText: {
-    fontSize: 16,
-    color: COLORS.textPrimary,
+    fontSize: 15,
+    color: GAMING_COLORS.accent,
+    marginTop: 5,
+    fontWeight: '500',
   },
   profilePreviewContainer: {
     alignItems: 'center',
@@ -528,29 +606,37 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 75,
     marginBottom: 15,
+    borderWidth: 3,
+    borderColor: GAMING_COLORS.accent,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
   },
   changePhotoButton: {
-    backgroundColor: COLORS.background,
+    backgroundColor: 'rgba(78, 84, 200, 0.2)',
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.secondary,
+    borderColor: GAMING_COLORS.secondary,
   },
   changePhotoText: {
-    color: COLORS.secondary,
+    color: GAMING_COLORS.accent,
     fontSize: 14,
     fontWeight: '600',
   },
   errorText: {
-    color: COLORS.error,
+    color: '#ff5252',
     fontSize: 14,
     marginBottom: 15,
+    marginLeft: 5,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
+    marginTop: 20,
   },
   backButton: {
     flexDirection: 'row',
@@ -560,22 +646,33 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 16,
-    color: COLORS.secondary,
+    color: GAMING_COLORS.accent,
     marginLeft: 5,
+    fontWeight: '500',
   },
   nextButton: {
-    backgroundColor: COLORS.secondary,
+    backgroundColor: GAMING_COLORS.secondary,
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    shadowColor: GAMING_COLORS.secondary,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   nextButtonText: {
     fontSize: 16,
     color: COLORS.white,
     fontWeight: '600',
-    marginRight: 5,
+    marginRight: 8,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: {width: 0, height: 1},
+    textShadowRadius: 2,
   },
 });
 
