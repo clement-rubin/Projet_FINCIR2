@@ -1993,7 +1993,7 @@ const CATEGORY_LABELS_FR = {
                             <View style={styles.correctResultIcon}>
                               <Icon name="trophy" size={30} color={COLORS.white} />
                             </View>
-                            <Text style={styles.resultMessage}>
+                                                                                                                                                                             <Text style={styles.resultMessage}>
                               Défi déjà relevé avec succès!
                             </Text>
                             <Text style={styles.completedQuizPoints}>
@@ -2372,17 +2372,14 @@ const CATEGORY_LABELS_FR = {
           </View>
         </View>
       </Modal>
-
-      {/* Ajustons l'espace blanc en bas pour éviter que le contenu ne soit masqué par la nouvelle barre de navigation */}
-      <View style={{ height: 90 }} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({  safeArea: {
     flex: 1,
-    backgroundColor: '#0f1123',
-    paddingTop: 0,
+    backgroundColor: '#151736',
+    // Ne pas mettre de paddingTop ici, le StatusBar est déjà géré ailleurs
   },
   container: {
     flex: 1,
