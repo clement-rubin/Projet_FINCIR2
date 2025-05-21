@@ -785,16 +785,17 @@ const TasksScreen = ({ navigation }) => {
     // Charger les données
     loadUserData();
     loadTaskRatings();
-    // Charger les défis du CIR Day
     loadCirDayChallenges();
+
+    // Appliquer le filtre 'all' dès l'arrivée sur la page
+    applyFilter('all');
 
     // Configurer l'écouteur de focus pour recharger les données quand on revient sur cet écran
     const unsubscribe = navigation.addListener('focus', () => {
       loadUserData();
       loadTaskRatings();
-      loadCirDayChallenges(); // Ajouter le rechargement des défis CIR Day
-      // Réappliquer le filtre actuel à chaque focus
-      applyFilter(filter);
+      loadCirDayChallenges();
+      applyFilter('all'); // Toujours afficher les défis dès l'accès
     });
 
     return () => {
@@ -2146,6 +2147,8 @@ const TasksScreen = ({ navigation }) => {
         ) : (
           renderTasksByType()
         )}
+        
+        
         
         
         {renderLevelInfo()}
