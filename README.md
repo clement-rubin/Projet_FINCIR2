@@ -14,6 +14,7 @@
 - **Accumulation de points** : Gagnez des points en relevant des défis
 - **Progression par niveaux** : Montez en niveau et suivez votre progression avec une barre de progression intuitive
 - **Récompenses visuelles** : Animations de récompense pour célébrer vos accomplissements
+- **Aperçu des avantages futurs** : Consultez les pouvoirs qui vous attendent aux rangs supérieurs
 
 ### 📅 Défis quotidiens
 - **Défis diversifiés** : Des activités variées dans plusieurs catégories (fitness, bien-être, apprentissage, socialisation...)

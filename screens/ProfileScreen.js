@@ -17,8 +17,8 @@ import {
   ActivityIndicator, 
   Pressable, 
   Alert,
-  Keyboard, // Ajouté ici pour corriger l'erreur
-  Easing // Ajoutez ceci pour corriger l'erreur Easing
+  Keyboard, 
+  Easing 
 } from 'react-native';
 import { SCREEN, calculateLevel, LEVEL_CONFIG } from '../utils/constants';
 import { retrievePoints, retrieveCompletedTasks, storeUserProfile, retrieveUserProfile } from '../utils/storage';
@@ -29,6 +29,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import CameraScreen from '../components/CameraScreen';
 import { logoutUser } from '../services/authService';
 import { useFocusEffect } from '@react-navigation/native';
+import LevelPowersModal from '../components/LevelPowersModal'; // Importer le nouveau composant
 
 // Suppression du composant CustomNavBar
 
@@ -165,6 +166,7 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [showAllBadges, setShowAllBadges] = useState(false);
+  const [showLevelPowersModal, setShowLevelPowersModal] = useState(false); // Ajouter un nouvel état pour la modal des pouvoirs des rangs supérieurs
   
   // États pour l'édition du profil
   const [editedProfile, setEditedProfile] = useState({});
@@ -846,7 +848,10 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
             ))}
             
             {level < 15 && (
-              <TouchableOpacity style={styles.viewMoreLevelsButton}>
+              <TouchableOpacity 
+                style={styles.viewMoreLevelsButton}
+                onPress={() => setShowLevelPowersModal(true)}  // Ajouter le gestionnaire d'événement
+              >
                 <Text style={styles.viewMoreLevelsText}>Voir les pouvoirs des rangs supérieurs</Text>
                 <Icon name="chevron-forward" size={16} color={COLORS.secondary} />
               </TouchableOpacity>
@@ -987,6 +992,13 @@ const ProfileScreen = ({ navigation, isGuest = false, onLogout }) => {
       
       {renderBadgeModal()}
       {renderEditProfileModal()}
+      
+      {/* Ajouter la modal des pouvoirs des rangs supérieurs */}
+      <LevelPowersModal
+        visible={showLevelPowersModal}
+        onClose={() => setShowLevelPowersModal(false)}
+        currentLevel={level}
+      />
       
       {/* Modal pour la caméra */}
       {showCamera && (
