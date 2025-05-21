@@ -754,9 +754,8 @@ const TasksScreen = ({ navigation }) => {
   const [filterAnims] = useState({
     all: new Animated.Value(filter === 'all' ? 1 : 0.7),
     daily: new Animated.Value(filter === 'daily' ? 1 : 0.7),
-    custom: new Animated.Value(filter === 'custom' ? 1 : 0.7),
     completed: new Animated.Value(filter === 'completed' ? 1 : 0.7),
-    cirday: new Animated.Value(filter === 'cirday' ? 1 : 0.7) // Ajouter l'animation pour l'onglet CIR Day
+    cirday: new Animated.Value(filter === 'cirday' ? 1 : 0.7)
   });
 
   const [taskRatings, setTaskRatings] = useState({});
@@ -980,7 +979,6 @@ const TasksScreen = ({ navigation }) => {
     const filterTask = (task) => {
       if (filter === 'all') return true;
       if (filter === 'daily') return task.type === CHALLENGE_TYPES.DAILY;
-      if (filter === 'custom') return task.type !== CHALLENGE_TYPES.DAILY && !task.completed;
       if (filter === 'completed') return task.completed;
       if (filter === 'cirday') return task.category === 'CIR DAY'; // Filtrer par catégorie pour CIR Day
       return true;
@@ -1025,7 +1023,7 @@ const TasksScreen = ({ navigation }) => {
           data: filteredRegularTasks,
           info: "Journal de vos victoires et accomplissements"
         });
-      } else if (filter === 'custom' || filter === 'all') {
+      } else if (filter === 'all') {
         // Sinon, on sépare les défis actifs 
         const activeRegularTasks = filteredRegularTasks.filter(task => !task.completed);
         if (activeRegularTasks.length > 0) {
@@ -1041,80 +1039,112 @@ const TasksScreen = ({ navigation }) => {
     setTaskSections(sections);
   };
     const applyFilter = (filterType, tasksList = tasks) => {
-    setFilter(filterType);
+  setFilter(filterType);
+  
+  // Récupérer toutes les tâches
+  const allTasksArray = [...dailyTasks, ...timedTasks, ...tasks, ...cirDayChallenges];
+  
+  // Mettre à jour les tâches filtrées pour l'affichage selon le nouveau système de filtrage
+  let filtered;
+  if (filterType === 'all') {
+    // "Tous" montre tous les défis
+    filtered = allTasksArray;
+  } else if (filterType === 'daily') {
+    // "Quotidien" montre uniquement les défis quotidiens
+    filtered = dailyTasks;
+  } else if (filterType === 'completed') {
+    // "Complétés" montre tous les défis complétés
+    filtered = allTasksArray.filter(task => task.completed);
+  } else if (filterType === 'cirday') {
+    // "CIR Day" montre uniquement les défis de l'événement CIR Day
+    filtered = cirDayChallenges;
+  }
+  
+  setFilteredTasks(filtered);
+  
+  // Mettre à jour les sections avec le nouveau filtre
+  const sections = [];
+  // Section pour les séries si l'utilisateur a une série en cours
+  if (streak.count > 0 && filterType !== 'cirday' && filterType !== 'completed') {
+    sections.push({
+      title: `🔥 Combo x${streak.count}`,
+      data: [],
+      info: `Maintenez votre combo en complétant au moins une quête chaque jour. Dernière activité: ${new Date(streak.lastCompletionDate).toLocaleDateString()}`
+    });
+  }
+  
+  // Section spéciale pour les défis complétés
+  if (filterType === 'completed') {
+    // Organiser les défis complétés par type
+    const completedDailyTasks = dailyTasks.filter(task => task.completed);
+    const completedTimedTasks = timedTasks.filter(task => task.completed);
+    const completedCirDayTasks = cirDayChallenges.filter(task => task.completed);
+    const completedUserTasks = tasks.filter(task => task.completed);
     
-    // Récupérer toutes les tâches
-    const allTasksArray = [...dailyTasks, ...timedTasks, ...tasks, ...cirDayChallenges];
-    
-    // Mettre à jour les tâches filtrées pour l'affichage selon le nouveau système de filtrage
-    let filtered;
-    if (filterType === 'all') {
-      // "Tous" montre tous les défis
-      filtered = allTasksArray;
-    } else if (filterType === 'daily') {
-      // "Quotidien" montre uniquement les défis quotidiens
-      filtered = dailyTasks;
-    } else if (filterType === 'custom') {
-      // "En cours" montre uniquement les défis créés par l'utilisateur non complétés
-      filtered = tasks.filter(task => !task.completed);
-    } else if (filterType === 'completed') {
-      // "Complétés" montre tous les défis complétés
-      filtered = allTasksArray.filter(task => task.completed);
-    } else if (filterType === 'cirday') {
-      // "CIR Day" montre uniquement les défis de l'événement CIR Day
-      filtered = cirDayChallenges;
-    }
-    
-    setFilteredTasks(filtered);
-    
-    // Mettre à jour les sections avec le nouveau filtre
-    const sections = [];
-    // Section pour les séries si l'utilisateur a une série en cours
-    if (streak.count > 0 && filterType !== 'cirday') {
+    if (completedDailyTasks.length > 0) {
       sections.push({
-        title: `🔥 Combo x${streak.count}`,
-        data: [],
-        info: `Maintenez votre combo en complétant au moins une quête chaque jour. Dernière activité: ${new Date(streak.lastCompletionDate).toLocaleDateString()}`
+        title: "📅 Quêtes journalières accomplies",
+        data: completedDailyTasks,
+        info: "Défis quotidiens que vous avez relevés avec succès"
       });
     }
     
-    // Filtrer les défis selon le type et le filtre actuel
-    const filterByType = (tasks, type) => {
-      if (filterType === 'all') return tasks;
-      if (filterType === 'daily') return type === 'daily' ? tasks : [];
-      if (filterType === 'custom') return type === 'custom' ? tasks.filter(task => !task.completed) : [];
-      if (filterType === 'completed') return tasks.filter(task => task.completed);
-      if (filterType === 'cirday') return type === 'cirday' ? tasks : [];
-      return [];
-    };
-
-    // Section spéciale pour les défis CIR Day
-    if (filterType === 'cirday') {
-      const activeCirDayChallenges = cirDayChallenges.filter(task => !task.completed);
-      const completedCirDayChallenges = cirDayChallenges.filter(task => task.completed);
-      
-      if (activeCirDayChallenges.length > 0) {
-        sections.push({
-          title: "🎯 Défis CIR Day",
-          data: activeCirDayChallenges,
-          info: "Défis spéciaux pour l'événement CIR Day. Participez et gagnez des points bonus!"
-        });
-      }
-      
-      if (completedCirDayChallenges.length > 0) {
-        sections.push({
-          title: "✅ Défis CIR Day complétés",
-          data: completedCirDayChallenges,
-          info: "Défis que vous avez déjà relevés pendant l'événement"
-        });
-      }
-      
-      setTaskSections(sections);
-      return;
+    if (completedTimedTasks.length > 0) {
+      sections.push({
+        title: "⏱️ Quêtes éphémères accomplies",
+        data: completedTimedTasks,
+        info: "Défis à durée limitée que vous avez complétés à temps"
+      });
     }
+    
+    if (completedCirDayTasks.length > 0) {
+      sections.push({
+        title: "🎯 Défis CIR Day accomplis",
+        data: completedCirDayTasks,
+        info: "Défis spéciaux de l'événement CIR Day que vous avez réussis"
+      });
+    }
+    
+    if (completedUserTasks.length > 0) {
+      sections.push({
+        title: "✅ Aventures accomplies",
+        data: completedUserTasks,
+        info: "Défis personnalisés que vous avez créés et complétés"
+      });
+    }
+    
+    setTaskSections(sections);
+    return;
+  }
+  
+  // Section spéciale pour les défis CIR Day
+  if (filterType === 'cirday') {
+    const activeCirDayChallenges = cirDayChallenges.filter(task => !task.completed);
+    const completedCirDayChallenges = cirDayChallenges.filter(task => task.completed);
+    
+    if (activeCirDayChallenges.length > 0) {
+      sections.push({
+        title: "🎯 Défis CIR Day",
+        data: activeCirDayChallenges,
+        info: "Défis spéciaux pour l'événement CIR Day. Participez et gagnez des points bonus!"
+      });
+    }
+    
+    if (completedCirDayChallenges.length > 0) {
+      sections.push({
+        title: "✅ Défis CIR Day complétés",
+        data: completedCirDayChallenges,
+        info: "Défis que vous avez déjà relevés pendant l'événement"
+      });
+    }
+    
+    setTaskSections(sections);
+    return;
+  }
 
-    // Section pour les défis quotidiens
-    const filteredDailyTasks = filterByType(dailyTasks, 'daily');
+  // Section pour les défis quotidiens
+  if (filterType === 'all' || filterType === 'daily') {
+    const filteredDailyTasks = filterType === 'daily' ? dailyTasks : dailyTasks.filter(task => !task.completed);
     if (filteredDailyTasks.length > 0) {
       sections.push({
         title: "📅 Quêtes journalières",
@@ -1122,53 +1152,60 @@ const TasksScreen = ({ navigation }) => {
         info: "Ces quêtes sont générées automatiquement chaque jour. Accomplissez-les pour maintenir votre combo!"
       });
     }
+  }
 
-    // Section pour les défis temporaires
-    const filteredTimedTasks = filterByType(timedTasks, 'timed');
-    if (filteredTimedTasks.length > 0) {
+  // Section pour les défis temporaires (uniquement dans All)
+  if (filterType === 'all') {
+    const activeTimedTasks = timedTasks.filter(task => !task.completed);
+    if (activeTimedTasks.length > 0) {
       sections.push({
         title: "⏱️ Quêtes éphémères",
-        data: filteredTimedTasks,
+        data: activeTimedTasks,
         info: "Attention! Ces quêtes disparaîtront bientôt. Relevez le défi avant qu'il ne soit trop tard."
       });
     }
+  }
+  
+  // Section pour les défis CIR Day dans l'onglet "Tous"
+  if (filterType === 'all') {
+    const filteredCirDayChallenges = cirDayChallenges.filter(task => !task.completed);
+    if (filteredCirDayChallenges.length > 0) {
+      sections.push({
+        title: "🎯 Défis CIR Day",
+        data: filteredCirDayChallenges,
+        info: "Défis spéciaux pour l'événement CIR Day. Participez et gagnez des points bonus!"
+      });
+    }
+  }
+
+  // Section pour les défis standards
+  if (filterType === 'all') {
+    const activeRegularTasks = tasks.filter(task => !task.completed);
+    if (activeRegularTasks.length > 0) {
+      sections.push({
+        title: "📝 Aventures en cours",
+        data: activeRegularTasks,
+        info: "Quêtes personnalisées que vous avez créées. Forgez votre destin avec le bouton '+'"
+      });
+    }
     
-    // Section pour les défis CIR Day dans l'onglet "Tous"
-    if (filterType === 'all') {
-      const filteredCirDayChallenges = cirDayChallenges.filter(task => !task.completed);
-      if (filteredCirDayChallenges.length > 0) {
-        sections.push({
-          title: "🎯 Défis CIR Day",
-          data: filteredCirDayChallenges,
-          info: "Défis spéciaux pour l'événement CIR Day. Participez et gagnez des points bonus!"
-        });
-      }
+    // Ajouter une section pour montrer quelques tâches complétées récentes dans l'onglet Tous
+    const recentCompletedTasks = allTasksArray
+      .filter(task => task.completed)
+      .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+      .slice(0, 3); // Montrer seulement les 3 plus récentes
+    
+    if (recentCompletedTasks.length > 0) {
+      sections.push({
+        title: "✅ Accomplissements récents",
+        data: recentCompletedTasks,
+        info: "Vos succès les plus récents. Voir l'onglet 'Accomplies' pour tout afficher."
+      });
     }
+  }
 
-    // Section pour les défis standards
-    const filteredRegularTasks = filterByType(tasks, 'custom');
-    if (filteredRegularTasks.length > 0) {
-      const activeRegularTasks = filteredRegularTasks.filter(task => !task.completed);
-      const completedRegularTasks = filteredRegularTasks.filter(task => task.completed);
-      
-      if ((filterType === 'all' || filterType === 'custom') && activeRegularTasks.length > 0) {
-        sections.push({
-          title: "📝 Aventures en cours",
-          data: activeRegularTasks,
-          info: "Quêtes personnalisées que vous avez créées. Forgez votre destin avec le bouton '+'"
-        });
-      }
-
-      if ((filterType === 'all' || filterType === 'completed') && completedRegularTasks.length > 0) {
-        sections.push({
-          title: "✅ Quêtes accomplies",
-          data: completedRegularTasks
-        });
-      }
-    }
-
-    setTaskSections(sections);
-  };
+  setTaskSections(sections);
+};
 
   // Fonction pour animer les filtres lors de la sélection
   const animateFilter = (newFilter) => {
@@ -2039,7 +2076,6 @@ const TasksScreen = ({ navigation }) => {
           >
             {renderFilterButton('all', 'apps', 'Toutes')}
             {renderFilterButton('daily', 'calendar', 'Journalières')}
-            {renderFilterButton('custom', 'time', 'En cours')}
             {renderFilterButton('completed', 'checkmark-circle', 'Accomplies')}
             {renderFilterButton('cirday', 'trophy', 'CIR Day')}
           </ScrollView>
@@ -2055,11 +2091,9 @@ const TasksScreen = ({ navigation }) => {
               <Text style={styles.emptySubText}>
                 {filter === 'all' 
                   ? 'Créez votre première quête en appuyant sur "+ Nouvelle quête"'
-                  : filter === 'custom'
-                    ? 'Créez votre première quête personnelle en appuyant sur "+ Nouvelle quête"'
-                    : filter === 'daily'
-                      ? 'Aucune quête journalière disponible pour le moment'
-                      : 'Accomplissez des quêtes pour les voir ici'
+                  : filter === 'daily'
+                    ? 'Aucune quête journalière disponible pour le moment'
+                    : 'Accomplissez des quêtes pour les voir ici'
                 }
               </Text>
               {filter !== 'all' && (
