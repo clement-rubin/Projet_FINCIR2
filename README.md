@@ -138,7 +138,6 @@ Dans un monde de distractions infinies, ChallengR vous aide à rester fidèle à
       <td align="center"><img src="https://user-images.githubusercontent.com/3059371/34322809-f7d95710-e808-11e7-8b8f-9248931e493b.png" width="40"><br>AsyncStorage</td>
       <td align="center"><img src="https://miro.medium.com/max/400/1*JktK87FL_sqDDnuxHxe6Fw.png" width="40"><br>Expo Location</td>
       <td align="center"><img src="https://raw.githubusercontent.com/react-native-maps/react-native-maps/master/docs/assets/react-native-maps-icon.png" width="40"><br>React Native Maps</td>
-      <td align="center"><img src="https://www.vectorlogo.zone/logos/firebase/firebase-icon.svg" width="40"><br>Firebase</td>
     </tr>
   </table>
 </div>
@@ -195,67 +194,6 @@ Dans un monde de distractions infinies, ChallengR vous aide à rester fidèle à
      - `a` pour ouvrir l'application sur un émulateur Android
      - `i` pour ouvrir l'application sur un simulateur iOS (Mac uniquement)
      - `w` pour ouvrir l'application dans un navigateur web (fonctionnalités limitées)
-
-### Déploiement pour la production
-
-#### Génération des versions de production
-
-1. **Pour Android (APK/AAB)**
-   ```bash
-   # Générer un bundle Android
-   expo build:android -t apk   # Pour générer un APK
-   # ou
-   expo build:android -t app-bundle   # Pour générer un AAB (recommandé pour Google Play)
-   ```
-
-2. **Pour iOS (IPA)**
-   ```bash
-   # Générer une archive iOS
-   expo build:ios -t archive   # Pour App Store
-   # ou
-   expo build:ios -t simulator   # Pour tests sur simulateur
-   ```
-
-3. **Publication sur Expo**
-   ```bash
-   # Publier sur Expo pour une distribution plus simple
-   expo publish
-   ```
-
-#### Soumission aux stores
-
-1. **Google Play Store**
-   - Créer un compte développeur sur la [Google Play Console](https://play.google.com/console/about/)
-   - Créer une nouvelle application
-   - Télécharger votre AAB généré par Expo
-   - Remplir les métadonnées de l'application
-   - Soumettre pour examen
-
-2. **Apple App Store**
-   - Créer un compte développeur Apple sur [App Store Connect](https://appstoreconnect.apple.com/)
-   - Créer une nouvelle application
-   - Utiliser Xcode ou Transporter pour téléverser votre IPA
-   - Remplir les métadonnées de l'application
-   - Soumettre pour examen
-
-### Configuration supplémentaire
-
-#### Firebase
-
-Si vous utilisez Firebase pour l'authentification ou le stockage:
-
-1. Créer un projet sur [Firebase Console](https://console.firebase.google.com/)
-2. Ajouter une application Android et/ou iOS
-3. Télécharger les fichiers de configuration (`google-services.json` pour Android, `GoogleService-Info.plist` pour iOS)
-4. Placer ces fichiers dans le dossier approprié selon les instructions Firebase
-
-#### Notifications Push
-
-Pour configurer les notifications push:
-
-1. Créer un projet sur [Firebase Cloud Messaging](https://firebase.google.com/docs/cloud-messaging)
-2. Suivre les instructions de configuration de Firebase pour React Native
-3. Ajouter le code pour gérer les tokens et notifications dans votre application
 
 ### Résolution des problèmes courants
 
@@ -369,58 +307,24 @@ Connectez-vous avec la communauté:
 
 ## 📈 Feuille de route
 
-- **Q3 2023**
+- **Partie 1 2025**
   - ✅ Lancement de la version bêta
   - ✅ Système de défis quotidiens
   - ✅ Profils utilisateurs basiques
 
-- **Q4 2023**
+- **Partie 2 2025**
   - ✅ Géolocalisation des défis
   - ✅ Système de points et niveaux
   - ⏳ Fonctionnalités sociales de base
 
-- **Q1 2024**
-  - 🔜 Défis collaboratifs
-  - 🔜 Intégration avec services de santé
-  - 🔜 Système de récompenses réelles
-
-- **Q2 2024**
-  - 🔜 API publique pour développeurs
-  - 🔜 Événements communautaires en direct
-  - 🔜 Version web complémentaire
-
-## 🤝 Contribution
-
-Nous accueillons avec enthousiasme les contributions à ChallengR! Consultez notre [guide de contribution](CONTRIBUTING.md) pour plus de détails.
-
-### Comment contribuer
-
-1. Fork le projet
-2. Créer une branche pour votre fonctionnalité (`git checkout -b feature/AmazingFeature`)
-3. Commit vos changements (`git commit -m 'Add: Amazing new feature'`)
-4. Push sur la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrir une Pull Request
-
-### Code de conduite
-
-Ce projet adhère à un [Code de Conduite](CODE_OF_CONDUCT.md). En participant, vous acceptez de respecter ses termes.
-
-## 📜 Licence
-
-Ce projet est sous licence 0BSD - voir le fichier [LICENSE](LICENSE) pour plus de détails.
-
 ## 📞 Contact et support
 
-- **Site Web**: [challengr.app](https://challengr.app)
-- **Email**: support@challengr.app
-- **Twitter**: [@ChallengR_App](https://twitter.com/ChallengR_App)
-- **Discord**: [Serveur ChallengR](https://discord.gg/challengr)
-
+- **Email**: clement.rubin@student.junia.com
+  
 ## 🙏 Remerciements
 
-- À tous nos bêta-testeurs pour leurs précieux retours
 - À l'équipe d'enseignants de JUNIA pour leur soutien
-- À la communauté open source pour les ressources inestimables
+- À l'ensemble des personnes ayant été impliqué dans ce projet.
 
 ---
 
