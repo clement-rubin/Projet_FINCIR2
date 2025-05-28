@@ -47,16 +47,10 @@
 - **Partage multimédia de progression** : Partagez photos, vidéos et réalisations avec votre réseau
 - **Communication enrichie** : Messagerie instantanée avec réactions et encouragements personnalisés
 
-### 📊 Analytics de progression avancés
-- **Tableau de bord personnalisé** : Visualisation dynamique de votre évolution par domaine
-- **Historique complet et filtrable** : Accès à l'ensemble de votre parcours avec recherche intelligente
-- **Insights personnalisés** : Recommandations basées sur l'analyse de vos performances
-
-### 🎨 Expérience utilisateur premium
-- **Design adaptatif** : Interface qui s'ajuste parfaitement à tous les appareils
-- **Retour sensoriel multi-niveaux** : Combinaisons de vibrations, sons et animations pour une immersion totale
-- **Thèmes visuels personnalisables** : Choix parmi 8 palettes de couleurs et modes sombre/clair
-- **Accessibilité universelle** : Fonctionnalités inclusives pour tous les utilisateurs
+### 🖼️ Partage créatif
+- **Galerie personnelle** : Conservez un historique visuel de vos accomplissements
+- **Prise de photos intégrée** : Capturez et partagez vos moments de réussite
+- **Retouche et annotations** : Personnalisez vos créations avant de les partager
 
 ## 🛠️ Technologies utilisées
 
@@ -77,29 +71,16 @@
   </table>
 </div>
 
-- **React Native** : Framework cross-platform pour le développement mobile
-- **Expo** : Plateforme pour simplifier le développement React Native
-- **React Navigation** : Navigation intuitive entre les écrans de l'application
-- **Redux** : Gestion d'état centralisée pour l'application
-- **AsyncStorage** : Stockage local des données utilisateur
-- **Expo Haptics** : Retours haptiques pour améliorer l'expérience utilisateur
-- **Expo Linear Gradient** : Effets visuels de dégradés
-- **Expo Location** : Services de géolocalisation de haute précision
-- **React Native Maps** : Intégration de cartes interactives
-- **Expo Camera** : Fonctionnalités avancées liées à l'appareil photo
-- **Expo Blur** : Effets visuels de flou
-- **Animatable** : Bibliothèque pour animations complexes
-- **Firebase** : Services backend pour l'authentification et le stockage
+## 🏁 Mise en route et déploiement
 
-## 🏁 Mise en route rapide
+### Prérequis système
+- **Node.js** (v14.0.0 ou plus récent)
+- **npm** (v6.0.0 ou plus récent) ou **yarn** (v1.22.0 ou plus récent)
+- **Expo CLI** (installé globalement)
+- **Git** (pour cloner le dépôt)
+- Un appareil mobile iOS/Android ou un émulateur/simulateur
 
-### Prérequis
-- Node.js (v14.0.0 ou plus)
-- npm ou yarn
-- Expo CLI
-- Un appareil mobile ou un émulateur
-
-### Installation
+### Étapes d'installation complètes
 
 1. **Cloner le dépôt**
    ```bash
@@ -109,38 +90,110 @@
 
 2. **Installer les dépendances**
    ```bash
+   # Avec npm
    npm install
-   # ou
+   
+   # Ou avec Yarn
    yarn install
    ```
 
 3. **Configurer les variables d'environnement**
    ```bash
+   # Copier le fichier d'exemple
    cp .env.example .env
-   # Complétez les variables dans le fichier .env
+   
+   # Puis éditer le fichier .env avec vos propres valeurs
+   # FIREBASE_API_KEY=votre_cle_api
+   # FIREBASE_AUTH_DOMAIN=votre_domaine_auth
+   # etc.
    ```
 
-4. **Lancer l'application**
+4. **Lancer le serveur de développement**
    ```bash
+   # Avec npm
    npm start
-   # ou
+   
+   # Ou avec Yarn
    yarn start
    ```
 
-5. **Scanner le QR code** avec l'application Expo Go sur votre appareil mobile ou lancer sur un émulateur.
+5. **Tester l'application**
+   - Scanner le QR code avec l'application **Expo Go** sur votre appareil mobile
+   - Ou appuyer sur:
+     - `a` pour ouvrir l'application sur un émulateur Android
+     - `i` pour ouvrir l'application sur un simulateur iOS (Mac uniquement)
+     - `w` pour ouvrir l'application dans un navigateur web (fonctionnalités limitées)
 
-### Démarrage rapide pour les développeurs
+### Déploiement pour la production
 
-```bash
-# Installer les dépendances de développement
-npm install --dev
+#### Génération des versions de production
 
-# Exécuter les tests
-npm test
+1. **Pour Android (APK/AAB)**
+   ```bash
+   # Générer un bundle Android
+   expo build:android -t apk   # Pour générer un APK
+   # ou
+   expo build:android -t app-bundle   # Pour générer un AAB (recommandé pour Google Play)
+   ```
 
-# Lancer en mode développement avec rechargement à chaud
-npm run dev
-```
+2. **Pour iOS (IPA)**
+   ```bash
+   # Générer une archive iOS
+   expo build:ios -t archive   # Pour App Store
+   # ou
+   expo build:ios -t simulator   # Pour tests sur simulateur
+   ```
+
+3. **Publication sur Expo**
+   ```bash
+   # Publier sur Expo pour une distribution plus simple
+   expo publish
+   ```
+
+#### Soumission aux stores
+
+1. **Google Play Store**
+   - Créer un compte développeur sur la [Google Play Console](https://play.google.com/console/about/)
+   - Créer une nouvelle application
+   - Télécharger votre AAB généré par Expo
+   - Remplir les métadonnées de l'application
+   - Soumettre pour examen
+
+2. **Apple App Store**
+   - Créer un compte développeur Apple sur [App Store Connect](https://appstoreconnect.apple.com/)
+   - Créer une nouvelle application
+   - Utiliser Xcode ou Transporter pour téléverser votre IPA
+   - Remplir les métadonnées de l'application
+   - Soumettre pour examen
+
+### Configuration supplémentaire
+
+#### Firebase
+
+Si vous utilisez Firebase pour l'authentification ou le stockage:
+
+1. Créer un projet sur [Firebase Console](https://console.firebase.google.com/)
+2. Ajouter une application Android et/ou iOS
+3. Télécharger les fichiers de configuration (`google-services.json` pour Android, `GoogleService-Info.plist` pour iOS)
+4. Placer ces fichiers dans le dossier approprié selon les instructions Firebase
+
+#### Notifications Push
+
+Pour configurer les notifications push:
+
+1. Créer un projet sur [Firebase Cloud Messaging](https://firebase.google.com/docs/cloud-messaging)
+2. Suivre les instructions de configuration de Firebase pour React Native
+3. Ajouter le code pour gérer les tokens et notifications dans votre application
+
+### Résolution des problèmes courants
+
+| Problème | Solution |
+|----------|----------|
+| `Unable to resolve module...` | Vérifiez que toutes les dépendances sont installées. Essayez `npm install` à nouveau ou effacez le cache avec `expo r -c` |
+| Erreurs de Metro Bundler | Redémarrez le bundler avec `expo start --clear` |
+| Problèmes de compilation Android | Vérifiez la version de Gradle dans `android/build.gradle` |
+| Échec de build iOS | Vérifiez vos certificats de provisioning et identifiants de bundle |
+| Problèmes de géolocalisation | Assurez-vous d'avoir activé les services de localisation et accordé les permissions à l'application |
 
 ## 📱 Architecture de l'application
 
